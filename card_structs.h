@@ -3,6 +3,7 @@
 
 #include <map>
 #include <cstdint>
+#include <stdexcept>
 
 enum FigureCardValue
 {
@@ -32,7 +33,22 @@ namespace deck
     public:
         // Constructors
         CardClassWrapper() = delete;
-        CardClassWrapper(Suit suit, uint8_t value) : card({suit, value}) {}
+        CardClassWrapper(Suit suit, uint8_t value) 
+        {
+            this->card.suit = suit;
+            if (value >= 2 && value <= 10)
+            {
+                this->card.value = value;
+            }
+            else if (value >= J && value <= A)
+            {
+                this->card.value = value;
+            }
+            else
+            {
+                throw std::invalid_argument("Invalid card value");
+            }
+        }
         CardClassWrapper(Card card) : card(card) {}
 
         // Destructor
@@ -63,31 +79,57 @@ namespace deck
         Card card;
     };
 
-    class AllCards
+    class DeckOfCards
     {
     public:
-        AllCards() 
+        DeckOfCards(bool init = true) 
         {
-            for (uint8_t i = 2; i <= 10; i++)
+            if (init)
             {
-                was_card_played_map[{HEARTS, i}] = false;
-                was_card_played_map[{DIAMONDS, i}] = false;
-                was_card_played_map[{CLUBS, i}] = false;
-                was_card_played_map[{SPADES, i}] = false;
-            }
-            for (uint8_t i = J; i <= A; i++)
-            {
-                was_card_played_map[{HEARTS, i}] = false;
-                was_card_played_map[{DIAMONDS, i}] = false;
-                was_card_played_map[{CLUBS, i}] = false;
-                was_card_played_map[{SPADES, i}] = false;
+                for (uint8_t i = 2; i <= 10; i++)
+                {
+                    was_card_played_map[{HEARTS, i}] = false;
+                    was_card_played_map[{DIAMONDS, i}] = false;
+                    was_card_played_map[{CLUBS, i}] = false;
+                    was_card_played_map[{SPADES, i}] = false;
+                }
+                for (uint8_t i = J; i <= A; i++)
+                {
+                    was_card_played_map[{HEARTS, i}] = false;
+                    was_card_played_map[{DIAMONDS, i}] = false;
+                    was_card_played_map[{CLUBS, i}] = false;
+                    was_card_played_map[{SPADES, i}] = false;
+                }
             }
         }
-        ~AllCards() = default;
+        ~DeckOfCards() = default;
+
+        bool add_card(const CardClassWrapper &card)
+        {
+            if (was_card_played_map.find(card) == was_card_played_map.end())
+            {
+                was_card_played_map[card] = false;
+                return true;
+            }
+            return false;
+        }
 
         void set_card_played(const CardClassWrapper &card)
         {
             was_card_played_map[card] = true;
+        }
+
+        bool was_card_played(const CardClassWrapper &card) const
+        {
+            return was_card_played_map.at(card);
+        }
+
+        void reset()
+        {
+            for (auto &pair : was_card_played_map)
+            {
+                pair.second = false;
+            }
         }
 
     private:
