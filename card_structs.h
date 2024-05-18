@@ -4,6 +4,7 @@
 #include <map>
 #include <cstdint>
 #include <stdexcept>
+#include <vector>
 
 enum FigureCardValue
 {
@@ -21,7 +22,7 @@ enum Suit
     SPADES = 'S'
 };
 namespace deck
-{
+{ 
     typedef struct __attribute__((__packed__)) Card
     {
         Suit suit;
@@ -77,6 +78,7 @@ namespace deck
 
     private:
         Card card;
+        // Dont know yet whether Card should know if it was played
     };
 
     class DeckOfCards
@@ -135,6 +137,44 @@ namespace deck
     private:
         std::map<CardClassWrapper, bool> was_card_played_map;
     };
-} // namespace deck
+
+// Trick == Lewa in polish, I prefer to use polish name for it.
+class Lewa
+{
+public:
+    Lewa(int nbr) : lewa_nbr(nbr) {}
+    ~Lewa() = default;
+
+    void add_card(const CardClassWrapper &card)
+    {
+        if (lewa.size() == 4)
+        {
+            throw std::invalid_argument("Lewa " + 
+            std::to_string(this->lewa_nbr) + " is full");
+        }
+        lewa.push_back(card);
+    }
+
+    void clear_lewa()
+    {
+        lewa.clear();
+    }
+
+    std::vector<CardClassWrapper> get_lewa() const
+    {
+        return lewa;
+    }
+
+    int get_lewa_nbr() const
+    {
+        return lewa_nbr;
+    }
+
+private:
+    int lewa_nbr;
+    std::vector<CardClassWrapper> lewa;
+};
+
+}// namespace deck
 
 #endif // COMMUNICATION_STRUCTS_H
