@@ -66,8 +66,31 @@ namespace deck
     class AllCards
     {
     public:
-        // std::map<Suit, std::map<uint8_t, bool>> was_card_played_map;
-        // albo
+        AllCards() 
+        {
+            for (uint8_t i = 2; i <= 10; i++)
+            {
+                was_card_played_map[{HEARTS, i}] = false;
+                was_card_played_map[{DIAMONDS, i}] = false;
+                was_card_played_map[{CLUBS, i}] = false;
+                was_card_played_map[{SPADES, i}] = false;
+            }
+            for (uint8_t i = J; i <= A; i++)
+            {
+                was_card_played_map[{HEARTS, i}] = false;
+                was_card_played_map[{DIAMONDS, i}] = false;
+                was_card_played_map[{CLUBS, i}] = false;
+                was_card_played_map[{SPADES, i}] = false;
+            }
+        }
+        ~AllCards() = default;
+
+        void set_card_played(const CardClassWrapper &card)
+        {
+            was_card_played_map[card] = true;
+        }
+
+    private:
         std::map<CardClassWrapper, bool> was_card_played_map;
     };
 } // namespace deck
