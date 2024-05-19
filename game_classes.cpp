@@ -84,6 +84,7 @@ uint8_t PointCounter::count_points(deck::Lewa &lewa)
         points += count_figures(K, NO_MISTER_POINTS, lewa);
         points += count_figures(J, NO_MISTER_POINTS, lewa);
         points += count_figures(K, NO_KING_HEARTS_POINTS, lewa, true);
+
         if (lewa.get_lewa_id() == 7 || lewa.get_lewa_id() == 13)
             points += NO_SEVEN_AND_LAST_POINTS;
         break;

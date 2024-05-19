@@ -1,5 +1,5 @@
-#ifndef CARD_STRUCTS_H
-#define CARD_STRUCTS_H
+#ifndef CARD_CLASSES_H
+#define CARD_CLASSES_H
 
 #include <map>
 #include <stdexcept>
@@ -205,4 +205,4 @@ namespace deck
  
 } // namespace deck
 
-#endif // COMMUNICATION_STRUCTS_H
+#endif // CARD_CLASSES_H

@@ -7,7 +7,6 @@ constexpr uint8_t MAX_PLAYERS = 4;
 constexpr uint8_t MAX_LEWA_SIZE = 4;
 
 
-
 // GAME_CLASSES CONSTANTS
 constexpr uint8_t MAX_NBR_OF_LEWAS = 13;
 constexpr uint8_t MAX_ONE_COLOR_SIZE = 13;

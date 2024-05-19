@@ -1,7 +1,7 @@
 #ifndef GAME_CLASSES_H
 #define GAME_CLASSES_H
 
-#include "card_structs.h"
+#include "card_classes.h"
 
 enum GameType
 {

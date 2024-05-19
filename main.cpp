@@ -1,4 +1,4 @@
-#include "card_structs.h"
+#include "card_classes.h"
 #include <iostream>
 
 int main()
