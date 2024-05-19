@@ -13,10 +13,16 @@ enum PlayerPosition
 
 class Player
 {
+    Player() = delete;
+    Player(PlayerPosition position) : position(position), points(0) {}
+    ~Player() = default;
+
+    
+
 private:
     deck::DeckOfCards hand;
     PlayerPosition position;
-    int points;
+    uint8_t points;
 };
 
 #endif // PLAYER_CLASS_H

@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
+#include <memory>
 
 enum FigureCardValue
 {
@@ -21,20 +22,26 @@ enum Suit
     CLUBS = 'C',
     SPADES = 'S'
 };
+
 namespace deck
-{ 
+{
+    // Card struct needed for C-style socket API, to send it by TCP socket
     typedef struct __attribute__((__packed__)) Card
     {
         Suit suit;
         uint8_t value;
     } Card;
 
+    /**
+     * @brief Wrapper for Card struct, to use it in C++ code (i.e. in std::map 
+     * as key). Has get methods and operators for comparison.
+    */
     class CardClassWrapper
     {
     public:
         // Constructors
         CardClassWrapper() = delete;
-        CardClassWrapper(Suit suit, uint8_t value) 
+        CardClassWrapper(Suit suit, uint8_t value)
         {
             this->card.suit = suit;
             if (value >= 2 && value <= 10)
@@ -81,10 +88,14 @@ namespace deck
         // Dont know yet whether Card should know if it was played
     };
 
+    /**
+     * @brief DeckOfCards class stores Cards objects in a map. It has methods to
+     * add card to deck, set card as played and check if card was played.
+    */
     class DeckOfCards
     {
     public:
-        DeckOfCards(bool init = true) 
+        DeckOfCards(bool init = false)
         {
             if (init)
             {
@@ -118,7 +129,15 @@ namespace deck
 
         void set_card_played(const CardClassWrapper &card)
         {
-            was_card_played_map[card] = true;
+            if (was_card_played_map.find(card) != was_card_played_map.end())
+            {
+                if (was_card_played_map[card])
+                {
+                    throw std::invalid_argument("Card already played");
+                }
+                was_card_played_map[card] = true;
+            }
+            throw std::invalid_argument("Card not in deck");
         }
 
         bool was_card_played(const CardClassWrapper &card) const
@@ -138,43 +157,52 @@ namespace deck
         std::map<CardClassWrapper, bool> was_card_played_map;
     };
 
-// Trick == Lewa in polish, I prefer to use polish name for it.
-class Lewa
-{
-public:
-    Lewa(int nbr) : lewa_nbr(nbr) {}
-    ~Lewa() = default;
-
-    void add_card(const CardClassWrapper &card)
+    /**
+     * @brief Trik == Lewa in polish, I prefer to use polish name for it.
+     * Lewa class stores maximally 4 cards, which are played in one round.
+     * It has methods to add card to lewa and get vector of cards in lewa.
+    */
+    class Lewa
     {
-        if (lewa.size() == 4)
+    public:
+        Lewa(int nbr) : lewa_id(nbr) {}
+        ~Lewa() = default;
+
+        void add_card(const CardClassWrapper &card)
         {
-            throw std::invalid_argument("Lewa " + 
-            std::to_string(this->lewa_nbr) + " is full");
+            if (lewa.size() == 4)
+            {
+                throw std::invalid_argument("Lewa " +
+                                            std::to_string(this->lewa_id) + " is full");
+            }
+            lewa.push_back(card);
         }
-        lewa.push_back(card);
-    }
 
-    void clear_lewa()
-    {
-        lewa.clear();
-    }
+        void clear_lewa()
+        {
+            lewa.clear();
+        }
 
-    std::vector<CardClassWrapper> get_lewa() const
-    {
-        return lewa;
-    }
+        std::vector<CardClassWrapper> &get_cards_in_lewa()
+        {
+            return lewa;
+        }
 
-    int get_lewa_nbr() const
-    {
-        return lewa_nbr;
-    }
+        int get_lewa_id() const
+        {
+            return lewa_id;
+        }
 
-private:
-    int lewa_nbr;
-    std::vector<CardClassWrapper> lewa;
-};
+        bool id_lewa_full() const
+        {
+            return lewa.size() == 4;
+        }
 
-}// namespace deck
+    private:
+        int lewa_id;
+        std::vector<CardClassWrapper> lewa;
+    };
+ 
+} // namespace deck
 
 #endif // COMMUNICATION_STRUCTS_H
