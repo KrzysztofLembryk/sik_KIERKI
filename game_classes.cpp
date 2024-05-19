@@ -1,10 +1,11 @@
 #include "game_classes.h"
+#include "constants.h"
 
 using namespace game;
 
 uint8_t count_figures(FigureCardValue figure, uint8_t val, deck::Lewa &lewa, bool is_king_heart = false)
 {
-    uint8_t points = 0;
+    uint8_t points = INIT_POINTS;
     auto cards = lewa.get_cards_in_lewa();
 
     for (auto card : cards)
@@ -27,7 +28,7 @@ uint8_t count_figures(FigureCardValue figure, uint8_t val, deck::Lewa &lewa, boo
 
 uint8_t count_colors(Suit suit, uint8_t val, deck::Lewa &lewa)
 {
-    uint8_t points = 0;
+    uint8_t points = INIT_POINTS;
     auto cards = lewa.get_cards_in_lewa();
 
     for (auto card : cards)
@@ -53,38 +54,38 @@ uint8_t count_colors(Suit suit, uint8_t val, deck::Lewa &lewa)
  */
 uint8_t PointCounter::count_points(deck::Lewa &lewa)
 {
-    uint8_t points = 0;
+    uint8_t points = INIT_POINTS;
     switch (this->game_type)
     {
     case NO_LEWA:
-        points = 1;
+        points = NO_LEWA_POINTS;
         break;
     case NO_HEART:
-        points = count_colors(HEARTS, 1, lewa);
+        points = count_colors(HEARTS, NO_HEART_POINTS, lewa);
         break;
     case NO_QUEEN:
-        points = count_figures(Q, 5, lewa);
+        points = count_figures(Q, NO_QUEEN_POINTS, lewa);
         break;
     case NO_MISTER:
-        points = count_figures(K, 2, lewa);
-        points += count_figures(J, 2, lewa);
+        points = count_figures(K, NO_MISTER_POINTS, lewa);
+        points += count_figures(J, NO_MISTER_POINTS, lewa);
         break;
     case NO_KING_HEART:
-        points = count_figures(K, 18, lewa, true);
+        points = count_figures(K, NO_KING_HEARTS_POINTS, lewa, true);
         break;
     case NO_SEVEN_AND_LAST:
         if (lewa.get_lewa_id() == 7 || lewa.get_lewa_id() == 13)
-            points = 10;
+            points = NO_SEVEN_AND_LAST_POINTS;
         break;
     case BANDIT:
-        points = 1;
-        points += count_colors(HEARTS, 1, lewa);
-        points += count_figures(Q, 5, lewa);
-        points += count_figures(K, 2, lewa);
-        points += count_figures(J, 2, lewa);
-        points += count_figures(K, 18, lewa, true);
+        points = NO_LEWA_POINTS;
+        points += count_colors(HEARTS, NO_HEART_POINTS, lewa);
+        points += count_figures(Q, NO_QUEEN_POINTS, lewa);
+        points += count_figures(K, NO_MISTER_POINTS, lewa);
+        points += count_figures(J, NO_MISTER_POINTS, lewa);
+        points += count_figures(K, NO_KING_HEARTS_POINTS, lewa, true);
         if (lewa.get_lewa_id() == 7 || lewa.get_lewa_id() == 13)
-            points += 10;
+            points += NO_SEVEN_AND_LAST_POINTS;
         break;
     }
     return points;
@@ -120,7 +121,7 @@ void CardCounter::count_cards(deck::Lewa &lewa)
 
     this->nbr_of_lewas_played++;
 
-    if (this->nbr_of_lewas_played == 13)
+    if (this->nbr_of_lewas_played == MAX_NBR_OF_LEWAS)
     {
         this->seven_and_last_played = true;
     }
@@ -131,19 +132,19 @@ bool CardCounter::has_game_ended()
     switch (this->game_type)
     {
     case NO_LEWA:
-        return this->nbr_of_lewas_played == 13;
+        return this->nbr_of_lewas_played == MAX_NBR_OF_LEWAS;
     case NO_HEART:
-        return this->nbr_of_hearts_played == 13;
+        return this->nbr_of_hearts_played == MAX_ONE_COLOR_SIZE;
     case NO_QUEEN:
-        return this->nbr_of_queens_played == 4;
+        return this->nbr_of_queens_played == MAX_ONE_FIGURE_SIZE;
     case NO_MISTER:
-        return this->nbr_of_misters_played == 8;
+        return this->nbr_of_misters_played == (2 * MAX_ONE_FIGURE_SIZE);
     case NO_KING_HEART:
         return this->king_of_hearts_played;
     case NO_SEVEN_AND_LAST:
         return this->seven_and_last_played;
     case BANDIT:
-        return this->nbr_of_lewas_played == 13;     
+        return this->nbr_of_lewas_played == MAX_NBR_OF_LEWAS;     
     }
     return false;
 }

@@ -2,10 +2,10 @@
 #define CARD_STRUCTS_H
 
 #include <map>
-#include <cstdint>
 #include <stdexcept>
 #include <vector>
 #include <memory>
+#include "constants.h"
 
 enum FigureCardValue
 {
@@ -170,7 +170,7 @@ namespace deck
 
         void add_card(const CardClassWrapper &card)
         {
-            if (lewa.size() == 4)
+            if (lewa.size() == MAX_LEWA_SIZE)
             {
                 throw std::invalid_argument("Lewa " +
                                             std::to_string(this->lewa_id) + " is full");
@@ -195,7 +195,7 @@ namespace deck
 
         bool id_lewa_full() const
         {
-            return lewa.size() == 4;
+            return lewa.size() == MAX_LEWA_SIZE;
         }
 
     private:
