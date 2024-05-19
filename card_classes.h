@@ -198,6 +198,19 @@ namespace deck
             return lewa.size() == MAX_LEWA_SIZE;
         }
 
+        void set_player_who_took_lewa(PlayerPosition player)
+        {
+            if (player == NONE_POS)
+            {
+                throw std::invalid_argument("Player who took lewa cannot be NONE_POS");
+            }
+            if (player_who_took_lewa != NONE_POS)
+            {
+                throw std::invalid_argument("Player who took lewa already set");
+            }
+            player_who_took_lewa = player;
+        }
+
     private:
         int lewa_id;
         std::vector<CardClassWrapper> lewa;
