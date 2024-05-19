@@ -6,22 +6,7 @@
 #include <vector>
 #include <memory>
 #include "constants.h"
-
-enum FigureCardValue
-{
-    J = 11,
-    Q,
-    K,
-    A
-};
-
-enum Suit
-{
-    HEARTS = 'H',
-    DIAMONDS = 'D',
-    CLUBS = 'C',
-    SPADES = 'S'
-};
+#include "game_enum_types.h"
 
 namespace deck
 {

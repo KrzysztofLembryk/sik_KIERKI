@@ -3,15 +3,6 @@
 
 #include <cstdint>
 
-enum PlayerPosition
-{
-    N = 0,
-    E,
-    S,
-    W,
-    NONE_POS
-};
-
 constexpr uint8_t MAX_PLAYERS = 4;
 constexpr uint8_t MAX_LEWA_SIZE = 4;
 

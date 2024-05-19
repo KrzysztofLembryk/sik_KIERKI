@@ -3,16 +3,6 @@
 
 #include "card_classes.h"
 
-enum GameType
-{
-    NO_LEWA = 1,
-    NO_HEART,
-    NO_QUEEN,
-    NO_MISTER,
-    NO_KING_HEART,
-    NO_SEVEN_AND_LAST,
-    BANDIT
-};
 
 namespace game
 {
