@@ -165,7 +165,7 @@ namespace deck
     class Lewa
     {
     public:
-        Lewa(int nbr) : lewa_id(nbr) {}
+        Lewa(int nbr) : lewa_id(nbr), player_who_took_lewa(NONE_POS) {}
         ~Lewa() = default;
 
         void add_card(const CardClassWrapper &card)
@@ -201,6 +201,7 @@ namespace deck
     private:
         int lewa_id;
         std::vector<CardClassWrapper> lewa;
+        PlayerPosition player_who_took_lewa;
     };
  
 } // namespace deck

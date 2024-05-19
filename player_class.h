@@ -3,13 +3,6 @@
 
 #include "game_classes.h"
 
-enum PlayerPosition
-{
-    N = 0,
-    E,
-    S,
-    W
-};
 
 class Player
 {
