@@ -168,7 +168,7 @@ namespace deck
             lewa.clear();
         }
 
-        std::vector<CardClassWrapper> &get_cards_in_lewa()
+        const std::vector<CardClassWrapper> &get_cards_in_lewa()
         {
             return lewa;
         }
