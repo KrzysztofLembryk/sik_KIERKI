@@ -3,6 +3,9 @@
 
 #include <cstdint>
 
+constexpr int SUCCES = 0;
+constexpr int FAILURE = 1;
+
 constexpr uint8_t MAX_PLAYERS = 4;
 constexpr uint8_t MAX_LEWA_SIZE = 4;
 
