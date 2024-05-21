@@ -1,6 +1,7 @@
 #include "read_file.h"
 #include <iostream>
 #include <regex>
+#include "exception_wrappers.h"
 
 using std::cout;
 
@@ -26,7 +27,7 @@ deck::CardClassWrapper create_card(const std::string &card_str)
             suit = SPADES;
             break;
         default:
-            throw std::invalid_argument("Invalid suit");
+            exception_wrappers::invalid_arg_wrapper("Invalid suit");
         }
 
         if (card_str[0] >= '2' && card_str[0] <= '9')
@@ -50,7 +51,7 @@ deck::CardClassWrapper create_card(const std::string &card_str)
                 value = A;
                 break;
             default:
-                throw std::invalid_argument("Invalid card value");
+                exception_wrappers::invalid_arg_wrapper("Invalid card value");
             }
         }
     }
@@ -71,7 +72,7 @@ deck::CardClassWrapper create_card(const std::string &card_str)
             suit = SPADES;
             break;
         default:
-            throw std::invalid_argument("Invalid suit");
+            exception_wrappers::invalid_arg_wrapper("Invalid suit");
         }
         value = 10;
     }
@@ -105,9 +106,7 @@ std::vector<game::Round> fHandler::read_rounds_from_file(const std::string &file
     std::ifstream input_file(file_path);
 
     if (!input_file.is_open())
-    {
-        throw std::invalid_argument("File not found");
-    }
+        exception_wrappers::invalid_arg_wrapper("File not found");
 
     std::string line;
     int curr_line = 0;
@@ -131,7 +130,7 @@ std::vector<game::Round> fHandler::read_rounds_from_file(const std::string &file
             else if (line[1] == 'W')
                 first_player = W;
             else
-                throw std::invalid_argument("Invalid place of first player");
+                exception_wrappers::invalid_arg_wrapper("Invalid place of first player");
 
             round.set_first_player(first_player);
             round.set_game_type(game_type);

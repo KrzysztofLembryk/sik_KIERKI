@@ -24,7 +24,7 @@ kierki-serwer.o: kierki-serwer.cpp constants.h
 main.o: main.cpp card_classes.h constants.h enum_types.h read_file.h \
  game_classes.h
 read_file.o: read_file.cpp read_file.h game_classes.h card_classes.h \
- constants.h enum_types.h
+ constants.h enum_types.h exception_wrappers.h
 
 clean:
 	rm -f $(TARGETS) *.o
