@@ -166,5 +166,13 @@ deck::DeckOfCards Round::get_player_cards(PlayerPosition player_pos) const
 void Round::set_player_cards(PlayerPosition player_pos,
                              deck::DeckOfCards &cards)
 {
+    if (player_pos < 0 || player_pos >= MAX_PLAYERS)
+    {
+        throw std::invalid_argument("Invalid player position");
+    }
+    if (player_cards.find(player_pos) != player_cards.end())
+    {
+        throw std::invalid_argument("Player cards already set");
+    }
     player_cards[player_pos] = cards;
 }
