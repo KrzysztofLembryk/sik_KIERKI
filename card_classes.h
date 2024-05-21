@@ -2,13 +2,6 @@
 #define CARD_CLASSES_H
 
 #include <map>
-#include <stdexcept>
-#include <vector>
-#include <memory>
-#include <source_location>
-#include <iostream>
-#include "exception_wrappers.h"
-#include "constants.h"
 #include "enum_types.h"
 
 namespace deck
@@ -95,60 +88,15 @@ namespace deck
         }
         ~DeckOfCards() = default;
 
-        void add_card(const CardClassWrapper &card)
-        {
-            if (was_card_played_map.find(card) == was_card_played_map.end())
-            {
-                if (was_card_played_map.size() == MAX_CARDS_IN_DECK)
-                {
-                    exception_wrappers::invalid_arg_wrapper("Deck is full, cannot add more cards");
-                }
-                was_card_played_map[card] = false;
-            }
-            else 
-                exception_wrappers::invalid_arg_wrapper("Card already in deck");
-        }
+        void add_card(const CardClassWrapper &card);
 
-        void set_card_played(const CardClassWrapper &card)
-        {
-            if (was_card_played_map.find(card) != was_card_played_map.end())
-            {
-                if (was_card_played_map[card])
-                {
-                    exception_wrappers::invalid_arg_wrapper("Card already played");
-                }
-                was_card_played_map[card] = true;
-            }
-            else 
-                exception_wrappers::invalid_arg_wrapper("Card not in deck");
-        }
+        void set_card_played(const CardClassWrapper &card);
 
-        bool was_card_played(const CardClassWrapper &card) const
-        {
-            if (was_card_played_map.find(card) == was_card_played_map.end())
-            {
-                exception_wrappers::invalid_arg_wrapper("Card not in deck");
-            }
-            return was_card_played_map.at(card);
-        }
+        bool was_card_played(const CardClassWrapper &card) const;
 
-        void reset()
-        {
-            for (auto &pair : was_card_played_map)
-            {
-                pair.second = false;
-            }
-        }
+        void reset();
 
-        void print() const
-        {
-            for (const auto &pair : was_card_played_map)
-            {
-                pair.first.print();
-                std::cout << " ";
-            }
-            std::cout << "\n";
-        }
+        void print() const;
         
 
     private:
@@ -166,48 +114,17 @@ namespace deck
         Lewa(int nbr) : lewa_id(nbr), player_who_took_lewa(NONE_POS) {}
         ~Lewa() = default;
 
-        void add_card(const CardClassWrapper &card)
-        {
-            if (lewa.size() == MAX_LEWA_SIZE)
-            {
-                exception_wrappers::invalid_arg_wrapper("Lewa " +
-                                                        std::to_string(this->lewa_id) + " is full");
-            }
-            lewa.push_back(card);
-        }
+        void add_card(const CardClassWrapper &card);
 
-        void clear_lewa()
-        {
-            lewa.clear();
-        }
+        void clear_lewa();
 
-        const std::vector<CardClassWrapper> &get_cards_in_lewa()
-        {
-            return lewa;
-        }
+        const std::vector<CardClassWrapper> &get_cards_in_lewa();
 
-        int get_lewa_id() const
-        {
-            return lewa_id;
-        }
+        int get_lewa_id() const;
 
-        bool id_lewa_full() const
-        {
-            return lewa.size() == MAX_LEWA_SIZE;
-        }
+        bool id_lewa_full() const;
 
-        void set_player_who_took_lewa(PlayerPosition player)
-        {
-            if (player == NONE_POS)
-            {
-                exception_wrappers::invalid_arg_wrapper("Player who took lewa cannot be NONE_POS");
-            }
-            if (player_who_took_lewa != NONE_POS)
-            {
-                exception_wrappers::invalid_arg_wrapper("Player who took lewa already set");
-            }
-            player_who_took_lewa = player;
-        }
+        void set_player_who_took_lewa(PlayerPosition player);
 
     private:
         int lewa_id;

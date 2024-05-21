@@ -1,4 +1,8 @@
 #include "card_classes.h"
+#include "exception_wrappers.h"
+#include "constants.h"
+#include <iostream>
+#include <vector>
 
 // CARD CLASS WRAPPER
 bool deck::CardClassWrapper::operator==(const CardClassWrapper &other) const
@@ -108,7 +112,6 @@ void deck::DeckOfCards::print() const
 }
 
 // LEWA
-
 
 void deck::Lewa::add_card(const CardClassWrapper &card)
 {
