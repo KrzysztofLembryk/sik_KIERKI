@@ -1,7 +1,7 @@
 #include "exception_wrappers.h"
 #include <stdexcept>
 
-void exception_wrappers::invalid_arg_wrapper(const std::string &msg, const std::source_location &loc) 
+[[noreturn]] void exception_wrappers::invalid_arg_wrapper(const std::string &msg, const std::source_location &loc) 
 {
     std::string file_name = loc.file_name();
     std::string line = std::to_string(loc.line());
@@ -11,7 +11,7 @@ void exception_wrappers::invalid_arg_wrapper(const std::string &msg, const std::
     throw std::invalid_argument("file: " + file_name + "(" + line + ":" + column + ") --> " + func_name + ":\n---" + msg + "---");
 }
 
-void exception_wrappers::runtime_err_wrapper(const std::string &msg, const std::source_location &loc) 
+ [[noreturn]] void exception_wrappers::runtime_err_wrapper(const std::string &msg, const std::source_location &loc) 
 {
     std::string file_name = loc.file_name();
     std::string line = std::to_string(loc.line());
