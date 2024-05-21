@@ -85,13 +85,20 @@ void create_player_cards(PlayerPosition player_pos, const std::string &line, gam
     std::smatch match;
     std::string::const_iterator search_start(line.cbegin());
     std::string card_str;
+    deck::DeckOfCards player_cards;
 
     while (std::regex_search(search_start, line.cend(), match, regx))
     {
         card_str = match.str();
+        deck::CardClassWrapper card = create_card(card_str);
+
+        player_cards.add_card(card);
+
         std::cout << "card: " << card_str << "\n";
+
         search_start = match.suffix().first;
     }
+    round.set_player_cards(player_pos, player_cards);
 }
 
 std::vector<game::Round> read_rounds_from_file(const std::string &file_path)
@@ -123,23 +130,27 @@ std::vector<game::Round> read_rounds_from_file(const std::string &file_path)
         }
         else if (curr_line - 1 == N)
         {
-            
+           create_player_cards(N, line, round); 
         }
         else if (curr_line - 1 == E)
         {
-
+            create_player_cards(E, line, round);
         }
         else if (curr_line - 1 == S)
         {
-
+            create_player_cards(S, line, round);
         }
         else if (curr_line - 1 == W)
         {
-
+            create_player_cards(W, line, round);
             rounds.push_back(round);
+            round.clear_round();
         }
         curr_line++;
         curr_line = curr_line % 5;
     }
+
+    input_file.close();
+    return rounds;
 }
 

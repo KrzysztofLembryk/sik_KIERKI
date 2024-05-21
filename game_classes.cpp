@@ -186,3 +186,10 @@ void Round::set_player_cards(PlayerPosition player_pos,
     }
     player_cards[player_pos] = cards;
 }
+
+void Round::clear_round()
+{
+    this->game_type = NO_LEWA;
+    this->first_player = NONE_POS;
+    this->player_cards.clear();
+}
