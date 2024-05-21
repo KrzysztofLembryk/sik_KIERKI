@@ -145,7 +145,26 @@ bool CardCounter::has_game_ended()
     case NO_SEVEN_AND_LAST:
         return this->seven_and_last_played;
     case BANDIT:
-        return this->nbr_of_lewas_played == MAX_NBR_OF_LEWAS;     
+        return this->nbr_of_lewas_played == MAX_NBR_OF_LEWAS;
     }
     return false;
+}
+
+GameType Round::get_game_type() const
+{
+    return game_type;
+}
+PlayerPosition Round::get_first_player() const
+{
+    return first_player;
+}
+deck::DeckOfCards Round::get_player_cards(PlayerPosition player_pos) const
+{
+    return player_cards.at(player_pos);
+}
+
+void Round::set_player_cards(PlayerPosition player_pos,
+                             deck::DeckOfCards &cards)
+{
+    player_cards[player_pos] = cards;
 }

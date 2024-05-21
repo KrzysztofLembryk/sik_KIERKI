@@ -2,16 +2,8 @@
 #define READ_FILE_CLASS_H
 
 #include <fstream>
-#include <vector>
-#include "enum_types.h"
+#include "game_classes.h"
 
-class Round
-{
-
-private:
-    GameType game_type;
-    PlayerPosition first_player;
-};
 
 class ReadFile
 {
@@ -19,7 +11,7 @@ class ReadFile
 private:
     std::string file_name;
     std::ifstream file;
-    std::vector<Round> rounds;
+    std::vector<game::Round> rounds;
 };
 
 #endif
