@@ -50,7 +50,7 @@ void assign_programme_parameters(po::variables_map &vm, uint16_t &port, unsigned
     }
     else
         timeout = 5;
-    
+
     auto file_names = vm["f"].as<std::vector<std::string>>();
     file_name = file_names[0];
 }
@@ -70,9 +70,9 @@ void init_socket_fd(int *socket_fd)
         throw std::runtime_error("socket() failed");
     }
 
-    // Disabling IPV6_V6ONLY option so that we can use both IPv4 and IPv6 on 
+    // Disabling IPV6_V6ONLY option so that we can use both IPv4 and IPv6 on
     // the same socket.
-    int no = 0;     
+    int no = 0;
     if (setsockopt(*socket_fd, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&no, sizeof(no)) == -1)
     {
         throw std::runtime_error("setsockopt() failed");
@@ -88,13 +88,44 @@ void set_timeout_for_socket(int client_fd, int max_wait)
     }
 }
 
+void handle_socket_init(uint16_t &port,
+                        int *socket_fd,
+                        struct sockaddr_in &server_address)
+{
+    std::signal(SIGPIPE, SIG_IGN);
+    init_socket_fd(socket_fd);
+
+    server_address.sin_family = AF_INET6;
+    server_address.sin_addr.s_addr = htonl(INADDR_ANY);
+    server_address.sin_port = htons(port);
+
+    // Now we need to bind created address to our socket.
+    if (bind(*socket_fd, (struct sockaddr *)(&server_address),
+             (socklen_t)sizeof server_address) < 0)
+    {
+        throw std::runtime_error("binding socket with address unsuccesful");
+    }
+
+    // Switch the socket to listening.
+    if (listen(*socket_fd, QUEUE_LENGTH) < 0)
+    {
+        throw std::runtime_error("listen() failed");
+    }
+
+    socklen_t length = (socklen_t) sizeof server_address;
+    if (getsockname(*socket_fd, (struct sockaddr *) &server_address, &length) < 0)
+    {
+        throw std::runtime_error("getsockname() failed");
+    }
+}
+
 int main(int ac, char *av[])
 {
     try
     {
         po::variables_map vm;
         if (parse_programme_parameters(ac, av, vm) != SUCCES)
-            return FAILURE; 
+            return FAILURE;
 
         // Default value for port is 0, since if port is not specified by user
         // 0 means we will bind to any available port.
@@ -102,27 +133,36 @@ int main(int ac, char *av[])
         unsigned timeout;
         std::string file_name;
 
-        assign_programme_parameters(vm, port, timeout, file_name); 
+        assign_programme_parameters(vm, port, timeout, file_name);
         print_parameters(port, timeout, file_name);
-        
-        std::signal(SIGPIPE, SIG_IGN);
+
+        // Read from file_name
 
         int socket_fd;
-        init_socket_fd(&socket_fd);
-
         struct sockaddr_in server_address;
 
-        server_address.sin_family = AF_INET6;
-        server_address.sin_addr.s_addr = htonl(INADDR_ANY); 
-        server_address.sin_port = htons(port);
+        handle_socket_init(port, &socket_fd, server_address);
 
-        // Now we need to bind created address to our socket.
-        if (bind(socket_fd, (struct sockaddr *) (&server_address),
-                                (socklen_t) sizeof server_address) < 0)
+        while (true)
         {
-            throw std::runtime_error("binding socket with address unsuccesful");
-        }
+            struct sockaddr_in client_address;
+            socklen_t client_address_len = sizeof client_address;
 
+            int client_fd = accept(socket_fd, (struct sockaddr *) &client_address, &client_address_len);
+            if (client_fd < 0)
+            {
+                throw std::runtime_error("accept() failed");
+            }
+
+            std::thread t(
+                [client_fd, client_address, timeout]()
+                {
+                    set_timeout_for_socket(client_fd, timeout);
+                    // handle_connection(client_fd, file_name);
+                }
+            );
+            t.detach();
+        }
 
     }
     catch (std::invalid_argument &e)

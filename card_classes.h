@@ -6,7 +6,7 @@
 #include <vector>
 #include <memory>
 #include "constants.h"
-#include "game_enum_types.h"
+#include "enum_types.h"
 
 namespace deck
 {

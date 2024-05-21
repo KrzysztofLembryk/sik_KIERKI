@@ -1,5 +1,5 @@
-#ifndef GAME_ENUM_TYPES_H
-#define GAME_ENUM_TYPES_H
+#ifndef ENUM_TYPES_H
+#define ENUM_TYPES_H
 
 enum GameType
 {
@@ -37,4 +37,4 @@ enum Suit
     SPADES = 'S'
 };
 
-#endif // GAME_ENUM_TYPES_H`
+#endif // ENUM_TYPES_H`
