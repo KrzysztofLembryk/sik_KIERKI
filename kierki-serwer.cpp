@@ -8,6 +8,8 @@ namespace po = boost::program_options;
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <csignal>
+#include <thread>
+#include <atomic>
 #include "constants.h"
 
 int parse_programme_parameters(int ac, char *av[], po::variables_map &vm)
@@ -62,10 +64,18 @@ void print_parameters(uint16_t port, unsigned timeout, std::string file_name)
 
 void init_socket_fd(int *socket_fd)
 {
-    *socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    *socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
     if (*socket_fd < 0)
     {
         throw std::runtime_error("socket() failed");
+    }
+
+    // Disabling IPV6_V6ONLY option so that we can use both IPv4 and IPv6 on 
+    // the same socket.
+    int no = 0;     
+    if (setsockopt(*socket_fd, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&no, sizeof(no)) == -1)
+    {
+        throw std::runtime_error("setsockopt() failed");
     }
 }
 
@@ -83,11 +93,11 @@ int main(int ac, char *av[])
     try
     {
         po::variables_map vm;
-        int ret = parse_programme_parameters(ac, av, vm);
+        if (parse_programme_parameters(ac, av, vm) != SUCCES)
+            return FAILURE; 
 
-        if (ret != SUCCES)
-            return ret;
-
+        // Default value for port is 0, since if port is not specified by user
+        // 0 means we will bind to any available port.
         uint16_t port = 0;
         unsigned timeout;
         std::string file_name;
@@ -102,7 +112,7 @@ int main(int ac, char *av[])
 
         struct sockaddr_in server_address;
 
-        server_address.sin_family = AF_INET;
+        server_address.sin_family = AF_INET6;
         server_address.sin_addr.s_addr = htonl(INADDR_ANY); 
         server_address.sin_port = htons(port);
 

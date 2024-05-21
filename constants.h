@@ -6,6 +6,12 @@
 constexpr int SUCCES = 0;
 constexpr int FAILURE = 1;
 
+// TCP SERVER CONSTANTS
+constexpr uint8_t QUEUE_LENGTH = 5;
+constexpr uint8_t BUFFER_SIZE = 1024;
+
+
+
 constexpr uint8_t MAX_PLAYERS = 4;
 constexpr uint8_t MAX_LEWA_SIZE = 4;
 
