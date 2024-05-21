@@ -2,6 +2,8 @@
 #define CARD_CLASSES_H
 
 #include <map>
+#include <cstdint>
+#include <vector>
 #include "enum_types.h"
 
 namespace deck
@@ -14,30 +16,15 @@ namespace deck
     } Card;
 
     /**
-     * @brief Wrapper for Card struct, to use it in C++ code (i.e. in std::map 
+     * @brief Wrapper for Card struct, to use it in C++ code (i.e. in std::map
      * as key). Has get methods and operators for comparison.
-    */
+     */
     class CardClassWrapper
     {
     public:
         // Constructors
         CardClassWrapper() = delete;
-        CardClassWrapper(Suit suit, uint8_t value)
-        {
-            this->card.suit = suit;
-            if (value >= 2 && value <= 10)
-            {
-                this->card.value = value;
-            }
-            else if (value >= J && value <= A)
-            {
-                this->card.value = value;
-            }
-            else
-            {
-                exception_wrappers::invalid_arg_wrapper("Invalid card value");
-            }
-        }
+        CardClassWrapper(Suit suit, uint8_t value);
         CardClassWrapper(Card card) : card(card) {}
 
         // Destructor
@@ -62,30 +49,30 @@ namespace deck
     /**
      * @brief DeckOfCards class stores Cards objects in a map. It has methods to
      * add card to deck, set card as played and check if card was played.
-    */
+     */
     class DeckOfCards
     {
     public:
-        DeckOfCards(bool init = false)
-        {
-            if (init)
-            {
-                for (uint8_t i = 2; i <= 10; i++)
-                {
-                    was_card_played_map[{HEARTS, i}] = false;
-                    was_card_played_map[{DIAMONDS, i}] = false;
-                    was_card_played_map[{CLUBS, i}] = false;
-                    was_card_played_map[{SPADES, i}] = false;
-                }
-                for (uint8_t i = J; i <= A; i++)
-                {
-                    was_card_played_map[{HEARTS, i}] = false;
-                    was_card_played_map[{DIAMONDS, i}] = false;
-                    was_card_played_map[{CLUBS, i}] = false;
-                    was_card_played_map[{SPADES, i}] = false;
-                }
-            }
-        }
+        DeckOfCards() = default;
+        // {
+        //     if (init)
+        //     {
+        //         for (uint8_t i = 2; i <= 10; i++)
+        //         {
+        //             was_card_played_map[{HEARTS, i}] = false;
+        //             was_card_played_map[{DIAMONDS, i}] = false;
+        //             was_card_played_map[{CLUBS, i}] = false;
+        //             was_card_played_map[{SPADES, i}] = false;
+        //         }
+        //         for (uint8_t i = J; i <= A; i++)
+        //         {
+        //             was_card_played_map[{HEARTS, i}] = false;
+        //             was_card_played_map[{DIAMONDS, i}] = false;
+        //             was_card_played_map[{CLUBS, i}] = false;
+        //             was_card_played_map[{SPADES, i}] = false;
+        //         }
+        //     }
+        // }
         ~DeckOfCards() = default;
 
         void add_card(const CardClassWrapper &card);
@@ -97,7 +84,6 @@ namespace deck
         void reset();
 
         void print() const;
-        
 
     private:
         std::map<CardClassWrapper, bool> was_card_played_map;
@@ -107,7 +93,7 @@ namespace deck
      * @brief Trik == Lewa in polish, I prefer to use polish name for it.
      * Lewa class stores maximally 4 cards, which are played in one round.
      * It has methods to add card to lewa and get vector of cards in lewa.
-    */
+     */
     class Lewa
     {
     public:
@@ -131,7 +117,7 @@ namespace deck
         std::vector<CardClassWrapper> lewa;
         PlayerPosition player_who_took_lewa;
     };
- 
+
 } // namespace deck
 
 #endif // CARD_CLASSES_H

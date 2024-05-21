@@ -2,6 +2,7 @@
 #define READ_FILE_H
 
 #include <fstream>
+#include <vector>
 #include "game_classes.h"
 
 namespace fHandler

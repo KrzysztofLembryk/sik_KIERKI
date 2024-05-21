@@ -7,7 +7,7 @@ using std::cout;
 
 deck::CardClassWrapper create_card(const std::string &card_str)
 {
-    Suit suit;
+    Suit suit = HEARTS;
     uint8_t value = 69;
 
     if (card_str.length() == 2)

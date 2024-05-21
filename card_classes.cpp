@@ -1,10 +1,26 @@
 #include "card_classes.h"
-#include "exception_wrappers.h"
 #include "constants.h"
 #include <iostream>
-#include <vector>
+#include "exception_wrappers.h"
 
 // CARD CLASS WRAPPER
+deck::CardClassWrapper::CardClassWrapper(Suit suit, uint8_t value)
+{
+    this->card.suit = suit;
+    if (value >= 2 && value <= 10)
+    {
+        this->card.value = value;
+    }
+    else if (value >= J && value <= A)
+    {
+        this->card.value = value;
+    }
+    else
+    {
+        exception_wrappers::invalid_arg_wrapper("Invalid card value");
+    }
+}
+
 bool deck::CardClassWrapper::operator==(const CardClassWrapper &other) const
 {
     return card.suit == other.card.suit && card.value == other.card.value;
