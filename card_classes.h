@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <vector>
 #include <memory>
+#include <source_location>
+#include <iostream>
 #include "constants.h"
 #include "enum_types.h"
 
@@ -68,6 +70,36 @@ namespace deck
             return card.value;
         }
 
+        void print() const
+        {
+            std::cout << "value: ";
+            if (card.value >= 2 && card.value <= 10)
+            {
+                std::cout << unsigned(card.value);
+            }
+            else
+            {
+                switch (card.value)
+                {
+                case J:
+                    std::cout << "J";
+                    break;
+                case Q:
+                    std::cout << "Q";
+                    break;
+                case K:
+                    std::cout << "K";
+                    break;
+                case A:
+                    std::cout << "A";
+                    break;
+                default:
+                    throw std::invalid_argument("Invalid card value");
+                }
+            }
+            std::cout << ", suit: " << (char)card.suit << " \n";
+        }
+
     private:
         Card card;
         // Dont know yet whether Card should know if it was played
@@ -102,14 +134,18 @@ namespace deck
         }
         ~DeckOfCards() = default;
 
-        bool add_card(const CardClassWrapper &card)
+        void add_card(const CardClassWrapper &card)
         {
             if (was_card_played_map.find(card) == was_card_played_map.end())
             {
+                if (was_card_played_map.size() == MAX_CARDS_IN_DECK)
+                {
+                    throw std::invalid_argument(": Deck is full, cannot add more cards");
+                }
                 was_card_played_map[card] = false;
-                return true;
             }
-            return false;
+            else 
+                throw std::invalid_argument("Card already in deck");
         }
 
         void set_card_played(const CardClassWrapper &card)
@@ -122,11 +158,16 @@ namespace deck
                 }
                 was_card_played_map[card] = true;
             }
-            throw std::invalid_argument("Card not in deck");
+            else 
+                throw std::invalid_argument("Card not in deck");
         }
 
         bool was_card_played(const CardClassWrapper &card) const
         {
+            if (was_card_played_map.find(card) == was_card_played_map.end())
+            {
+                throw std::invalid_argument("Card not in deck");
+            }
             return was_card_played_map.at(card);
         }
 
@@ -136,6 +177,39 @@ namespace deck
             {
                 pair.second = false;
             }
+        }
+
+        void print() const
+        {
+            for (const auto &pair : was_card_played_map)
+            {
+                if (pair.first.get_value() >= 2 && pair.first.get_value() <= 10)
+                {
+                    std::cout << pair.first.get_value();
+                }
+                else
+                {
+                    switch (pair.first.get_value())
+                    {
+                    case J:
+                        std::cout << "J";
+                        break;
+                    case Q:
+                        std::cout << "Q";
+                        break;
+                    case K:
+                        std::cout << "K";
+                        break;
+                    case A:
+                        std::cout << "A";
+                        break;
+                    default:
+                        throw std::invalid_argument("Invalid card value");
+                    }
+                }
+                std::cout << pair.first.get_suit() << " ";
+            }
+            std::cout << "\n";
         }
 
     private:

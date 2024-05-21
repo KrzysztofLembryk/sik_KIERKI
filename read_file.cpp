@@ -1,12 +1,13 @@
 #include "read_file.h"
 #include <iostream>
 #include <regex>
-using namespace fHandler;
+
+using std::cout;
 
 deck::CardClassWrapper create_card(const std::string &card_str)
 {
     Suit suit;
-    uint8_t value;
+    uint8_t value = 69;
 
     if (card_str.length() == 2)
     {
@@ -74,8 +75,7 @@ deck::CardClassWrapper create_card(const std::string &card_str)
         }
         value = 10;
     }
-
-    return deck::CardClassWrapper(deck::Card(suit, value));
+    return deck::CardClassWrapper(suit, value);
 }
 
 
@@ -87,21 +87,20 @@ void create_player_cards(PlayerPosition player_pos, const std::string &line, gam
     std::string card_str;
     deck::DeckOfCards player_cards;
 
+    cout << "CARDS FOR PLAYER: " << player_pos << "\n";
     while (std::regex_search(search_start, line.cend(), match, regx))
     {
         card_str = match.str();
+        cout << "card str: " << card_str << ", len: " << card_str.length() << "\n";
         deck::CardClassWrapper card = create_card(card_str);
 
         player_cards.add_card(card);
-
-        std::cout << "card: " << card_str << "\n";
-
         search_start = match.suffix().first;
     }
     round.set_player_cards(player_pos, player_cards);
 }
 
-std::vector<game::Round> read_rounds_from_file(const std::string &file_path)
+std::vector<game::Round> fHandler::read_rounds_from_file(const std::string &file_path)
 {
     std::ifstream input_file(file_path);
 
@@ -121,31 +120,45 @@ std::vector<game::Round> read_rounds_from_file(const std::string &file_path)
     {
         if (curr_line == 0)
         {
-            game_type = (GameType)line[0];
-            std::cout << "game type: " << game_type << "\n";
-            first_player = (PlayerPosition)line[1];
+            game_type = (GameType)(line[0] - '0');
+
+            if (line[1] == 'N')
+                first_player = N;
+            else if (line[1] == 'E')
+                first_player = E;
+            else if (line[1] == 'S')
+                first_player = S;
+            else if (line[1] == 'W')
+                first_player = W;
+            else
+                throw std::invalid_argument("Invalid place of first player");
 
             round.set_first_player(first_player);
             round.set_game_type(game_type);
         }
         else if (curr_line - 1 == N)
         {
+            cout << "N:\n";
            create_player_cards(N, line, round); 
         }
         else if (curr_line - 1 == E)
         {
+            cout << "E:\n";
             create_player_cards(E, line, round);
         }
         else if (curr_line - 1 == S)
         {
+            cout << "S:\n";
             create_player_cards(S, line, round);
         }
         else if (curr_line - 1 == W)
         {
+            cout << "W:\n";
             create_player_cards(W, line, round);
             rounds.push_back(round);
             round.clear_round();
         }
+        cout << curr_line << "\n";
         curr_line++;
         curr_line = curr_line % 5;
     }

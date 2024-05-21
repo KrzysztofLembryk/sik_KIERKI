@@ -158,7 +158,7 @@ PlayerPosition Round::get_first_player() const
 {
     return first_player;
 }
-deck::DeckOfCards Round::get_player_cards(PlayerPosition player_pos) const
+deck::DeckOfCards &Round::get_player_cards(PlayerPosition player_pos) 
 {
     return player_cards.at(player_pos);
 }

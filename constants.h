@@ -8,7 +8,7 @@ constexpr int FAILURE = 1;
 
 // TCP SERVER CONSTANTS
 constexpr uint8_t QUEUE_LENGTH = 5;
-constexpr uint8_t BUFFER_SIZE = 1024;
+constexpr int BUFFER_SIZE = 1024;
 
 
 
@@ -17,6 +17,7 @@ constexpr uint8_t MAX_LEWA_SIZE = 4;
 
 
 // GAME_CLASSES CONSTANTS
+constexpr uint8_t MAX_CARDS_IN_DECK = 13;
 constexpr uint8_t MAX_NBR_OF_LEWAS = 13;
 constexpr uint8_t MAX_ONE_COLOR_SIZE = 13;
 constexpr uint8_t MAX_ONE_FIGURE_SIZE = 4;

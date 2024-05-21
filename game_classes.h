@@ -52,13 +52,13 @@ namespace game
     class Round
     {
     public:
-        Round();
+        Round() = default;
         Round(GameType game_type, PlayerPosition first_player) : game_type(game_type), first_player(first_player) {}
         ~Round() = default;
 
         GameType get_game_type() const;
         PlayerPosition get_first_player() const;
-        deck::DeckOfCards get_player_cards(PlayerPosition player_pos) const;
+        deck::DeckOfCards &get_player_cards(PlayerPosition player_pos);
         void set_game_type(GameType game_type);
         void set_first_player(PlayerPosition first_player);
         void set_player_cards(PlayerPosition player_pos,
