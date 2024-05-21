@@ -72,7 +72,6 @@ namespace deck
 
         void print() const
         {
-            std::cout << "value: ";
             if (card.value >= 2 && card.value <= 10)
             {
                 std::cout << unsigned(card.value);
@@ -97,7 +96,7 @@ namespace deck
                     throw std::invalid_argument("Invalid card value");
                 }
             }
-            std::cout << ", suit: " << (char)card.suit << " \n";
+            std::cout << (char)card.suit;
         }
 
     private:
@@ -183,34 +182,12 @@ namespace deck
         {
             for (const auto &pair : was_card_played_map)
             {
-                if (pair.first.get_value() >= 2 && pair.first.get_value() <= 10)
-                {
-                    std::cout << pair.first.get_value();
-                }
-                else
-                {
-                    switch (pair.first.get_value())
-                    {
-                    case J:
-                        std::cout << "J";
-                        break;
-                    case Q:
-                        std::cout << "Q";
-                        break;
-                    case K:
-                        std::cout << "K";
-                        break;
-                    case A:
-                        std::cout << "A";
-                        break;
-                    default:
-                        throw std::invalid_argument("Invalid card value");
-                    }
-                }
-                std::cout << pair.first.get_suit() << " ";
+                pair.first.print();
+                std::cout << " ";
             }
             std::cout << "\n";
         }
+        
 
     private:
         std::map<CardClassWrapper, bool> was_card_played_map;

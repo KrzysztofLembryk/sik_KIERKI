@@ -137,28 +137,17 @@ std::vector<game::Round> fHandler::read_rounds_from_file(const std::string &file
             round.set_game_type(game_type);
         }
         else if (curr_line - 1 == N)
-        {
-            cout << "N:\n";
            create_player_cards(N, line, round); 
-        }
         else if (curr_line - 1 == E)
-        {
-            cout << "E:\n";
             create_player_cards(E, line, round);
-        }
         else if (curr_line - 1 == S)
-        {
-            cout << "S:\n";
             create_player_cards(S, line, round);
-        }
         else if (curr_line - 1 == W)
         {
-            cout << "W:\n";
             create_player_cards(W, line, round);
             rounds.push_back(round);
             round.clear_round();
         }
-        cout << curr_line << "\n";
         curr_line++;
         curr_line = curr_line % 5;
     }
