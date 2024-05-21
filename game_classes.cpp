@@ -163,6 +163,16 @@ deck::DeckOfCards Round::get_player_cards(PlayerPosition player_pos) const
     return player_cards.at(player_pos);
 }
 
+void Round::set_game_type(GameType game_type)
+{
+    this->game_type = game_type;
+}
+
+void Round::set_first_player(PlayerPosition first_player)
+{
+    this->first_player = first_player;
+}
+
 void Round::set_player_cards(PlayerPosition player_pos,
                              deck::DeckOfCards &cards)
 {
