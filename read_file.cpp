@@ -113,7 +113,7 @@ std::vector<game::Round> fHandler::read_rounds_from_file(const std::string &file
     std::vector<game::Round> rounds;
     game::Round round;
     GameType game_type;
-    PlayerPosition first_player;
+    PlayerPosition first_player = N;
 
     while(getline(input_file, line))
     {

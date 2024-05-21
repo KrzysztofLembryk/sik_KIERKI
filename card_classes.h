@@ -7,6 +7,7 @@
 #include <memory>
 #include <source_location>
 #include <iostream>
+#include "exception_wrappers.h"
 #include "constants.h"
 #include "enum_types.h"
 
@@ -41,7 +42,7 @@ namespace deck
             }
             else
             {
-                throw std::invalid_argument("Invalid card value");
+                exception_wrappers::invalid_arg_wrapper("Invalid card value");
             }
         }
         CardClassWrapper(Card card) : card(card) {}
@@ -50,54 +51,15 @@ namespace deck
         ~CardClassWrapper() = default;
 
         // Operators
-        bool operator==(const CardClassWrapper &other) const
-        {
-            return card.suit == other.card.suit && card.value == other.card.value;
-        }
+        bool operator==(const CardClassWrapper &other) const;
 
-        bool operator<(const CardClassWrapper &other) const
-        {
-            return card.suit < other.card.suit || (card.suit == other.card.suit && card.value < other.card.value);
-        }
+        bool operator<(const CardClassWrapper &other) const;
 
-        Suit get_suit() const
-        {
-            return card.suit;
-        }
+        Suit get_suit() const;
 
-        uint8_t get_value() const
-        {
-            return card.value;
-        }
+        uint8_t get_value() const;
 
-        void print() const
-        {
-            if (card.value >= 2 && card.value <= 10)
-            {
-                std::cout << unsigned(card.value);
-            }
-            else
-            {
-                switch (card.value)
-                {
-                case J:
-                    std::cout << "J";
-                    break;
-                case Q:
-                    std::cout << "Q";
-                    break;
-                case K:
-                    std::cout << "K";
-                    break;
-                case A:
-                    std::cout << "A";
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid card value");
-                }
-            }
-            std::cout << (char)card.suit;
-        }
+        void print() const;
 
     private:
         Card card;
@@ -139,12 +101,12 @@ namespace deck
             {
                 if (was_card_played_map.size() == MAX_CARDS_IN_DECK)
                 {
-                    throw std::invalid_argument(": Deck is full, cannot add more cards");
+                    exception_wrappers::invalid_arg_wrapper("Deck is full, cannot add more cards");
                 }
                 was_card_played_map[card] = false;
             }
             else 
-                throw std::invalid_argument("Card already in deck");
+                exception_wrappers::invalid_arg_wrapper("Card already in deck");
         }
 
         void set_card_played(const CardClassWrapper &card)
@@ -153,19 +115,19 @@ namespace deck
             {
                 if (was_card_played_map[card])
                 {
-                    throw std::invalid_argument("Card already played");
+                    exception_wrappers::invalid_arg_wrapper("Card already played");
                 }
                 was_card_played_map[card] = true;
             }
             else 
-                throw std::invalid_argument("Card not in deck");
+                exception_wrappers::invalid_arg_wrapper("Card not in deck");
         }
 
         bool was_card_played(const CardClassWrapper &card) const
         {
             if (was_card_played_map.find(card) == was_card_played_map.end())
             {
-                throw std::invalid_argument("Card not in deck");
+                exception_wrappers::invalid_arg_wrapper("Card not in deck");
             }
             return was_card_played_map.at(card);
         }
@@ -208,8 +170,8 @@ namespace deck
         {
             if (lewa.size() == MAX_LEWA_SIZE)
             {
-                throw std::invalid_argument("Lewa " +
-                                            std::to_string(this->lewa_id) + " is full");
+                exception_wrappers::invalid_arg_wrapper("Lewa " +
+                                                        std::to_string(this->lewa_id) + " is full");
             }
             lewa.push_back(card);
         }
@@ -238,11 +200,11 @@ namespace deck
         {
             if (player == NONE_POS)
             {
-                throw std::invalid_argument("Player who took lewa cannot be NONE_POS");
+                exception_wrappers::invalid_arg_wrapper("Player who took lewa cannot be NONE_POS");
             }
             if (player_who_took_lewa != NONE_POS)
             {
-                throw std::invalid_argument("Player who took lewa already set");
+                exception_wrappers::invalid_arg_wrapper("Player who took lewa already set");
             }
             player_who_took_lewa = player;
         }

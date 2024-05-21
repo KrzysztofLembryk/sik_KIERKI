@@ -1,5 +1,6 @@
 #include "game_classes.h"
 #include "constants.h"
+#include "exception_wrappers.h"
 
 using namespace game;
 
@@ -178,11 +179,11 @@ void Round::set_player_cards(PlayerPosition player_pos,
 {
     if (player_pos < 0 || player_pos >= MAX_PLAYERS)
     {
-        throw std::invalid_argument("Invalid player position");
+        exception_wrappers::invalid_arg_wrapper("Invalid player position");
     }
     if (player_cards.find(player_pos) != player_cards.end())
     {
-        throw std::invalid_argument("Player cards already set");
+        exception_wrappers::invalid_arg_wrapper("Player cards already set");
     }
     player_cards[player_pos] = cards;
 }
