@@ -5,6 +5,48 @@
 
 using std::cout;
 
+void determine_suit(const char suit_str, Suit &suit)
+{
+    if (suit_str == 'H')
+        suit = HEARTS;
+    else if (suit_str == 'D')
+        suit = DIAMONDS;
+    else if (suit_str == 'C')
+        suit = CLUBS;
+    else if (suit_str == 'S')
+        suit = SPADES;
+    else
+        exception_wrappers::invalid_arg_wrapper("Invalid suit");
+}
+
+void determine_value(const char value_str, uint8_t &value)
+{
+    if (value_str >= '2' && value_str <= '9')
+    {
+        value = value_str - '0';
+    }
+    else
+    {
+        switch (value_str)
+        {
+        case 'J':
+            value = J;
+            break;
+        case 'Q':
+            value = Q;
+            break;
+        case 'K':
+            value = K;
+            break;
+        case 'A':
+            value = A;
+            break;
+        default:
+            exception_wrappers::invalid_arg_wrapper("Invalid card value");
+        }
+    }
+}
+
 deck::CardClassWrapper create_card(const std::string &card_str)
 {
     Suit suit;
@@ -12,73 +54,16 @@ deck::CardClassWrapper create_card(const std::string &card_str)
 
     if (card_str.length() == 2)
     {
-        switch (card_str[1])
-        {
-        case 'H':
-            suit = HEARTS;
-            break;
-        case 'D':
-            suit = DIAMONDS;
-            break;
-        case 'C':
-            suit = CLUBS;
-            break;
-        case 'S':
-            suit = SPADES;
-            break;
-        default:
-            exception_wrappers::invalid_arg_wrapper("Invalid suit");
-        }
-
-        if (card_str[0] >= '2' && card_str[0] <= '9')
-        {
-            value = card_str[0] - '0';
-        }
-        else
-        {
-            switch (card_str[0])
-            {
-            case 'J':
-                value = J;
-                break;
-            case 'Q':
-                value = Q;
-                break;
-            case 'K':
-                value = K;
-                break;
-            case 'A':
-                value = A;
-                break;
-            default:
-                exception_wrappers::invalid_arg_wrapper("Invalid card value");
-            }
-        }
+        determine_suit(card_str[1], suit);
+        determine_value(card_str[0], value);
     }
     else
     {
-        switch (card_str[2])
-        {
-        case 'H':
-            suit = HEARTS;
-            break;
-        case 'D':
-            suit = DIAMONDS;
-            break;
-        case 'C':
-            suit = CLUBS;
-            break;
-        case 'S':
-            suit = SPADES;
-            break;
-        default:
-            exception_wrappers::invalid_arg_wrapper("Invalid suit");
-        }
+        determine_suit(card_str[2], suit);
         value = 10;
     }
     return deck::CardClassWrapper(suit, value);
 }
-
 
 void create_player_cards(PlayerPosition player_pos, const std::string &line, game::Round &round)
 {
@@ -115,7 +100,7 @@ std::vector<game::Round> fHandler::read_rounds_from_file(const std::string &file
     GameType game_type;
     PlayerPosition first_player = N;
 
-    while(getline(input_file, line))
+    while (getline(input_file, line))
     {
         if (curr_line == 0)
         {
@@ -136,7 +121,7 @@ std::vector<game::Round> fHandler::read_rounds_from_file(const std::string &file
             round.set_game_type(game_type);
         }
         else if (curr_line - 1 == N)
-           create_player_cards(N, line, round); 
+            create_player_cards(N, line, round);
         else if (curr_line - 1 == E)
             create_player_cards(E, line, round);
         else if (curr_line - 1 == S)
@@ -154,4 +139,3 @@ std::vector<game::Round> fHandler::read_rounds_from_file(const std::string &file
     input_file.close();
     return rounds;
 }
-
