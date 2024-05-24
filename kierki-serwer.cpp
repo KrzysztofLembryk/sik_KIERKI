@@ -16,72 +16,6 @@ namespace po = boost::program_options;
 #include "read_file.h"
 #include "game_master.h"
 
-
-// void parse_programme_parameters(int ac, char *av[], po::variables_map &vm)
-// {
-//     po::options_description desc("Allowed options");
-//     desc.add_options()
-//         ("help,h", "produce help message")
-//         ("p,p", po::value<std::vector<uint16_t>>(), "<port nbr> on which server listens")
-//         ("f,f", po::value<std::vector<std::string>>(), "<file name> to read from")
-//         ("t,t", po::value<std::vector<unsigned>>(), "<timeout> in seconds");
-
-//     po::store(po::parse_command_line(ac, av, desc), vm);
-//     po::notify(vm);
-
-//     if (vm.count("help"))
-//     {
-//         std::cout << desc << "\n";
-//         throw std::invalid_argument("help option");
-//     }
-//     if (vm.count("f") == 0)
-//     {
-//         exception_wrappers::invalid_arg_wrapper("The 'f' option is required but missing.");
-//     } 
-// }
-// void assign_programme_parameters(po::variables_map &vm, uint16_t &port, unsigned &timeout, std::string &file_name)
-// {
-//     if (vm.count("p"))
-//     {
-//         auto ports = vm["p"].as<std::vector<uint16_t>>();
-//         port = ports[0];
-//     }
-//     if (vm.count("t"))
-//     {
-//         auto timeouts = vm["t"].as<std::vector<unsigned>>();
-//         timeout = timeouts[0];
-//     }
-//     else
-//         timeout = 5;
-
-//     auto file_names = vm["f"].as<std::vector<std::string>>();
-//     file_name = file_names[0];
-// }
-
-// void print_parameters(uint16_t port, unsigned timeout, std::string file_name)
-// {
-//     std::cout << "port: " << port << "\n";
-//     std::cout << "timeout: " << timeout << "\n";
-//     std::cout << "file name: " << file_name << "\n";
-// }
-
-void init_socket_fd(int *socket_fd)
-{
-    *socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
-    if (*socket_fd < 0)
-    {
-        exception_wrappers::runtime_err_wrapper("socket() failed");
-    }
-
-    // Disabling IPV6_V6ONLY option so that we can use both IPv4 and IPv6 on
-    // the same socket.
-    int no = 0;
-    if (setsockopt(*socket_fd, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&no, sizeof(no)) == -1)
-    {
-        exception_wrappers::runtime_err_wrapper("setsockopt() failed");
-    }
-}
-
 void set_timeout_for_socket(int client_fd, int max_wait)
 {
     struct timeval time_o = {.tv_sec = max_wait, .tv_usec = 0};
@@ -91,32 +25,51 @@ void set_timeout_for_socket(int client_fd, int max_wait)
     }
 }
 
-void handle_socket_init(uint16_t &port,
-                        int *socket_fd,
-                        struct sockaddr_in &server_address)
+void init_socket_fd(int &socket_fd)
 {
-    std::signal(SIGPIPE, SIG_IGN);
+    socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
+    if (socket_fd < 0)
+    {
+        exception_wrappers::runtime_err_wrapper("socket() failed");
+    }
+
+    // Disabling IPV6_V6ONLY option so that we can use both IPv4 and IPv6 on
+    // the same socket.
+    int no = 0;
+    if (setsockopt(socket_fd, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&no, sizeof(no)) == -1)
+    {
+        exception_wrappers::runtime_err_wrapper("setsockopt() failed");
+    }
+}
+
+void handle_socket_init(uint16_t &port,
+                        int &socket_fd,
+                        struct sockaddr_in6 &server_address)
+{
+    // std::signal(SIGPIPE, SIG_IGN);
     init_socket_fd(socket_fd);
 
-    server_address.sin_family = AF_INET6;
-    server_address.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_address.sin_port = htons(port);
+    server_address.sin6_family = AF_INET6;
+    server_address.sin6_addr = in6addr_any;
+    server_address.sin6_port = htons(port);
 
     // Now we need to bind created address to our socket.
-    if (bind(*socket_fd, (struct sockaddr *)(&server_address),
-             (socklen_t)sizeof server_address) < 0)
+    std::cout << "Binding to port " << port << "\n";
+
+    if (bind(socket_fd, (struct sockaddr *)(&server_address),
+             (socklen_t)sizeof (server_address)) < 0)
     {
         exception_wrappers::runtime_err_wrapper("binding socket with address unsuccesful");
     }
 
     // Switch the socket to listening.
-    if (listen(*socket_fd, QUEUE_LENGTH) < 0)
+    if (listen(socket_fd, QUEUE_LENGTH) < 0)
     {
         exception_wrappers::runtime_err_wrapper("listen() failed");
     }
 
-    socklen_t length = (socklen_t) sizeof server_address;
-    if (getsockname(*socket_fd, (struct sockaddr *) &server_address, &length) < 0)
+    socklen_t length = (socklen_t) sizeof (server_address);
+    if (getsockname(socket_fd, (struct sockaddr *) &server_address, &length) < 0)
     {
         exception_wrappers::runtime_err_wrapper("getsockname() failed");
     }
@@ -124,7 +77,7 @@ void handle_socket_init(uint16_t &port,
 
 int init_server(int ac, char *av[], po::variables_map &vm,
                  uint16_t &port, unsigned &timeout, std::string &file_name,
-                 int &socket_fd, struct sockaddr_in &server_address)
+                 int &socket_fd, struct sockaddr_in6 &server_address)
 {
     try
     {
@@ -134,12 +87,12 @@ int init_server(int ac, char *av[], po::variables_map &vm,
         assign_programme_parameters_server(vm, port, timeout, file_name);
         print_parameters(port, timeout, file_name);
         // Read from file_name
-        handle_socket_init(port, &socket_fd, server_address);
+        handle_socket_init(port, socket_fd, server_address);
         return SUCCES;
     }
     catch(const std::exception& e)
     {
-        std::cerr << "init_server(): " << e.what() << '\n';
+        std::cerr << e.what() << '\n';
         return FAILURE;
     }
     
@@ -152,9 +105,10 @@ int main(int ac, char *av[])
     unsigned timeout;
     std::string file_name;
     int socket_fd;
-    struct sockaddr_in server_address;
+    struct sockaddr_in6 server_address;
 
-    if (init_server(ac, av, vm, port, timeout, file_name, socket_fd, server_address) != SUCCES)
+    if (init_server(ac, av, vm, port, timeout, file_name, socket_fd, 
+    server_address) != SUCCES)
         return FAILURE;
 
     std::vector<gameCls::Round> vec_of_rounds;
@@ -184,9 +138,10 @@ int main(int ac, char *av[])
             {
                 exception_wrappers::runtime_err_wrapper("accept() failed");
             }
+
             char const *client_ip = inet_ntoa(client_address.sin_addr);
-        uint16_t client_port = ntohs(client_address.sin_port);
-        printf("accepted connection from %s:%" PRIu16 "\n", client_ip, client_port);
+            uint16_t client_port = ntohs(client_address.sin_port);
+            printf("accepted connection from %s:%" PRIu16 "\n", client_ip, client_port);
 
 
             std::thread t(
