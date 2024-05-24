@@ -1,4 +1,4 @@
-#include <boost/program_options.hpp>
+#include "parameters_handling.h"
 
 namespace po = boost::program_options;
 
@@ -7,61 +7,63 @@ namespace po = boost::program_options;
 #include <stdexcept>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <csignal>
 #include <thread>
 #include <atomic>
 #include "constants.h"
 #include "exception_wrappers.h"
 #include "read_file.h"
+#include "game_master.h"
 
-void parse_programme_parameters(int ac, char *av[], po::variables_map &vm)
-{
-    po::options_description desc("Allowed options");
-    desc.add_options()
-        ("help,h", "produce help message")
-        ("p,p", po::value<std::vector<uint16_t>>(), "<port nbr> on which server listens")
-        ("f,f", po::value<std::vector<std::string>>(), "<file name> to read from")
-        ("t,t", po::value<std::vector<unsigned>>(), "<timeout> in seconds");
 
-    po::store(po::parse_command_line(ac, av, desc), vm);
-    po::notify(vm);
+// void parse_programme_parameters(int ac, char *av[], po::variables_map &vm)
+// {
+//     po::options_description desc("Allowed options");
+//     desc.add_options()
+//         ("help,h", "produce help message")
+//         ("p,p", po::value<std::vector<uint16_t>>(), "<port nbr> on which server listens")
+//         ("f,f", po::value<std::vector<std::string>>(), "<file name> to read from")
+//         ("t,t", po::value<std::vector<unsigned>>(), "<timeout> in seconds");
 
-    if (vm.count("help"))
-    {
-        std::cout << desc << "\n";
-        throw std::invalid_argument("help option");
-    }
-    if (vm.count("f") == 0)
-    {
-        exception_wrappers::invalid_arg_wrapper("The 'f' option is required but missing.");
-    }
-}
+//     po::store(po::parse_command_line(ac, av, desc), vm);
+//     po::notify(vm);
 
-void assign_programme_parameters(po::variables_map &vm, uint16_t &port, unsigned &timeout, std::string &file_name)
-{
-    if (vm.count("p"))
-    {
-        auto ports = vm["p"].as<std::vector<uint16_t>>();
-        port = ports[0];
-    }
-    if (vm.count("t"))
-    {
-        auto timeouts = vm["t"].as<std::vector<unsigned>>();
-        timeout = timeouts[0];
-    }
-    else
-        timeout = 5;
+//     if (vm.count("help"))
+//     {
+//         std::cout << desc << "\n";
+//         throw std::invalid_argument("help option");
+//     }
+//     if (vm.count("f") == 0)
+//     {
+//         exception_wrappers::invalid_arg_wrapper("The 'f' option is required but missing.");
+//     } 
+// }
+// void assign_programme_parameters(po::variables_map &vm, uint16_t &port, unsigned &timeout, std::string &file_name)
+// {
+//     if (vm.count("p"))
+//     {
+//         auto ports = vm["p"].as<std::vector<uint16_t>>();
+//         port = ports[0];
+//     }
+//     if (vm.count("t"))
+//     {
+//         auto timeouts = vm["t"].as<std::vector<unsigned>>();
+//         timeout = timeouts[0];
+//     }
+//     else
+//         timeout = 5;
 
-    auto file_names = vm["f"].as<std::vector<std::string>>();
-    file_name = file_names[0];
-}
+//     auto file_names = vm["f"].as<std::vector<std::string>>();
+//     file_name = file_names[0];
+// }
 
-void print_parameters(uint16_t port, unsigned timeout, std::string file_name)
-{
-    std::cout << "port: " << port << "\n";
-    std::cout << "timeout: " << timeout << "\n";
-    std::cout << "file name: " << file_name << "\n";
-}
+// void print_parameters(uint16_t port, unsigned timeout, std::string file_name)
+// {
+//     std::cout << "port: " << port << "\n";
+//     std::cout << "timeout: " << timeout << "\n";
+//     std::cout << "file name: " << file_name << "\n";
+// }
 
 void init_socket_fd(int *socket_fd)
 {
@@ -126,10 +128,10 @@ int init_server(int ac, char *av[], po::variables_map &vm,
 {
     try
     {
-        parse_programme_parameters(ac, av, vm);
+        parse_programme_parameters_server(ac, av, vm);
         // Default value for port is 0, since if port is not specified by user
         // 0 means we will bind to any available port.
-        assign_programme_parameters(vm, port, timeout, file_name);
+        assign_programme_parameters_server(vm, port, timeout, file_name);
         print_parameters(port, timeout, file_name);
         // Read from file_name
         handle_socket_init(port, &socket_fd, server_address);
@@ -167,7 +169,7 @@ int main(int ac, char *av[])
         return FAILURE;
     }
      
-
+    gm::GameMaster game_master(vec_of_rounds);
 
     while (true)
     {
@@ -182,6 +184,10 @@ int main(int ac, char *av[])
             {
                 exception_wrappers::runtime_err_wrapper("accept() failed");
             }
+            char const *client_ip = inet_ntoa(client_address.sin_addr);
+        uint16_t client_port = ntohs(client_address.sin_port);
+        printf("accepted connection from %s:%" PRIu16 "\n", client_ip, client_port);
+
 
             std::thread t(
                 [client_fd, client_address, timeout]()

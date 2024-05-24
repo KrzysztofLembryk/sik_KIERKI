@@ -3,24 +3,32 @@
 
 #include "player_class.h"
 #include <memory>
-
+#include <mutex>
 
 namespace gm
 {
+    /**
+     * @brief GameMaster class is responsible for managing the game. 
+     * It is a critical section, for threads, It is a MONITOR.
+    */
     class GameMaster
     {
     public:
         GameMaster(std::vector<gameCls::Round> &rounds);
+        ~GameMaster() = default;
 
-        private:
+        bool check_if_seat_taken(PlayerPosition pos);
+
+    private:
         std::map<PlayerPosition, std::shared_ptr<Player>> players;
         std::vector<gameCls::Round> rounds;
         cardCls::Lewa curr_lewa;
         PlayerPosition whose_turn;
         size_t round_number;
         gameCls::CardCounter card_counter;
+        std::map<PlayerPosition, bool> seat_taken_map;
+        std::mutex mutex_gm;
     };
 }
-
 
 #endif
