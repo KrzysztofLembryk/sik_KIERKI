@@ -17,6 +17,7 @@ namespace game
         ~PointCounter() = default;
 
         uint8_t count_points(deck::Lewa &lewa);
+        void set_game_type(GameType game_type);
 
     private:
         GameType game_type;

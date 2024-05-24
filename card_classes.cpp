@@ -154,7 +154,7 @@ int deck::Lewa::get_lewa_id() const
     return lewa_id;
 }
 
-bool deck::Lewa::id_lewa_full() const
+bool deck::Lewa::lewa_full() const
 {
     return lewa.size() == MAX_LEWA_SIZE;
 }

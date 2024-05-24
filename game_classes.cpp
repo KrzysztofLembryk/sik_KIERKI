@@ -94,6 +94,11 @@ uint8_t PointCounter::count_points(deck::Lewa &lewa)
     return points;
 }
 
+void PointCounter::set_game_type(GameType game_type)
+{
+    this->game_type = game_type;
+}
+
 void CardCounter::count_cards(deck::Lewa &lewa)
 {
     auto cards = lewa.get_cards_in_lewa();

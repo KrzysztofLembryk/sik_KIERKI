@@ -108,7 +108,7 @@ namespace deck
 
         int get_lewa_id() const;
 
-        bool id_lewa_full() const;
+        bool lewa_full() const;
 
         void set_player_who_took_lewa(PlayerPosition player);
 
