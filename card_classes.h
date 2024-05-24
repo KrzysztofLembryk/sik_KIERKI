@@ -6,7 +6,7 @@
 #include <vector>
 #include "enum_types.h"
 
-namespace deck
+namespace cardCls
 {
     // Card struct needed for C-style socket API, to send it by TCP socket
     typedef struct __attribute__((__packed__)) Card
@@ -48,7 +48,7 @@ namespace deck
 
     /**
      * @brief DeckOfCards class stores Cards objects in a map. It has methods to
-     * add card to deck, set card as played and check if card was played.
+     * add card to cardCls, set card as played and check if card was played.
      */
     class DeckOfCards
     {
@@ -118,6 +118,6 @@ namespace deck
         PlayerPosition player_who_took_lewa;
     };
 
-} // namespace deck
+} // namespace cardCls
 
 #endif // CARD_CLASSES_H

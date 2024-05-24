@@ -3,7 +3,7 @@
 
 #include "card_classes.h"
 
-namespace game
+namespace gameCls
 {
     /**
      * @brief PointCounter class is used to count points for given Lewa
@@ -16,7 +16,7 @@ namespace game
         PointCounter(GameType game_type) : game_type(game_type) {}
         ~PointCounter() = default;
 
-        uint8_t count_points(deck::Lewa &lewa);
+        uint8_t count_points(cardCls::Lewa &lewa);
         void set_game_type(GameType game_type);
 
     private:
@@ -37,7 +37,7 @@ namespace game
         CardCounter(GameType game_type) : game_type(game_type), nbr_of_lewas_played(0), nbr_of_hearts_played(0), nbr_of_queens_played(0), nbr_of_misters_played(0), king_of_hearts_played(false), seven_and_last_played(false) {}
         ~CardCounter() = default;
 
-        void count_cards(deck::Lewa &lewa);
+        void count_cards(cardCls::Lewa &lewa);
         bool has_game_ended();
 
     private:
@@ -59,18 +59,18 @@ namespace game
 
         GameType get_game_type() const;
         PlayerPosition get_first_player() const;
-        deck::DeckOfCards &get_player_cards(PlayerPosition player_pos);
+        cardCls::DeckOfCards &get_player_cards(PlayerPosition player_pos);
         void set_game_type(GameType game_type);
         void set_first_player(PlayerPosition first_player);
         void set_player_cards(PlayerPosition player_pos,
-                              deck::DeckOfCards &cards);
+                              cardCls::DeckOfCards &cards);
         void clear_round();
         void print_round();
 
     private:
         GameType game_type;
         PlayerPosition first_player;
-        std::map<PlayerPosition, deck::DeckOfCards> player_cards;
+        std::map<PlayerPosition, cardCls::DeckOfCards> player_cards;
     };
 
 } // namespace game

@@ -7,7 +7,7 @@
 
 namespace fHandler
 {
-    std::vector<game::Round> read_rounds_from_file(const std::string &file_path);
+    std::vector<gameCls::Round> read_rounds_from_file(const std::string &file_path);
 }
 
 #endif

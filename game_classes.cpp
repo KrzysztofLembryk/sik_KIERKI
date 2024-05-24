@@ -3,9 +3,9 @@
 #include "exception_wrappers.h"
 #include <iostream>
 
-using namespace game;
+using namespace gameCls;
 
-uint8_t count_figures(FigureCardValue figure, uint8_t val, deck::Lewa &lewa, bool is_king_heart = false)
+uint8_t count_figures(FigureCardValue figure, uint8_t val, cardCls::Lewa &lewa, bool is_king_heart = false)
 {
     uint8_t points = INIT_POINTS;
     auto cards = lewa.get_cards_in_lewa();
@@ -28,7 +28,7 @@ uint8_t count_figures(FigureCardValue figure, uint8_t val, deck::Lewa &lewa, boo
     return points;
 }
 
-uint8_t count_colors(Suit suit, uint8_t val, deck::Lewa &lewa)
+uint8_t count_colors(Suit suit, uint8_t val, cardCls::Lewa &lewa)
 {
     uint8_t points = INIT_POINTS;
     auto cards = lewa.get_cards_in_lewa();
@@ -54,7 +54,7 @@ uint8_t count_colors(Suit suit, uint8_t val, deck::Lewa &lewa)
  * - NO_SEVEN_AND_LAST - 10 points for seventh and thirteenth lewa
  * - BANDIT - sum of all above
  */
-uint8_t PointCounter::count_points(deck::Lewa &lewa)
+uint8_t PointCounter::count_points(cardCls::Lewa &lewa)
 {
     uint8_t points = INIT_POINTS;
     switch (this->game_type)
@@ -99,8 +99,13 @@ void PointCounter::set_game_type(GameType game_type)
     this->game_type = game_type;
 }
 
-void CardCounter::count_cards(deck::Lewa &lewa)
+void CardCounter::count_cards(cardCls::Lewa &lewa)
 {
+    if (!lewa.lewa_full())
+    {
+        exception_wrappers::invalid_arg_wrapper("Lewa is not full");
+    }
+    
     auto cards = lewa.get_cards_in_lewa();
 
     for (auto card : cards)
@@ -165,7 +170,7 @@ PlayerPosition Round::get_first_player() const
 {
     return first_player;
 }
-deck::DeckOfCards &Round::get_player_cards(PlayerPosition player_pos) 
+cardCls::DeckOfCards &Round::get_player_cards(PlayerPosition player_pos) 
 {
     return player_cards.at(player_pos);
 }
@@ -181,7 +186,7 @@ void Round::set_first_player(PlayerPosition first_player)
 }
 
 void Round::set_player_cards(PlayerPosition player_pos,
-                             deck::DeckOfCards &cards)
+                             cardCls::DeckOfCards &cards)
 {
     if (player_pos < 0 || player_pos >= MAX_PLAYERS)
     {

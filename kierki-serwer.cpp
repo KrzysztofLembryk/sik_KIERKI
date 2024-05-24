@@ -12,8 +12,9 @@ namespace po = boost::program_options;
 #include <atomic>
 #include "constants.h"
 #include "exception_wrappers.h"
+#include "read_file.h"
 
-int parse_programme_parameters(int ac, char *av[], po::variables_map &vm)
+void parse_programme_parameters(int ac, char *av[], po::variables_map &vm)
 {
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -28,13 +29,12 @@ int parse_programme_parameters(int ac, char *av[], po::variables_map &vm)
     if (vm.count("help"))
     {
         std::cout << desc << "\n";
-        return FAILURE;
+        throw std::invalid_argument("help option");
     }
     if (vm.count("f") == 0)
     {
         exception_wrappers::invalid_arg_wrapper("The 'f' option is required but missing.");
     }
-    return SUCCES;
 }
 
 void assign_programme_parameters(po::variables_map &vm, uint16_t &port, unsigned &timeout, std::string &file_name)
@@ -120,32 +120,60 @@ void handle_socket_init(uint16_t &port,
     }
 }
 
-int main(int ac, char *av[])
+int init_server(int ac, char *av[], po::variables_map &vm,
+                 uint16_t &port, unsigned &timeout, std::string &file_name,
+                 int &socket_fd, struct sockaddr_in &server_address)
 {
     try
     {
-        po::variables_map vm;
-        if (parse_programme_parameters(ac, av, vm) != SUCCES)
-            return FAILURE;
-
+        parse_programme_parameters(ac, av, vm);
         // Default value for port is 0, since if port is not specified by user
         // 0 means we will bind to any available port.
-        uint16_t port = 0;
-        unsigned timeout;
-        std::string file_name;
-
         assign_programme_parameters(vm, port, timeout, file_name);
         print_parameters(port, timeout, file_name);
-
         // Read from file_name
-
-        int socket_fd;
-        struct sockaddr_in server_address;
-
         handle_socket_init(port, &socket_fd, server_address);
+        return SUCCES;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "init_server(): " << e.what() << '\n';
+        return FAILURE;
+    }
+    
+}
 
-        while (true)
+int main(int ac, char *av[])
+{
+    po::variables_map vm;
+    uint16_t port = 0;
+    unsigned timeout;
+    std::string file_name;
+    int socket_fd;
+    struct sockaddr_in server_address;
+
+    if (init_server(ac, av, vm, port, timeout, file_name, socket_fd, server_address) != SUCCES)
+        return FAILURE;
+
+    std::vector<gameCls::Round> vec_of_rounds;
+
+    try
+    {
+     vec_of_rounds = fHandler::read_rounds_from_file(file_name);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return FAILURE;
+    }
+     
+
+
+    while (true)
+    {
+        try 
         {
+
             struct sockaddr_in client_address;
             socklen_t client_address_len = sizeof client_address;
 
@@ -164,27 +192,26 @@ int main(int ac, char *av[])
             );
             t.detach();
         }
-
-    }
-    catch (std::invalid_argument &e)
-    {
-        std::cerr << "invalid arg error: " << e.what() << "\n";
-        return FAILURE;
-    }
-    catch (std::runtime_error &e)
-    {
-        std::cerr << "runtime error: " << e.what() << "\n";
-        return FAILURE;
-    }
-    catch (std::exception &e)
-    {
-        std::cerr << "exception error: " << e.what() << "\n";
-        return FAILURE;
-    }
-    catch (...)
-    {
-        std::cerr << "error: unknown exception\n";
-        return FAILURE;
+        catch (std::invalid_argument &e)
+        {
+            std::cerr << "invalid arg error: " << e.what() << "\n";
+            return FAILURE;
+        }
+        catch (std::runtime_error &e)
+        {
+            std::cerr << "runtime error: " << e.what() << "\n";
+            return FAILURE;
+        }
+        catch (std::exception &e)
+        {
+            std::cerr << "exception error: " << e.what() << "\n";
+            return FAILURE;
+        }
+        catch (...)
+        {
+            std::cerr << "error: unknown exception\n";
+            return FAILURE;
+        }
     }
     return SUCCES;
 }

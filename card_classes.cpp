@@ -4,7 +4,7 @@
 #include "exception_wrappers.h"
 
 // CARD CLASS WRAPPER
-deck::CardClassWrapper::CardClassWrapper(Suit suit, uint8_t value)
+cardCls::CardClassWrapper::CardClassWrapper(Suit suit, uint8_t value)
 {
     this->card.suit = suit;
     if (value >= 2 && value <= 10)
@@ -21,27 +21,27 @@ deck::CardClassWrapper::CardClassWrapper(Suit suit, uint8_t value)
     }
 }
 
-bool deck::CardClassWrapper::operator==(const CardClassWrapper &other) const
+bool cardCls::CardClassWrapper::operator==(const CardClassWrapper &other) const
 {
     return card.suit == other.card.suit && card.value == other.card.value;
 }
 
-bool deck::CardClassWrapper::operator<(const CardClassWrapper &other) const
+bool cardCls::CardClassWrapper::operator<(const CardClassWrapper &other) const
 {
     return card.suit < other.card.suit || (card.suit == other.card.suit && card.value < other.card.value);
 }
 
-Suit deck::CardClassWrapper::get_suit() const
+Suit cardCls::CardClassWrapper::get_suit() const
 {
     return card.suit;
 }
 
-uint8_t deck::CardClassWrapper::get_value() const
+uint8_t cardCls::CardClassWrapper::get_value() const
 {
     return card.value;
 }
 
-void deck::CardClassWrapper::print() const
+void cardCls::CardClassWrapper::print() const
 {
     if (card.value >= 2 && card.value <= 10)
     {
@@ -72,7 +72,7 @@ void deck::CardClassWrapper::print() const
 
 
 // DECK OF CARDS
-void deck::DeckOfCards::add_card(const CardClassWrapper &card)
+void cardCls::DeckOfCards::add_card(const CardClassWrapper &card)
 {
     if (was_card_played_map.find(card) == was_card_played_map.end())
     {
@@ -86,7 +86,7 @@ void deck::DeckOfCards::add_card(const CardClassWrapper &card)
         exception_wrappers::invalid_arg_wrapper("Card already in deck");
 }
 
-void deck::DeckOfCards::set_card_played(const CardClassWrapper &card)
+void cardCls::DeckOfCards::set_card_played(const CardClassWrapper &card)
 {
     if (was_card_played_map.find(card) != was_card_played_map.end())
     {
@@ -100,7 +100,7 @@ void deck::DeckOfCards::set_card_played(const CardClassWrapper &card)
         exception_wrappers::invalid_arg_wrapper("Card not in deck");
 }
 
-bool deck::DeckOfCards::was_card_played(const CardClassWrapper &card) const
+bool cardCls::DeckOfCards::was_card_played(const CardClassWrapper &card) const
 {
     if (was_card_played_map.find(card) == was_card_played_map.end())
     {
@@ -109,7 +109,7 @@ bool deck::DeckOfCards::was_card_played(const CardClassWrapper &card) const
     return was_card_played_map.at(card);
 }
 
-void deck::DeckOfCards::reset()
+void cardCls::DeckOfCards::reset()
 {
     for (auto &pair : was_card_played_map)
     {
@@ -117,7 +117,7 @@ void deck::DeckOfCards::reset()
     }
 }
 
-void deck::DeckOfCards::print_deck() const
+void cardCls::DeckOfCards::print_deck() const
 {
     for (const auto &pair : was_card_played_map)
     {
@@ -129,7 +129,7 @@ void deck::DeckOfCards::print_deck() const
 
 // LEWA
 
-void deck::Lewa::add_card(const CardClassWrapper &card)
+void cardCls::Lewa::add_card(const CardClassWrapper &card)
 {
     if (lewa.size() == MAX_LEWA_SIZE)
     {
@@ -139,27 +139,27 @@ void deck::Lewa::add_card(const CardClassWrapper &card)
     lewa.push_back(card);
 }
 
-void deck::Lewa::clear_lewa()
+void cardCls::Lewa::clear_lewa()
 {
     lewa.clear();
 }
 
-const std::vector<deck::CardClassWrapper> &deck::Lewa::get_cards_in_lewa()
+const std::vector<cardCls::CardClassWrapper> &cardCls::Lewa::get_cards_in_lewa()
 {
     return lewa;
 }
 
-int deck::Lewa::get_lewa_id() const
+int cardCls::Lewa::get_lewa_id() const
 {
     return lewa_id;
 }
 
-bool deck::Lewa::lewa_full() const
+bool cardCls::Lewa::lewa_full() const
 {
     return lewa.size() == MAX_LEWA_SIZE;
 }
 
-void deck::Lewa::set_player_who_took_lewa(PlayerPosition player)
+void cardCls::Lewa::set_player_who_took_lewa(PlayerPosition player)
 {
     if (player == NONE_POS)
     {

@@ -49,7 +49,7 @@ void determine_value(const char value_str, uint8_t &value)
     }
 }
 
-deck::CardClassWrapper create_card(const std::string &card_str)
+cardCls::CardClassWrapper create_card(const std::string &card_str)
 {
     Suit suit;
     uint8_t value;
@@ -64,23 +64,23 @@ deck::CardClassWrapper create_card(const std::string &card_str)
         value = 10;
         determine_suit(card_str[2], suit);
     }
-    return deck::CardClassWrapper(suit, value);
+    return cardCls::CardClassWrapper(suit, value);
 }
 
-void create_player_cards(PlayerPosition player_pos, const std::string &line, game::Round &round)
+void create_player_cards(PlayerPosition player_pos, const std::string &line, gameCls::Round &round)
 {
     std::regex regx(CARD_REGEX);
     std::smatch match;
     std::string::const_iterator search_start(line.cbegin());
     std::string card_str;
-    deck::DeckOfCards player_cards;
+    cardCls::DeckOfCards player_cards;
 
     cout << "CARDS FOR PLAYER: " << player_pos << "\n";
     while (std::regex_search(search_start, line.cend(), match, regx))
     {
         card_str = match.str();
         cout << "card str: " << card_str << ", len: " << card_str.length() << "\n";
-        deck::CardClassWrapper card = create_card(card_str);
+        cardCls::CardClassWrapper card = create_card(card_str);
 
         player_cards.add_card(card);
         search_start = match.suffix().first;
@@ -88,7 +88,7 @@ void create_player_cards(PlayerPosition player_pos, const std::string &line, gam
     round.set_player_cards(player_pos, player_cards);
 }
 
-std::vector<game::Round> fHandler::read_rounds_from_file(const std::string &file_path)
+std::vector<gameCls::Round> fHandler::read_rounds_from_file(const std::string &file_path)
 {
     std::ifstream input_file(file_path);
 
@@ -97,8 +97,8 @@ std::vector<game::Round> fHandler::read_rounds_from_file(const std::string &file
 
     std::string line;
     int curr_line = 0;
-    std::vector<game::Round> rounds;
-    game::Round round;
+    std::vector<gameCls::Round> rounds;
+    gameCls::Round round;
     GameType game_type;
     PlayerPosition first_player;
 
