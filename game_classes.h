@@ -12,7 +12,7 @@ namespace gameCls
     class PointCounter
     {
     public:
-        PointCounter() = delete;
+        PointCounter() = default;
         PointCounter(GameType game_type) : game_type(game_type) {}
         ~PointCounter() = default;
 
@@ -33,11 +33,13 @@ namespace gameCls
     class CardCounter
     {
     public:
-        CardCounter() = delete;
+        CardCounter() : nbr_of_lewas_played(0), nbr_of_hearts_played(0), nbr_of_queens_played(0), nbr_of_misters_played(0), king_of_hearts_played(false), seven_and_last_played(false) {}
+
         CardCounter(GameType game_type) : game_type(game_type), nbr_of_lewas_played(0), nbr_of_hearts_played(0), nbr_of_queens_played(0), nbr_of_misters_played(0), king_of_hearts_played(false), seven_and_last_played(false) {}
         ~CardCounter() = default;
 
         void count_cards(cardCls::Lewa &lewa);
+        void new_game(GameType game_type);
         bool has_game_ended();
 
     private:

@@ -140,6 +140,17 @@ void CardCounter::count_cards(cardCls::Lewa &lewa)
     }
 }
 
+void CardCounter::new_game(GameType game_type)
+{
+    this->game_type = game_type;
+    this->nbr_of_lewas_played = 0;
+    this->nbr_of_hearts_played = 0;
+    this->nbr_of_queens_played = 0;
+    this->nbr_of_misters_played = 0;
+    this->king_of_hearts_played = false;
+    this->seven_and_last_played = false;
+}
+
 bool CardCounter::has_game_ended()
 {
     switch (this->game_type)

@@ -6,11 +6,12 @@
 
 class Player
 {
+public:
     Player() = default;
-    // Player(PlayerPosition position, GameType game_type) : position(position), points(0), point_counter(game_type) {}
+    Player(cardCls::DeckOfCards &hand, PlayerPosition position, GameType game_type) : hand(hand), position(position), points(0), point_counter(game_type) {}
     ~Player() = default;
 
-    
+    void set_hand(cardCls::DeckOfCards &hand);
 
 private:
     cardCls::DeckOfCards hand;

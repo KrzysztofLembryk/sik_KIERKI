@@ -9,6 +9,9 @@ namespace gm
 {
     class GameMaster
     {
+    public:
+        GameMaster(std::vector<gameCls::Round> &rounds);
+
         private:
         std::map<PlayerPosition, std::shared_ptr<Player>> players;
         std::vector<gameCls::Round> rounds;
