@@ -1,7 +1,9 @@
 #include "read_file.h"
 #include <iostream>
+#include <fstream>
 #include <regex>
 #include "exception_wrappers.h"
+#include "constants.h"
 
 using std::cout;
 
@@ -54,20 +56,20 @@ deck::CardClassWrapper create_card(const std::string &card_str)
 
     if (card_str.length() == 2)
     {
-        determine_suit(card_str[1], suit);
         determine_value(card_str[0], value);
+        determine_suit(card_str[1], suit);
     }
     else
     {
-        determine_suit(card_str[2], suit);
         value = 10;
+        determine_suit(card_str[2], suit);
     }
     return deck::CardClassWrapper(suit, value);
 }
 
 void create_player_cards(PlayerPosition player_pos, const std::string &line, game::Round &round)
 {
-    std::regex regx("([2-9]|10|[JQKA])([HDCS])");
+    std::regex regx(CARD_REGEX);
     std::smatch match;
     std::string::const_iterator search_start(line.cbegin());
     std::string card_str;
@@ -98,7 +100,7 @@ std::vector<game::Round> fHandler::read_rounds_from_file(const std::string &file
     std::vector<game::Round> rounds;
     game::Round round;
     GameType game_type;
-    PlayerPosition first_player = N;
+    PlayerPosition first_player;
 
     while (getline(input_file, line))
     {

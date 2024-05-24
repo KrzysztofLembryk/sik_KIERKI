@@ -64,6 +64,7 @@ namespace game
         void set_player_cards(PlayerPosition player_pos,
                               deck::DeckOfCards &cards);
         void clear_round();
+        void print_round();
 
     private:
         GameType game_type;

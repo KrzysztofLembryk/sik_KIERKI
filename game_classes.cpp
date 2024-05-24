@@ -1,6 +1,7 @@
 #include "game_classes.h"
 #include "constants.h"
 #include "exception_wrappers.h"
+#include <iostream>
 
 using namespace game;
 
@@ -193,4 +194,18 @@ void Round::clear_round()
     this->game_type = NO_LEWA;
     this->first_player = NONE_POS;
     this->player_cards.clear();
+}
+
+void Round::print_round()
+{
+    static const std::string game_type_str[] = {"NO_LEWA", "NO_HEART", "NO_QUEEN", "NO_MISTER", "NO_KING_HEART", "NO_SEVEN_AND_LAST", "BANDIT"};
+    static const std::string player_pos_str[] = {"N", "E", "S", "W"};
+
+    std::cout << "Game type: " << game_type_str[this->game_type] << "\n";
+    std::cout << "First player: " << player_pos_str[this->first_player] << "\n";
+    for (auto player : this->player_cards)
+    {
+        std::cout << "Player: " << player_pos_str[player.first] << "\n";
+        player.second.print_deck();
+    }
 }

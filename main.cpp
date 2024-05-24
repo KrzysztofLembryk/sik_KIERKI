@@ -4,8 +4,13 @@
 
 int main()
 {
-    auto res = fHandler::read_rounds_from_file("testii.txt");
-    res[0].get_player_cards(N).print();
+    auto res = fHandler::read_rounds_from_file("test.txt");
+
+    for (auto round : res)
+    {
+        round.print_round();
+    }
+
     return 0;
 }
 

@@ -117,7 +117,7 @@ void deck::DeckOfCards::reset()
     }
 }
 
-void deck::DeckOfCards::print() const
+void deck::DeckOfCards::print_deck() const
 {
     for (const auto &pair : was_card_played_map)
     {

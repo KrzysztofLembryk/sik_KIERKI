@@ -1,8 +1,8 @@
 #ifndef READ_FILE_H
 #define READ_FILE_H
 
-#include <fstream>
 #include <vector>
+#include <string>
 #include "game_classes.h"
 
 namespace fHandler

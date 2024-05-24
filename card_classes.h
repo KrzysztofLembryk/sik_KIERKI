@@ -83,7 +83,7 @@ namespace deck
 
         void reset();
 
-        void print() const;
+        void print_deck() const;
 
     private:
         std::map<CardClassWrapper, bool> was_card_played_map;
