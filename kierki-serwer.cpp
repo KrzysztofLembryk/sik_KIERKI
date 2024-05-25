@@ -123,14 +123,14 @@ int main(int ac, char *av[])
         return FAILURE;
     }
      
-    gm::GameMaster game_master(vec_of_rounds);
+    std::shared_ptr<gm::GameMaster> game_master_sp = std::make_shared<gm::GameMaster>(vec_of_rounds);
 
     while (true)
     {
         try 
         {
 
-            struct sockaddr_in client_address;
+            struct sockaddr_in6 client_address;
             socklen_t client_address_len = sizeof client_address;
 
             int client_fd = accept(socket_fd, (struct sockaddr *) &client_address, &client_address_len);
@@ -139,8 +139,9 @@ int main(int ac, char *av[])
                 exception_wrappers::runtime_err_wrapper("accept() failed");
             }
 
-            char const *client_ip = inet_ntoa(client_address.sin_addr);
-            uint16_t client_port = ntohs(client_address.sin_port);
+            char client_ip[INET6_ADDRSTRLEN];
+            inet_ntop(AF_INET6, &(client_address.sin6_addr), client_ip, INET6_ADDRSTRLEN);
+            uint16_t client_port = ntohs(client_address.sin6_port);
             printf("accepted connection from %s:%" PRIu16 "\n", client_ip, client_port);
 
 
