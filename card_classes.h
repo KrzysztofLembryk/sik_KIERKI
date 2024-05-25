@@ -97,7 +97,7 @@ namespace cardCls
     class Lewa
     {
     public:
-        Lewa(int nbr) : lewa_id(nbr), player_who_took_lewa(NONE_POS) {}
+        Lewa(uint8_t nbr) : lewa_id(nbr), player_who_took_lewa(NONE_POS) {}
         ~Lewa() = default;
 
         void add_card(const CardClassWrapper &card);
@@ -113,7 +113,7 @@ namespace cardCls
         void set_player_who_took_lewa(PlayerPosition player);
 
     private:
-        int lewa_id;
+        uint8_t lewa_id;
         std::vector<CardClassWrapper> lewa;
         PlayerPosition player_who_took_lewa;
     };

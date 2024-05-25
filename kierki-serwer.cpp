@@ -88,7 +88,7 @@ int init_server(int ac, char *av[], po::variables_map &vm,
         print_parameters(port, timeout, file_name);
         // Read from file_name
         handle_socket_init(port, socket_fd, server_address);
-        return SUCCES;
+        return SUCCESS;
     }
     catch(const std::exception& e)
     {
@@ -108,7 +108,7 @@ int main(int ac, char *av[])
     struct sockaddr_in6 server_address;
 
     if (init_server(ac, av, vm, port, timeout, file_name, socket_fd, 
-    server_address) != SUCCES)
+    server_address) != SUCCESS)
         return FAILURE;
 
     std::vector<gameCls::Round> vec_of_rounds;
@@ -123,7 +123,7 @@ int main(int ac, char *av[])
         return FAILURE;
     }
      
-    std::shared_ptr<gm::GameMaster> game_master_sp = std::make_shared<gm::GameMaster>(vec_of_rounds);
+    std::shared_ptr<gm::GameMaster> game_master_sp = std::make_shared<gm::GameMaster>(vec_of_rounds, server_address);
 
     while (true)
     {
@@ -152,7 +152,7 @@ int main(int ac, char *av[])
                     // handle_connection(client_fd, file_name);
                 }
             );
-            t.detach();
+            // t.detach(); Bardziej join chyba trzeba nie wiem jeszcze
         }
         catch (std::invalid_argument &e)
         {
@@ -175,5 +175,5 @@ int main(int ac, char *av[])
             return FAILURE;
         }
     }
-    return SUCCES;
+    return SUCCESS;
 }

@@ -4,7 +4,7 @@
 #include <string>
 #include <cstdint>
 
-constexpr int SUCCES = 0;
+constexpr int SUCCESS = 0;
 constexpr int FAILURE = 1;
 
 // TCP SERVER CONSTANTS
@@ -12,7 +12,8 @@ constexpr uint8_t QUEUE_LENGTH = 5;
 constexpr int BUFFER_SIZE = 1024;
 
 
-
+// COMMUNICATION WRAPPERS CONSTANTS
+constexpr size_t IAM_BUFF_SIZE = 6;
 
 
 // GAME_CLASSES CONSTANTS
