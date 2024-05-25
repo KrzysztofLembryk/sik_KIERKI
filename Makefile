@@ -7,11 +7,11 @@ all: $(TARGETS)
 
 kierki-serwer: kierki-serwer.o common.o err.o  game_classes.o \
 exception_wrappers.o card_classes.o read_file.o parameters_handling.o \
-game_master.o player_class.o communication_wrappers.o
+game_master.o player_class.o communication_wrappers.o socket_fd_wrapper.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 kierki-klient: kierki-klient.o common.o err.o game_classes.o \
-exception_wrappers.o card_classes.o communication_wrappers.o read_file.o
+exception_wrappers.o card_classes.o communication_wrappers.o read_file.o 
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 main: main.o read_file.o game_classes.o exception_wrappers.o card_classes.o
@@ -33,7 +33,8 @@ kierki-klient.o: kierki-klient.cpp common.h exception_wrappers.h \
  communication_wrappers.h card_classes.h enum_types.h constants.h
 kierki-serwer.o: kierki-serwer.cpp parameters_handling.h constants.h \
  exception_wrappers.h read_file.h game_classes.h card_classes.h \
- enum_types.h game_master.h player_class.h communication_wrappers.h
+ enum_types.h game_master.h player_class.h communication_wrappers.h \
+ socket_fd_wrapper.h
 main.o: main.cpp card_classes.h enum_types.h read_file.h game_classes.h
 parameters_handling.o: parameters_handling.cpp parameters_handling.h \
  exception_wrappers.h
@@ -41,6 +42,8 @@ player_class.o: player_class.cpp player_class.h game_classes.h \
  card_classes.h enum_types.h
 read_file.o: read_file.cpp read_file.h game_classes.h card_classes.h \
  enum_types.h exception_wrappers.h constants.h
+socket_fd_wrapper.o: socket_fd_wrapper.cpp socket_fd_wrapper.h \
+ exception_wrappers.h err.h
 
 clean:
 	rm -f $(TARGETS) *.o

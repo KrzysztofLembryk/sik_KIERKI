@@ -42,5 +42,5 @@ void err_func::error(const std::string &msg, const std::source_location &loc) {
     std::string column = std::to_string(loc.column());
     std::string func_name = loc.function_name();
 
-    std::cerr << "\tERROR: " << file_name + "(" + line + ":" + column + ") --> " + func_name + ":\n---" + msg + "---\n";
+    std::cerr << "\tERROR: " << file_name + "(" + line + ":" + column + ") --> " + func_name + ":\n\t---" + msg + "---\n";
 }

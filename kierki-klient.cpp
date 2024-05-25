@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     }
 
     communication_wrappers::IAM_Wrapper iam;
-    char buff[] = {'I', 'A', 'M', '8', '\r', '\n'};
+    char buff[] = {'I', 'A', 'M', 'N', '\r', '\n'};
     std::cout << "Sending wrong msg\n";
     writen(socket_fd, buff, sizeof(buff));
 }

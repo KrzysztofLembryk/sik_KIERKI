@@ -16,6 +16,7 @@ namespace po = boost::program_options;
 #include "read_file.h"
 #include "game_master.h"
 #include "communication_wrappers.h"
+#include "socket_fd_wrapper.h"
 
 void set_timeout_for_socket(int client_fd, int max_wait)
 {
@@ -99,6 +100,14 @@ int init_server(int ac, char *av[], po::variables_map &vm,
     
 }
 
+void print_client_address(struct sockaddr_in6 &client_address)
+{
+    char client_ip[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &(client_address.sin6_addr), client_ip, INET6_ADDRSTRLEN);
+    uint16_t client_port = ntohs(client_address.sin6_port);
+    printf("accepted connection from %s:%" PRIu16 "\n", client_ip, client_port);
+}
+
 int main(int ac, char *av[])
 {
     po::variables_map vm;
@@ -132,34 +141,29 @@ int main(int ac, char *av[])
         {
             struct sockaddr_in6 client_address;
             socklen_t client_address_len = sizeof client_address;
+            std::shared_ptr<ClientFdWrapper> client_fd_sp = std::make_shared<ClientFdWrapper>(
+                accept(socket_fd, (struct sockaddr *) &client_address, 
+                &client_address_len)
+            );
 
-            int client_fd = accept(socket_fd, (struct sockaddr *) &client_address, &client_address_len);
-
-            if (client_fd < 0)
-            {
-                exception_wrappers::runtime_err_wrapper("accept() failed");
-            }
-
-            char client_ip[INET6_ADDRSTRLEN];
-            inet_ntop(AF_INET6, &(client_address.sin6_addr), client_ip, INET6_ADDRSTRLEN);
-            uint16_t client_port = ntohs(client_address.sin6_port);
-            printf("accepted connection from %s:%" PRIu16 "\n", client_ip, client_port);
+            print_client_address(client_address);
 
             communication_wrappers::IAM_Wrapper iam_wrapper;
-            if (iam_wrapper.read(client_fd) != SUCCESS)
+            if (iam_wrapper.read(client_fd_sp->to_int()) != SUCCESS)
             {
-                close(client_fd);
+                // close(client_fd);
                 continue;
             }
 
             std::thread t(
-                [client_fd, client_address, timeout]()
+                [client_fd_sp, client_address, timeout]() mutable
                 {
-                    set_timeout_for_socket(client_fd, timeout);
+                    // set_timeout_for_socket(client_fd, timeout);
+                    client_fd_sp->set_timeout_for_socket(timeout);
                     // handle_connection(client_fd, file_name);
                 }
             );
-            t.detach(); 
+            t.join(); 
         }
         catch (std::exception &e)
         {
