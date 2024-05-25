@@ -15,6 +15,7 @@ namespace po = boost::program_options;
 #include "exception_wrappers.h"
 #include "read_file.h"
 #include "game_master.h"
+#include "communication_wrappers.h"
 
 void set_timeout_for_socket(int client_fd, int max_wait)
 {
@@ -129,11 +130,11 @@ int main(int ac, char *av[])
     {
         try 
         {
-
             struct sockaddr_in6 client_address;
             socklen_t client_address_len = sizeof client_address;
 
             int client_fd = accept(socket_fd, (struct sockaddr *) &client_address, &client_address_len);
+
             if (client_fd < 0)
             {
                 exception_wrappers::runtime_err_wrapper("accept() failed");
@@ -144,6 +145,12 @@ int main(int ac, char *av[])
             uint16_t client_port = ntohs(client_address.sin6_port);
             printf("accepted connection from %s:%" PRIu16 "\n", client_ip, client_port);
 
+            communication_wrappers::IAM_Wrapper iam_wrapper;
+            if (iam_wrapper.read(client_fd) != SUCCESS)
+            {
+                close(client_fd);
+                continue;
+            }
 
             std::thread t(
                 [client_fd, client_address, timeout]()
@@ -152,27 +159,11 @@ int main(int ac, char *av[])
                     // handle_connection(client_fd, file_name);
                 }
             );
-            // t.detach(); Bardziej join chyba trzeba nie wiem jeszcze
-        }
-        catch (std::invalid_argument &e)
-        {
-            std::cerr << "invalid arg error: " << e.what() << "\n";
-            return FAILURE;
-        }
-        catch (std::runtime_error &e)
-        {
-            std::cerr << "runtime error: " << e.what() << "\n";
-            return FAILURE;
+            t.detach(); 
         }
         catch (std::exception &e)
         {
-            std::cerr << "exception error: " << e.what() << "\n";
-            return FAILURE;
-        }
-        catch (...)
-        {
-            std::cerr << "error: unknown exception\n";
-            return FAILURE;
+            std::cerr << e.what() << "\n";
         }
     }
     return SUCCESS;

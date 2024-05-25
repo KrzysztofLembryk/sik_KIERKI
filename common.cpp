@@ -19,7 +19,7 @@ uint16_t port_from_str_to_ul(char const *string) {
     errno = 0;
     unsigned long port = strtoul(string, &endptr, 10);
     if (errno != 0 || *endptr != 0 || port > UINT16_MAX) {
-        fatal("%s is not a valid port number", string);
+        err_func::fatal("%s is not a valid port number", string);
     }
     return (uint16_t) port;
 }
@@ -34,7 +34,7 @@ struct sockaddr_in get_server_address(char const *host, uint16_t port) {
     struct addrinfo *address_result;
     int errcode = getaddrinfo(host, NULL, &hints, &address_result);
     if (errcode != 0) {
-        fatal("getaddrinfo: %s", gai_strerror(errcode));
+        err_func::fatal("getaddrinfo: %s", gai_strerror(errcode));
     }
 
     struct sockaddr_in send_address;
@@ -99,6 +99,6 @@ void install_signal_handler(int signal, void (*handler)(int))
     action.sa_flags = 0;
 
     if (sigaction(signal, &action, NULL) < 0 ){
-        syserr("sigaction");
+        err_func::syserr("sigaction");
     }
 }

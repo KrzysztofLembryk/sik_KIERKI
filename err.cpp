@@ -3,10 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
 
 #include "err.h"
 
-[[noreturn]] void syserr(const char* fmt, ...) {
+[[noreturn]] void err_func::syserr(const char* fmt, ...) {
     va_list fmt_args;
     int org_errno = errno;
 
@@ -20,7 +21,7 @@
     exit(1);
 }
 
-[[noreturn]] void fatal(const char* fmt, ...) {
+[[noreturn]] void err_func::fatal(const char* fmt, ...) {
     va_list fmt_args;
 
     fprintf(stderr, "\tERROR: ");
@@ -33,18 +34,13 @@
     exit(1);
 }
 
-void error(const char* fmt, ...) {
-    va_list fmt_args;
-    int org_errno = errno;
 
-    fprintf(stderr, "\tERROR: ");
+void err_func::error(const std::string &msg, const std::source_location &loc) {
 
-    va_start(fmt_args, fmt);
-    vfprintf(stderr, fmt, fmt_args);
-    va_end(fmt_args);
+    std::string file_name = loc.file_name();
+    std::string line = std::to_string(loc.line());
+    std::string column = std::to_string(loc.column());
+    std::string func_name = loc.function_name();
 
-    if (org_errno != 0) {
-      fprintf(stderr, " (%d; %s)", org_errno, strerror(org_errno));
-    }
-    fprintf(stderr, "\n");
+    std::cerr << "\tERROR: " << file_name + "(" + line + ":" + column + ") --> " + func_name + ":\n---" + msg + "---\n";
 }

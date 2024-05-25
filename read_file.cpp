@@ -75,11 +75,9 @@ void create_player_cards(PlayerPosition player_pos, const std::string &line, gam
     std::string card_str;
     cardCls::DeckOfCards player_cards;
 
-    cout << "CARDS FOR PLAYER: " << player_pos << "\n";
     while (std::regex_search(search_start, line.cend(), match, regx))
     {
         card_str = match.str();
-        cout << "card str: " << card_str << ", len: " << card_str.length() << "\n";
         cardCls::CardClassWrapper card = create_card(card_str);
 
         player_cards.add_card(card);

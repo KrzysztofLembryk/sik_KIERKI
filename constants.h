@@ -6,6 +6,7 @@
 
 constexpr int SUCCESS = 0;
 constexpr int FAILURE = 1;
+constexpr int ERROR = -1;
 
 // TCP SERVER CONSTANTS
 constexpr uint8_t QUEUE_LENGTH = 5;
