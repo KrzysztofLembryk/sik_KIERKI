@@ -3,10 +3,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include "err.h"
+#include <iostream>
 
 ClientFdWrapper::ClientFdWrapper(int client_fd) : should_be_closed(false)
 {
-    err_func::error("new client_fd");
     if (client_fd < 0)
     {
         exception_wrappers::runtime_err_wrapper("client_socket_fd < 0 -- accept() failed");
@@ -17,10 +17,8 @@ ClientFdWrapper::ClientFdWrapper(int client_fd) : should_be_closed(false)
 
 ClientFdWrapper::~ClientFdWrapper()
 {
-    err_func::error("destroying client_fd wrapper");
     if (should_be_closed)
     {
-        err_func::error("closing client_fd");
         close(client_fd);
     }
 }

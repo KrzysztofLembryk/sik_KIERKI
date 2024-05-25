@@ -141,6 +141,7 @@ int main(int ac, char *av[])
         {
             struct sockaddr_in6 client_address;
             socklen_t client_address_len = sizeof client_address;
+            
             std::shared_ptr<ClientFdWrapper> client_fd_sp = std::make_shared<ClientFdWrapper>(
                 accept(socket_fd, (struct sockaddr *) &client_address, 
                 &client_address_len)
@@ -151,19 +152,18 @@ int main(int ac, char *av[])
             communication_wrappers::IAM_Wrapper iam_wrapper;
             if (iam_wrapper.read(client_fd_sp->to_int()) != SUCCESS)
             {
-                // close(client_fd);
                 continue;
             }
 
-            std::thread t(
-                [client_fd_sp, client_address, timeout]() mutable
-                {
-                    // set_timeout_for_socket(client_fd, timeout);
-                    client_fd_sp->set_timeout_for_socket(timeout);
-                    // handle_connection(client_fd, file_name);
-                }
-            );
-            t.join(); 
+            // std::thread t(
+            //     [client_fd_sp, client_address, timeout]() mutable
+            //     {
+            //         // set_timeout_for_socket(client_fd, timeout);
+            //         client_fd_sp->set_timeout_for_socket(timeout);
+            //         // handle_connection(client_fd, file_name);
+            //     }
+            // );
+            // t.join(); 
         }
         catch (std::exception &e)
         {
