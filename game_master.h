@@ -19,6 +19,7 @@ namespace gm
         ~GameMaster() = default;
 
         bool check_if_seat_taken(PlayerPosition pos);
+        std::vector<PlayerPosition> get_taken_seats();
 
     private:
         std::map<PlayerPosition, std::shared_ptr<Player>> players;

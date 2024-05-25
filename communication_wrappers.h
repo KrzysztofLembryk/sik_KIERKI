@@ -40,11 +40,11 @@ namespace communication_wrappers
         
         // For read we will need to check if first 4 bytes are 'BUSY'
         std::vector<PlayerPosition> read(int socket_fd);
+
     private:
 
         std::vector<char> name{'B', 'U', 'S', 'Y'};
         char buff[10];
-        std::vector<char> end{'\r', '\n'};
 
     };
 
@@ -62,7 +62,6 @@ namespace communication_wrappers
         std::vector<char> name{'D', 'E', 'A', 'L'};
         std::vector<char> game_type_and_first_player_pos;
         char buff[50];
-        std::vector<char> end{'\r', '\n'};
     };
 
     class TRICK_Wrapper
@@ -78,7 +77,6 @@ namespace communication_wrappers
         private:
         std::vector<char> name{'T', 'R', 'I', 'C', 'K'};
         char buff[17];
-        std::vector<char> end{'\r', '\n'};
     };
 
     class WRONG_Wrapper
@@ -94,7 +92,6 @@ namespace communication_wrappers
     private:
         std::vector<char> name{'W', 'R', 'O', 'N', 'G'};
         char buff[9];
-        std::vector<char> end{'\r', '\n'};
     };
 
     class TAKEN_Wrapper
@@ -110,7 +107,6 @@ namespace communication_wrappers
     private:
         std::vector<char> name{'T', 'A', 'K', 'E', 'N'};
         char buff[23];
-        std::vector<char> end{'\r', '\n'};
     };
 }
 

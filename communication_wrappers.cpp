@@ -7,7 +7,10 @@
 #include <iostream>
 #include "TCP_handler.h"
 
-PlayerPosition check_read_pos(char pos)
+// Helper functions
+std::vector<char> end_chars{'\r', '\n'};
+
+PlayerPosition char_to_playerPos(char pos)
 {
     if (pos == 'N')
         return PlayerPosition::N;
@@ -22,13 +25,28 @@ PlayerPosition check_read_pos(char pos)
         err_func::error("Read wrong position");
         return PlayerPosition::NONE_POS;
     }
+}
 
+char playerPos_to_char(PlayerPosition pos)
+{
+    if (pos == PlayerPosition::N)
+        return 'N';
+    else if (pos == PlayerPosition::E)
+        return 'E';
+    else if (pos == PlayerPosition::S)
+        return 'S';
+    else if (pos == PlayerPosition::W)
+        return 'W';
+    else
+    {
+        exception_wrappers::invalid_arg_wrapper("Wrong position value");
+    }
 }
 
 // IAM_Wrapper
 void communication_wrappers::IAM_Wrapper::write(int socket_fd, PlayerPosition position)
 {
-    iam.position = static_cast<char>(position);
+    iam.position = playerPos_to_char(position);
     tcp::TCP_send_packet(socket_fd, &iam, sizeof(iam));    
 }
 
@@ -54,7 +72,7 @@ int communication_wrappers::IAM_Wrapper::read(int socket_fd)
         return ERROR;
     }
 
-    this->position = check_read_pos(read_buff[3]);
+    this->position = char_to_playerPos(read_buff[3]);
 
     if (this->position == PlayerPosition::NONE_POS)
     {
@@ -68,3 +86,32 @@ PlayerPosition communication_wrappers::IAM_Wrapper::get_position()
 {
     return this->position;
 }
+
+// BUSY_Wrapper
+
+void communication_wrappers::BUSY_Wrapper::write(int socket_fd, std::vector<PlayerPosition> taken_positions)
+{
+    std::vector<char> msg_vec(name);
+
+    // This should never HAPPEN if everything works correctly
+    if (taken_positions.size() == 0)
+    {
+        msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
+        tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+        return;
+    }
+
+    if (taken_positions.size() > 4)
+        exception_wrappers::invalid_arg_wrapper("Too many taken positions");
+
+    for (size_t i = 0; i < taken_positions.size(); i++)
+        msg_vec.push_back(playerPos_to_char(taken_positions[i]));
+
+    msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
+
+    tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+}
+
+
+
+

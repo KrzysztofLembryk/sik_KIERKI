@@ -23,4 +23,18 @@ bool gm::GameMaster::check_if_seat_taken(PlayerPosition pos)
     return seat_taken_map[pos];
 }
 
+std::vector<PlayerPosition> gm::GameMaster::get_taken_seats()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    std::vector<PlayerPosition> taken_seats;
 
+    for (auto &seat : seat_taken_map)
+    {
+        if (seat.second)
+        {
+            taken_seats.push_back(seat.first);
+        }
+    }
+
+    return taken_seats;
+}
