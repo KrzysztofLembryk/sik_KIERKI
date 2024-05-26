@@ -214,6 +214,11 @@ uint8_t cardCls::Lewa::get_lewa_id() const
     return lewa_id;
 }
 
+void cardCls::Lewa::set_lewa_id(uint8_t id)
+{
+    lewa_id = id;
+}
+
 bool cardCls::Lewa::lewa_full() const
 {
     return lewa.size() == MAX_LEWA_SIZE;
@@ -241,4 +246,15 @@ void cardCls::Lewa::set_player_who_took_lewa(PlayerPosition player)
 std::vector<char> cardCls::Lewa::to_char_vector() const
 {
     return cardVec_to_charVec(this->lewa);
+}
+
+
+cardCls::CardClassWrapper cardCls::Lewa::get_top_card() const
+{
+    if (lewa.size() == 0)
+    {
+        exception_wrappers::invalid_arg_wrapper("Lewa " +
+                                                std::to_string(this->lewa_id) + " is empty");
+    }
+    return lewa.back();
 }

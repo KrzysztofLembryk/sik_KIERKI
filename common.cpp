@@ -166,3 +166,15 @@ uint8_t determine_value(uint8_t value)
         exception_wrappers::invalid_arg_wrapper("Invalid card value");
     }
 }
+
+Suit determine_suit(char suit)
+{
+    if (suit == Suit::HEARTS || suit == Suit::DIAMONDS || suit == Suit::CLUBS || suit == Suit::SPADES)
+    {
+        return static_cast<Suit>(suit);
+    }
+    else
+    {
+        exception_wrappers::invalid_arg_wrapper("Invalid card suit");
+    }
+}

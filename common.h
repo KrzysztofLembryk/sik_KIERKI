@@ -19,6 +19,6 @@ char playerPos_to_char(PlayerPosition pos);
 
 uint8_t determine_value(uint8_t value);
 
-
+Suit determine_suit(char suit);
 
 #endif

@@ -13,9 +13,9 @@ namespace ingame_comm_wrappers
         TRICK_Wrapper() = default;
         ~TRICK_Wrapper() = default;
 
-        void write(int socket_fd, cardCls::Lewa  &lewa);
+        void write(int socket_fd, cardCls::Lewa &lewa);
 
-        void read(int socket_fd);
+        int read(int socket_fd, cardCls::Lewa &lewa);
 
         private:
         std::vector<char> name{'T', 'R', 'I', 'C', 'K'};

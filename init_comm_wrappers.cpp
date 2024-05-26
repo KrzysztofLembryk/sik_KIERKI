@@ -172,7 +172,7 @@ int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, P
     for (size_t i = 3; i < (size_t)read_length - 2; i+=2)
     {
         uint8_t value = determine_value(static_cast<uint8_t>(read_buff[i - 1]));
-        Suit suit = static_cast<Suit>(read_buff[i]);
+        Suit suit = determine_suit(read_buff[i]);
 
         deck_of_cards.add_card(cardCls::CardClassWrapper(suit, value));
     }
