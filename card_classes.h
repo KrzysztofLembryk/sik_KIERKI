@@ -1,6 +1,7 @@
 #ifndef CARD_CLASSES_H
 #define CARD_CLASSES_H
 
+#include <iostream>
 #include <map>
 #include <cstdint>
 #include <vector>
@@ -84,6 +85,8 @@ namespace cardCls
         void reset();
 
         void print_deck() const;
+
+        size_t size() const;
 
         std::vector<char> deck_to_char_vector() const;
 

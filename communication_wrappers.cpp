@@ -43,6 +43,35 @@ char playerPos_to_char(PlayerPosition pos)
     }
 }
 
+uint8_t determine_value(uint8_t value)
+{
+    if (value >= 2 && value <= 10)
+    {
+        return value;
+    }
+    else if (value == 'J')
+    {
+        return J;
+    }
+    else if (value == 'Q')
+    {
+        return Q;
+    }
+    else if (value == 'K')
+    {
+        return K;
+    }
+    else if (value == 'A')
+    {
+        return A;
+    }
+    else
+    {
+        exception_wrappers::invalid_arg_wrapper("Invalid card value");
+    }
+    
+}
+
 // IAM_Wrapper impl
 /**
  * Function transforms PlayerPosition to correct char value and sends 
@@ -164,12 +193,9 @@ int communication_wrappers::BUSY_Wrapper::read(
 
 void communication_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type , PlayerPosition first_player_pos, cardCls::DeckOfCards &&deck_of_cards)
 {
-    std::cout << "typ rozdania: " << (unsigned)game_type << '\n';
-    std::cout << "pierwszy gracz: " << playerPos_to_char(first_player_pos) << '\n';
-    deck_of_cards.print_deck();
-
     std::vector<char> msg_vec(name);
     std::vector<char> game_type_and_first_player_pos;
+
     game_type_and_first_player_pos.push_back(static_cast<char>(game_type));
     game_type_and_first_player_pos.push_back(playerPos_to_char(first_player_pos));
 
@@ -178,18 +204,6 @@ void communication_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_ty
     std::vector<char> deck = deck_of_cards.deck_to_char_vector();
 
     msg_vec.insert(msg_vec.end(), deck.begin(), deck.end());
-
-    std::cout << "printing msg_vec: ";
-    std::cout << "msg_vec.size(): " << msg_vec.size() << '\n';
-    for (auto elem : msg_vec)
-    {
-        if (elem <= 15)
-            std::cout << (unsigned)elem;
-        else 
-            std::cout << elem;
-    }
-    fflush(stdout);
-
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
@@ -209,15 +223,27 @@ int communication_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_typ
         return ERROR;
     }
 
-    // if (read_length < 30)
-    // {
-    //     err_func::error(" read_length < 30 which is minimal nbr of bytes required to be sent");
-    //     return ERROR;
-    // }
-    std::cout << "read_length: " << read_length << '\n';
-    read_buff[read_length - 2] = '\0';
-    std::cout << "typ rozdania: " << (unsigned)read_buff[0] << "\n";
-    std::cout << "pierwszy gracz: " << read_buff[1] << "\n";
-    std::cout << "buffor: " << read_buff << '\n';
+    if (read_length < 30)
+    {
+        err_func::error(" read_length < 30 which is minimal nbr of bytes required to be sent");
+        return ERROR;
+    }
+
+    game_type = static_cast<GameType>(read_buff[0]); 
+    first_player_pos = char_to_playerPos(read_buff[1]);
+
+    for (size_t i = 3; i < (size_t)read_length - 2; i+=2)
+    {
+        uint8_t value = determine_value(static_cast<uint8_t>(read_buff[i - 1]));
+        Suit suit = static_cast<Suit>(read_buff[i]);
+
+        deck_of_cards.add_card(cardCls::CardClassWrapper(suit, value));
+    }
+    if (deck_of_cards.size() != 13)
+    {
+        err_func::error("Deck of cards size is not equal to 13");
+        return ERROR;
+    }
+
     return SUCCESS;
 }

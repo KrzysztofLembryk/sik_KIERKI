@@ -79,15 +79,12 @@ int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size,
         {
             exception_wrappers::runtime_err_wrapper("read_len == 0 -- no newline found in packet name or sent packet is to short or connection was closed");
         }
+        
         if (curr_char == '\r')
             r_occured = true;
         else 
-        {
             if (r_occured && curr_char != '\n')
-            {
                 r_occured = false;
-            }
-        }
 
         buff[read_bytes] = curr_char;
         read_bytes++;
@@ -98,9 +95,10 @@ int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size,
 
     if (curr_char != '\n')
     {
-        err_func::error("curr_char != '\\n'");
+        err_func::error("send data didnt end with '\\n'");
         return ERROR;
     }
+
     read_length = read_bytes;
 
     return SUCCESS;
@@ -117,6 +115,7 @@ int tcp::TCP_read_packet_name(int socket_fd, size_t name_len, std::string &name)
     ssize_t read_length;
 
     std::memset(name_buff, 0, MAX_PACKET_NAME_SIZE);
+    
     if (tcp::TCP_read_packet(socket_fd, name_buff, name_len, read_length) != SUCCESS)
     {
         return ERROR;

@@ -164,6 +164,10 @@ std::vector<char> cardCls::DeckOfCards::deck_to_char_vector() const
     return deck;
 }
 
+size_t cardCls::DeckOfCards::size() const
+{
+    return was_card_played_map.size();
+}
 
 // LEWA
 
