@@ -58,14 +58,13 @@ namespace communication_wrappers
         DEAL_Wrapper() = default;
         ~DEAL_Wrapper() = default;
 
-        void write(int socket_fd, GameType &game_type , PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards);
+        void write(int socket_fd, GameType game_type , PlayerPosition first_player_pos, cardCls::DeckOfCards &&deck_of_cards);
 
-        int read(int socket_fd);
+        int read(int socket_fd, GameType &game_type, PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards);
 
     private:
         std::vector<char> name{'D', 'E', 'A', 'L'};
         std::vector<char> game_type_and_first_player_pos;
-        char buff[50];
     };
 
     class TRICK_Wrapper

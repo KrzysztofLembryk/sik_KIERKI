@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     }
 
     communication_wrappers::IAM_Wrapper iam;
-    iam.write(socket_fd, PlayerPosition::E);
+    iam.write(socket_fd, PlayerPosition::N);
     
     std::string packet_name;
     if (tcp::TCP_read_packet_name(socket_fd, INIT_CONN_PACKET_NAME_SIZE, packet_name) != SUCCESS)
@@ -48,6 +48,11 @@ int main(int argc, char *argv[])
     else if (packet_name == "DEAL")
     {
         std::cout << "Got DEAL packet\n";
+        communication_wrappers::DEAL_Wrapper deal;
+        GameType game_type;
+        PlayerPosition first_player_pos;
+        cardCls::DeckOfCards deck_of_cards;
+        deal.read(socket_fd, game_type, first_player_pos, deck_of_cards);
     }
     else
     {

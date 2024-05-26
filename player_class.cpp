@@ -9,3 +9,8 @@ void Player::set_player_address(const struct sockaddr_in6 &addr)
 {
     this->my_address = addr;
 }
+
+cardCls::DeckOfCards Player::get_hand()
+{
+    return hand;
+}

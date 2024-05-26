@@ -162,8 +162,12 @@ int communication_wrappers::BUSY_Wrapper::read(
 
 // DEAL_Wrapper
 
-void communication_wrappers::DEAL_Wrapper::write(int socket_fd, GameType &game_type , PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards)
+void communication_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type , PlayerPosition first_player_pos, cardCls::DeckOfCards &&deck_of_cards)
 {
+    std::cout << "typ rozdania: " << (unsigned)game_type << '\n';
+    std::cout << "pierwszy gracz: " << playerPos_to_char(first_player_pos) << '\n';
+    deck_of_cards.print_deck();
+
     std::vector<char> msg_vec(name);
     std::vector<char> game_type_and_first_player_pos;
     game_type_and_first_player_pos.push_back(static_cast<char>(game_type));
@@ -171,10 +175,46 @@ void communication_wrappers::DEAL_Wrapper::write(int socket_fd, GameType &game_t
 
     msg_vec.insert(msg_vec.end(), game_type_and_first_player_pos.begin(), game_type_and_first_player_pos.end());
 
+    std::cout << "printing msg_vec: ";
+    for (auto elem : msg_vec)
+    {
+        if (elem <= 15)
+            std::cout << (unsigned)elem;
+        else 
+            std::cout << elem;
+    }
+    fflush(stdout);
     std::vector<char> deck = deck_of_cards.deck_to_char_vector();
 
     msg_vec.insert(msg_vec.end(), deck.begin(), deck.end());
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+}
+
+int communication_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards)
+{
+    ssize_t read_length;
+    char read_buff[DEAL_BUFF_SIZE - this->name.size()];
+    std::memset(read_buff, 0, DEAL_BUFF_SIZE - this->name.size());
+
+    // DEAL_BUFF_SIZE is maximally equal to 50 - 4 bytes for packet name = DEAL
+    // 2 bytes for end chars and maximally 44 bytes for deck of cards thus
+    // we can read maximally DEAL_BUFF_SIZE - this->name.size() bytes
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, DEAL_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    {
+        return ERROR;
+    }
+
+    // if (read_length < 30)
+    // {
+    //     err_func::error(" read_length < 30 which is minimal nbr of bytes required to be sent");
+    //     return ERROR;
+    // }
+    std::cout << "read_length: " << read_length << '\n';
+    read_buff[read_length - 2] = '\0';
+    std::cout << "typ rozdania: " << (unsigned)read_buff[0] << "\n";
+    std::cout << "pierwszy gracz: " << read_buff[1] << "\n";
+    std::cout << "buffor: " << read_buff << '\n';
+    return SUCCESS;
 }

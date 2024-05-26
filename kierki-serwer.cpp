@@ -166,8 +166,9 @@ int main(int ac, char *av[])
             {
                 game_master_sp->add_new_player(new_p_position, client_address);
             }
-            busy_wrapper.write(client_fd_sp->to_int(), game_master_sp->get_taken_positions());
 
+            communication_wrappers::DEAL_Wrapper deal_wrapper;
+            deal_wrapper.write(client_fd_sp->to_int(), game_master_sp->get_game_type(), game_master_sp->get_whose_turn(), game_master_sp->get_player_cards(new_p_position));
             // std::thread t(
             //     [client_fd_sp, client_address, timeout]() mutable
             //     {

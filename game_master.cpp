@@ -45,3 +45,21 @@ void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &my_
     pos_taken_map[pos] = true;
     players[pos]->set_player_address(my_address);
 }
+
+PlayerPosition gm::GameMaster::get_whose_turn() 
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return whose_turn;
+}
+
+GameType gm::GameMaster::get_game_type()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return rounds[round_number].get_game_type();
+}
+
+cardCls::DeckOfCards gm::GameMaster::get_player_cards(PlayerPosition pos)
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return players[pos]->get_hand();
+}

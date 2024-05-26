@@ -22,6 +22,7 @@ public:
 
     void set_hand(cardCls::DeckOfCards &hand);
     void set_player_address(const struct sockaddr_in6 &addr);
+    cardCls::DeckOfCards get_hand();
 
 private:
     cardCls::DeckOfCards hand;

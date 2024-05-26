@@ -22,6 +22,12 @@ namespace gm
         std::vector<PlayerPosition> get_taken_positions();
         void add_new_player(PlayerPosition pos, 
                             struct sockaddr_in6 &my_address);
+        
+        PlayerPosition get_whose_turn();
+        GameType get_game_type();
+
+        cardCls::DeckOfCards get_player_cards(PlayerPosition pos);
+
 
     private:
         std::map<PlayerPosition, std::shared_ptr<Player>> players;
