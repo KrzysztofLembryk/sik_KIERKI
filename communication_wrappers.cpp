@@ -175,7 +175,12 @@ void communication_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_ty
 
     msg_vec.insert(msg_vec.end(), game_type_and_first_player_pos.begin(), game_type_and_first_player_pos.end());
 
+    std::vector<char> deck = deck_of_cards.deck_to_char_vector();
+
+    msg_vec.insert(msg_vec.end(), deck.begin(), deck.end());
+
     std::cout << "printing msg_vec: ";
+    std::cout << "msg_vec.size(): " << msg_vec.size() << '\n';
     for (auto elem : msg_vec)
     {
         if (elem <= 15)
@@ -184,9 +189,7 @@ void communication_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_ty
             std::cout << elem;
     }
     fflush(stdout);
-    std::vector<char> deck = deck_of_cards.deck_to_char_vector();
 
-    msg_vec.insert(msg_vec.end(), deck.begin(), deck.end());
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());

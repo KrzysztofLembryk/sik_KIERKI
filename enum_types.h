@@ -15,8 +15,8 @@ enum GameType : uint8_t
 };
 
 /**
- * @brief Enum for player position - it's not char because we want to easily 
- * determine next player by incrementing the value modulo 4.
+ * @brief Enum for player position - it's uint8_t, not char because we want to 
+ * easily determine next player by incrementing the value modulo 4.
 */
 enum PlayerPosition : uint8_t
 {
@@ -27,6 +27,9 @@ enum PlayerPosition : uint8_t
     NONE_POS
 };
 
+/**
+ * @brief FigureCardValue has uint8_t type
+*/
 enum FigureCardValue : uint8_t
 {
     J = 11,
@@ -35,6 +38,9 @@ enum FigureCardValue : uint8_t
     A
 };
 
+/**
+ * @brief Suit has char type
+*/
 enum Suit : char
 {
     HEARTS = 'H',

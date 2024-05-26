@@ -137,7 +137,7 @@ std::vector<char> cardCls::DeckOfCards::deck_to_char_vector() const
         uint8_t value = pair.first.get_value();
         if (value >= 2 && value <= 10)
         {
-            deck.push_back(value);
+            deck.push_back(static_cast<char>(value));
         }
         else
         {

@@ -57,8 +57,9 @@ int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size,
 {
     size_t read_bytes = 0;
     char curr_char = '\r';
+    bool r_occured = false;
 
-    while(read_bytes < data_size && curr_char != '\n')
+    while(read_bytes < data_size)
     {
         read_length = readn(socket_fd, &curr_char, 1);
 
@@ -76,11 +77,18 @@ int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size,
         }
         else if (read_length == 0) 
         {
-            exception_wrappers::runtime_err_wrapper(" - connection closed read_len == 0");
+            exception_wrappers::runtime_err_wrapper("read_len == 0 -- no newline found in packet name or sent packet is to short or connection was closed");
         }
+        if (curr_char == '\r')
+            r_occured = true;
+
         buff[read_bytes] = curr_char;
         read_bytes++;
+
+        if (curr_char == '\n' && r_occured)
+            break;
     }
+
     if (curr_char != '\n')
     {
         err_func::error("curr_char != '\\n'");
