@@ -43,22 +43,31 @@ char playerPos_to_char(PlayerPosition pos)
     }
 }
 
-// IAM_Wrapper
+// IAM_Wrapper impl
+/**
+ * Function transforms PlayerPosition to correct char value and sends 
+ * struct IAM by tcp socket
+*/
 void communication_wrappers::IAM_Wrapper::write(int socket_fd, PlayerPosition position)
 {
     iam.position = playerPos_to_char(position);
     tcp::TCP_send_packet(socket_fd, &iam, sizeof(iam));    
 }
 
-int communication_wrappers::IAM_Wrapper::read(int socket_fd)
+/**
+ * Function reads struct IAM from tcp socket, checks if nbr of bytes read is 
+ * correct, checks if packet name is correct and then transforms char position 
+ * value to PlayerPosition enum, and checks if it is correct
+*/
+int communication_wrappers::IAM_Wrapper::read(int socket_fd, PlayerPosition &position)
 {
     ssize_t read_length = 0;
 
     std::memset(read_buff, 0, IAM_BUFF_SIZE);
     
-    if (tcp::TCP_read_packet(socket_fd, read_buff, IAM_BUFF_SIZE, read_length) != SUCCESS)
+    if (tcp::TCP_read_packet(socket_fd, read_buff, IAM_BUFF_SIZE, read_length) == TIMEOUT)
     {
-        return ERROR;
+        return TIMEOUT;
     }
 
     if (strncmp(read_buff, "IAM", 3) != 0)
@@ -72,19 +81,14 @@ int communication_wrappers::IAM_Wrapper::read(int socket_fd)
         return ERROR;
     }
 
-    this->position = char_to_playerPos(read_buff[3]);
+    position = char_to_playerPos(read_buff[3]);
 
-    if (this->position == PlayerPosition::NONE_POS)
+    if (position == PlayerPosition::NONE_POS)
     {
         return ERROR;
     }
 
     return SUCCESS;
-}
-
-PlayerPosition communication_wrappers::IAM_Wrapper::get_position()
-{
-    return this->position;
 }
 
 // BUSY_Wrapper
@@ -112,6 +116,52 @@ void communication_wrappers::BUSY_Wrapper::write(int socket_fd, std::vector<Play
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
+/**
+ *  We assume that first four bytes are read by function that called us, since
+ * calling us means that these bytes were equal to BUSY
+*/
+int communication_wrappers::BUSY_Wrapper::read(
+    int socket_fd, std::vector<PlayerPosition> &taken_positions)
+{
+    ssize_t read_length;
+    char read_buff[BUSY_BUFF_SIZE - this->name.size()];
+    std::memset(read_buff, 0, BUSY_BUFF_SIZE - this->name.size());
 
+    // BUSY_BUFF_SIZE is maximally equal to 10 - 4 bytes for packet name = BUSY
+    // 2 bytes for end chars and maximally 4 bytes for player positions thus
+    // we can read maximally BUSY_BUFF_SIZE - this->name.size() bytes
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, BUSY_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    {
+        return ERROR;
+    }
+
+    if (read_length == 2)
+    {
+        // Msg was BUSY\r\n thus no positions were taken
+        return SUCCESS;
+    }
+    else if (read_length < 2)
+    {
+        err_func::error("read_length < 2");
+        return ERROR;
+    }
+    else 
+    {
+        for (size_t i = 0; i < read_length - 2; i++)
+        {
+            PlayerPosition pos = char_to_playerPos(read_buff[i]);
+
+            if (pos == PlayerPosition::NONE_POS)
+            {
+                err_func::error("Read wrong position");
+                return ERROR;
+            }
+
+            taken_positions.push_back(char_to_playerPos(read_buff[i]));
+        }
+        return SUCCESS;
+    }
+
+}
 
 

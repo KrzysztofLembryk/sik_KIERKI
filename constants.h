@@ -7,6 +7,7 @@
 constexpr int SUCCESS = 0;
 constexpr int FAILURE = 1;
 constexpr int ERROR = -1;
+constexpr int TIMEOUT = -2;
 
 // TCP SERVER CONSTANTS
 constexpr uint8_t QUEUE_LENGTH = 5;
@@ -15,6 +16,7 @@ constexpr int BUFFER_SIZE = 1024;
 
 // COMMUNICATION WRAPPERS CONSTANTS
 constexpr size_t IAM_BUFF_SIZE = 6;
+constexpr size_t BUSY_BUFF_SIZE = 10;
 
 
 // GAME_CLASSES CONSTANTS

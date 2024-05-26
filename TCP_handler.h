@@ -12,6 +12,9 @@ namespace tcp
 
     int TCP_read_packet(int socket_fd, char *buff, size_t data_size,  
         ssize_t &read_length);
+    
+    int TCP_read_till_newline(int socket_fd, char *buff, size_t data_size, 
+        ssize_t &read_length);
 }
 
 #endif // TCP_HANDLER_H

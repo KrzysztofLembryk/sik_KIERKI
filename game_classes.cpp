@@ -199,7 +199,7 @@ void Round::set_first_player(PlayerPosition first_player)
 void Round::set_player_cards(PlayerPosition player_pos,
                              cardCls::DeckOfCards &cards)
 {
-    if (player_pos < 0 || player_pos >= MAX_PLAYERS)
+    if (player_pos >= MAX_PLAYERS)
     {
         exception_wrappers::invalid_arg_wrapper("Invalid player position");
     }

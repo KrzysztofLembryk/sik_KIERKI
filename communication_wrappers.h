@@ -5,6 +5,15 @@
 #include "card_classes.h"
 #include "constants.h"
 
+/**
+ * IDEA OF READING FROM SOCKETS! --> Client after sending IAM will read only 
+ * first 4 bytes of packet so that we can check type of packet, because after 
+ * IAM we can get either BUSY or DEAL - we can assume server is trustworthy.
+ * Then we will use *_Wrapper::read to read rest of the packet, check if correct
+ * etc.
+*/
+
+
 namespace communication_wrappers
 {
     class IAM_Wrapper
@@ -14,8 +23,7 @@ namespace communication_wrappers
         ~IAM_Wrapper() = default;
 
         void write(int socket_fd, PlayerPosition position);
-        int read(int socket_fd);
-        PlayerPosition get_position(); 
+        int read(int socket_fd, PlayerPosition &position);
 
     private:
         typedef struct __attribute__((__packed__)) IAM
@@ -27,7 +35,6 @@ namespace communication_wrappers
 
         IAM iam;
         char read_buff[IAM_BUFF_SIZE];
-        PlayerPosition position;
     };
 
     class BUSY_Wrapper
@@ -38,13 +45,10 @@ namespace communication_wrappers
 
         void write(int socket_fd, std::vector<PlayerPosition> taken_positions);
         
-        // For read we will need to check if first 4 bytes are 'BUSY'
-        std::vector<PlayerPosition> read(int socket_fd);
+        int read(int socket_fd, std::vector<PlayerPosition> &taken_positions);
 
     private:
-
-        std::vector<char> name{'B', 'U', 'S', 'Y'};
-        char buff[10];
+        const std::vector<char> name{'B', 'U', 'S', 'Y'};
 
     };
 

@@ -38,7 +38,7 @@ int tcp::TCP_read_packet(int socket_fd, char *buff, size_t data_size,
         if (errno == EAGAIN) 
         {
             err_func::error("readn < 0 --> readn timeout");
-            return ERROR;
+            return TIMEOUT;
         } 
         else 
         {
@@ -52,4 +52,42 @@ int tcp::TCP_read_packet(int socket_fd, char *buff, size_t data_size,
     return SUCCESS;
 }
 
+int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size, 
+    ssize_t &read_length)
+{
+    size_t read_bytes = 0;
+    char curr_char = '\r';
+
+    while(read_bytes < data_size && curr_char != '\n')
+    {
+        read_length = readn(socket_fd, &curr_char, 1);
+
+        if (read_length < 0)
+        {
+            if (errno == EAGAIN) 
+            {
+                err_func::error("readn < 0 --> readn timeout");
+                return TIMEOUT;
+            } 
+            else 
+            {
+                exception_wrappers::runtime_err_wrapper("readn < 0");
+            }
+        }
+        else if (read_length == 0) 
+        {
+            exception_wrappers::runtime_err_wrapper(" - connection closed read_len == 0");
+        }
+        buff[read_bytes] = curr_char;
+        read_bytes++;
+    }
+    if (curr_char != '\n')
+    {
+        err_func::error("curr_char != '\\n'");
+        return ERROR;
+    }
+    read_length = read_bytes;
+
+    return SUCCESS;
+}
 
