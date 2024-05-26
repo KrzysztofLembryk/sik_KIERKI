@@ -105,7 +105,7 @@ void communication_wrappers::BUSY_Wrapper::write(int socket_fd, std::vector<Play
         return;
     }
 
-    if (taken_positions.size() > 4)
+    if (taken_positions.size() > MAX_PLAYERS)
         exception_wrappers::invalid_arg_wrapper("Too many taken positions");
 
     for (size_t i = 0; i < taken_positions.size(); i++)
@@ -135,14 +135,10 @@ int communication_wrappers::BUSY_Wrapper::read(
         return ERROR;
     }
 
-    if (read_length == 2)
+    if (read_length <= 2)
     {
         // Msg was BUSY\r\n thus no positions were taken
-        return SUCCESS;
-    }
-    else if (read_length < 2)
-    {
-        err_func::error("read_length < 2");
+        err_func::error(" read_length <= 2 ");
         return ERROR;
     }
     else 
@@ -164,4 +160,21 @@ int communication_wrappers::BUSY_Wrapper::read(
 
 }
 
+// DEAL_Wrapper
 
+void communication_wrappers::DEAL_Wrapper::write(int socket_fd, GameType &game_type , PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards)
+{
+    std::vector<char> msg_vec(name);
+    std::vector<char> game_type_and_first_player_pos;
+    game_type_and_first_player_pos.push_back(static_cast<char>(game_type));
+    game_type_and_first_player_pos.push_back(playerPos_to_char(first_player_pos));
+
+    msg_vec.insert(msg_vec.end(), game_type_and_first_player_pos.begin(), game_type_and_first_player_pos.end());
+
+    std::vector<char> deck = deck_of_cards.deck_to_char_vector();
+
+    msg_vec.insert(msg_vec.end(), deck.begin(), deck.end());
+    msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
+
+    tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+}

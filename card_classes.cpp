@@ -2,7 +2,8 @@
 #include "constants.h"
 #include <iostream>
 #include "exception_wrappers.h"
-
+#include "enum_types.h"
+#include <vector>
 // CARD CLASS WRAPPER
 cardCls::CardClassWrapper::CardClassWrapper(Suit suit, uint8_t value)
 {
@@ -126,6 +127,43 @@ void cardCls::DeckOfCards::print_deck() const
     }
     std::cout << "\n";
 }
+
+
+std::vector<char> cardCls::DeckOfCards::deck_to_char_vector() const
+{
+    std::vector<char> deck;
+    for (const auto &pair : was_card_played_map)
+    {
+        uint8_t value = pair.first.get_value();
+        if (value >= 2 && value <= 10)
+        {
+            deck.push_back(value);
+        }
+        else
+        {
+            switch (value)
+            {
+            case J:
+                deck.push_back('J');
+                break;
+            case Q:
+                deck.push_back('Q');
+                break;
+            case K:
+                deck.push_back('K');
+                break;
+            case A:
+                deck.push_back('A');
+                break;
+            default:
+                exception_wrappers::invalid_arg_wrapper("Invalid card value");
+            }
+        }
+        deck.push_back(pair.first.get_suit());
+    }
+    return deck;
+}
+
 
 // LEWA
 

@@ -85,6 +85,8 @@ namespace cardCls
 
         void print_deck() const;
 
+        std::vector<char> deck_to_char_vector() const;
+
     private:
         std::map<CardClassWrapper, bool> was_card_played_map;
     };

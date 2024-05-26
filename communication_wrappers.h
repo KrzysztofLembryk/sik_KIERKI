@@ -60,7 +60,7 @@ namespace communication_wrappers
 
         void write(int socket_fd, GameType &game_type , PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards);
 
-        void read(int socket_fd);
+        int read(int socket_fd);
 
     private:
         std::vector<char> name{'D', 'E', 'A', 'L'};
