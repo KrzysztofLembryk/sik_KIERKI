@@ -41,10 +41,11 @@ namespace ingame_comm_wrappers
         TAKEN_Wrapper() = default;
         ~TAKEN_Wrapper() = default;
 
-        void write(int socket_fd, cardCls::Lewa &lewa, 
-            PlayerPosition &player_who_took_lewa);
+        void write(int socket_fd, const cardCls::Lewa &lewa, 
+            const PlayerPosition &player_who_took_lewa);
 
-        void read(int socket_fd);
+        int read(int socket_fd, cardCls::Lewa &lewa, 
+            PlayerPosition &player_who_took_lewa);
     private:
         std::vector<char> name{'T', 'A', 'K', 'E', 'N'};
     };
