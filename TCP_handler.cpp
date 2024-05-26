@@ -81,6 +81,13 @@ int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size,
         }
         if (curr_char == '\r')
             r_occured = true;
+        else 
+        {
+            if (r_occured && curr_char != '\n')
+            {
+                r_occured = false;
+            }
+        }
 
         buff[read_bytes] = curr_char;
         read_bytes++;
