@@ -88,7 +88,7 @@ namespace cardCls
 
         size_t size() const;
 
-        std::vector<char> deck_to_char_vector() const;
+        std::vector<char> to_char_vector() const;
 
     private:
         std::map<CardClassWrapper, bool> was_card_played_map;
@@ -111,11 +111,15 @@ namespace cardCls
 
         const std::vector<CardClassWrapper> &get_cards_in_lewa();
 
-        int get_lewa_id() const;
+        uint8_t get_lewa_id() const;
 
         bool lewa_full() const;
 
+        size_t size() const;
+
         void set_player_who_took_lewa(PlayerPosition player);
+
+        std::vector<char> to_char_vector() const;
 
     private:
         uint8_t lewa_id;

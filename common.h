@@ -18,4 +18,7 @@ PlayerPosition char_to_playerPos(char pos);
 char playerPos_to_char(PlayerPosition pos);
 
 uint8_t determine_value(uint8_t value);
+
+
+
 #endif

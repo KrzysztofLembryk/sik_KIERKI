@@ -1,7 +1,6 @@
 #include "init_comm_wrappers.h"
 #include "common.h"
 #include "err.h"
-// #include <errno.h>
 #include "exception_wrappers.h"
 #include <cstring>
 #include <iostream>
@@ -10,6 +9,7 @@
 std::vector<char> end_chars{'\r', '\n'};
 
 // IAM_Wrapper impl
+
 /**
  * Function transforms PlayerPosition to correct char value and sends 
  * struct IAM by tcp socket
@@ -119,7 +119,7 @@ int init_comm_wrappers::BUSY_Wrapper::read(
                 return ERROR;
             }
 
-            taken_positions.push_back(char_to_playerPos(read_buff[i]));
+            taken_positions.push_back(pos);
         }
         return SUCCESS;
     }
@@ -138,7 +138,7 @@ void init_comm_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type ,
 
     msg_vec.insert(msg_vec.end(), game_type_and_first_player_pos.begin(), game_type_and_first_player_pos.end());
 
-    std::vector<char> deck = deck_of_cards.deck_to_char_vector();
+    std::vector<char> deck = deck_of_cards.to_char_vector();
 
     msg_vec.insert(msg_vec.end(), deck.begin(), deck.end());
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());

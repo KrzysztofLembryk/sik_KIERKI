@@ -4,6 +4,48 @@
 #include "exception_wrappers.h"
 #include "enum_types.h"
 #include <vector>
+
+
+std::vector<char> cardVec_to_charVec(std::vector<cardCls::CardClassWrapper> cards)
+{
+    std::vector<char> deck;
+    for (const auto &card : cards)
+    {
+        uint8_t value = card.get_value();
+        if (value >= 2 && value <= 10)
+        {
+            deck.push_back(static_cast<char>(value));
+        }
+        else
+        {
+            switch (value)
+            {
+            case J:
+                deck.push_back('J');
+                break;
+            case Q:
+                deck.push_back('Q');
+                break;
+            case K:
+                deck.push_back('K');
+                break;
+            case A:
+                deck.push_back('A');
+                break;
+            default:
+                exception_wrappers::invalid_arg_wrapper("Invalid card value");
+            }
+        }
+        deck.push_back(card.get_suit());
+    }
+    return deck;
+}
+
+
+
+
+
+
 // CARD CLASS WRAPPER
 cardCls::CardClassWrapper::CardClassWrapper(Suit suit, uint8_t value)
 {
@@ -129,38 +171,14 @@ void cardCls::DeckOfCards::print_deck() const
 }
 
 
-std::vector<char> cardCls::DeckOfCards::deck_to_char_vector() const
+std::vector<char> cardCls::DeckOfCards::to_char_vector() const
 {
-    std::vector<char> deck;
+    std::vector<cardCls::CardClassWrapper> cardVec;
     for (const auto &pair : was_card_played_map)
     {
-        uint8_t value = pair.first.get_value();
-        if (value >= 2 && value <= 10)
-        {
-            deck.push_back(static_cast<char>(value));
-        }
-        else
-        {
-            switch (value)
-            {
-            case J:
-                deck.push_back('J');
-                break;
-            case Q:
-                deck.push_back('Q');
-                break;
-            case K:
-                deck.push_back('K');
-                break;
-            case A:
-                deck.push_back('A');
-                break;
-            default:
-                exception_wrappers::invalid_arg_wrapper("Invalid card value");
-            }
-        }
-        deck.push_back(pair.first.get_suit());
+        cardVec.push_back(pair.first);
     }
+    std::vector<char> deck = cardVec_to_charVec(cardVec);
     return deck;
 }
 
@@ -191,7 +209,7 @@ const std::vector<cardCls::CardClassWrapper> &cardCls::Lewa::get_cards_in_lewa()
     return lewa;
 }
 
-int cardCls::Lewa::get_lewa_id() const
+uint8_t cardCls::Lewa::get_lewa_id() const
 {
     return lewa_id;
 }
@@ -199,6 +217,11 @@ int cardCls::Lewa::get_lewa_id() const
 bool cardCls::Lewa::lewa_full() const
 {
     return lewa.size() == MAX_LEWA_SIZE;
+}
+
+size_t cardCls::Lewa::size() const
+{
+    return lewa.size();
 }
 
 void cardCls::Lewa::set_player_who_took_lewa(PlayerPosition player)
@@ -212,4 +235,10 @@ void cardCls::Lewa::set_player_who_took_lewa(PlayerPosition player)
         exception_wrappers::invalid_arg_wrapper("Player who took lewa already set");
     }
     player_who_took_lewa = player;
+}
+
+
+std::vector<char> cardCls::Lewa::to_char_vector() const
+{
+    return cardVec_to_charVec(this->lewa);
 }

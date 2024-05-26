@@ -19,7 +19,6 @@ namespace ingame_comm_wrappers
 
         private:
         std::vector<char> name{'T', 'R', 'I', 'C', 'K'};
-        char buff[17];
     };
 
     class WRONG_Wrapper
@@ -34,7 +33,6 @@ namespace ingame_comm_wrappers
 
     private:
         std::vector<char> name{'W', 'R', 'O', 'N', 'G'};
-        char buff[9];
     };
 
     class TAKEN_Wrapper
@@ -49,7 +47,6 @@ namespace ingame_comm_wrappers
         void read(int socket_fd);
     private:
         std::vector<char> name{'T', 'A', 'K', 'E', 'N'};
-        char buff[23];
     };
 }
 #endif // MAIN_COMM_WRAPPERS_H
