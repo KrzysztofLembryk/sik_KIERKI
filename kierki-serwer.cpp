@@ -15,7 +15,7 @@ namespace po = boost::program_options;
 #include "exception_wrappers.h"
 #include "read_file.h"
 #include "game_master.h"
-#include "communication_wrappers.h"
+#include "init_comm_wrappers.h"
 #include "socket_fd_wrapper.h"
 
 void set_timeout_for_socket(int client_fd, int max_wait)
@@ -149,14 +149,14 @@ int main(int ac, char *av[])
 
             print_client_address(client_address);
 
-            communication_wrappers::IAM_Wrapper iam_wrapper;
+            init_comm_wrappers::IAM_Wrapper iam_wrapper;
             PlayerPosition new_p_position;
             if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position) != SUCCESS)
             {
                 continue;
             }
 
-            communication_wrappers::BUSY_Wrapper busy_wrapper;
+            init_comm_wrappers::BUSY_Wrapper busy_wrapper;
             if (game_master_sp->check_if_position_taken(new_p_position))
             {
                 busy_wrapper.write(client_fd_sp->to_int(), game_master_sp->get_taken_positions());
@@ -167,7 +167,7 @@ int main(int ac, char *av[])
                 game_master_sp->add_new_player(new_p_position, client_address);
             }
 
-            communication_wrappers::DEAL_Wrapper deal_wrapper;
+            init_comm_wrappers::DEAL_Wrapper deal_wrapper;
             deal_wrapper.write(client_fd_sp->to_int(), game_master_sp->get_game_type(), game_master_sp->get_whose_turn(), game_master_sp->get_player_cards(new_p_position));
             // std::thread t(
             //     [client_fd_sp, client_address, timeout]() mutable

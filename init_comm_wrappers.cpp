@@ -1,4 +1,4 @@
-#include "communication_wrappers.h"
+#include "init_comm_wrappers.h"
 #include "common.h"
 #include "err.h"
 // #include <errno.h>
@@ -7,77 +7,14 @@
 #include <iostream>
 #include "TCP_handler.h"
 
-// Helper functions
 std::vector<char> end_chars{'\r', '\n'};
-
-PlayerPosition char_to_playerPos(char pos)
-{
-    if (pos == 'N')
-        return PlayerPosition::N;
-    else if (pos == 'E')
-        return PlayerPosition::E;
-    else if (pos == 'S')
-        return PlayerPosition::S;
-    else if (pos == 'W')
-        return PlayerPosition::W;
-    else
-    {
-        err_func::error("Read not allowed position: " + std::string(1, pos));
-        return PlayerPosition::NONE_POS;
-    }
-}
-
-char playerPos_to_char(PlayerPosition pos)
-{
-    if (pos == PlayerPosition::N)
-        return 'N';
-    else if (pos == PlayerPosition::E)
-        return 'E';
-    else if (pos == PlayerPosition::S)
-        return 'S';
-    else if (pos == PlayerPosition::W)
-        return 'W';
-    else
-    {
-        exception_wrappers::invalid_arg_wrapper("Wrong position value");
-    }
-}
-
-uint8_t determine_value(uint8_t value)
-{
-    if (value >= 2 && value <= 10)
-    {
-        return value;
-    }
-    else if (value == 'J')
-    {
-        return J;
-    }
-    else if (value == 'Q')
-    {
-        return Q;
-    }
-    else if (value == 'K')
-    {
-        return K;
-    }
-    else if (value == 'A')
-    {
-        return A;
-    }
-    else
-    {
-        exception_wrappers::invalid_arg_wrapper("Invalid card value");
-    }
-    
-}
 
 // IAM_Wrapper impl
 /**
  * Function transforms PlayerPosition to correct char value and sends 
  * struct IAM by tcp socket
 */
-void communication_wrappers::IAM_Wrapper::write(int socket_fd, PlayerPosition position)
+void init_comm_wrappers::IAM_Wrapper::write(int socket_fd, PlayerPosition position)
 {
     iam.position = playerPos_to_char(position);
     tcp::TCP_send_packet(socket_fd, &iam, sizeof(iam));    
@@ -88,7 +25,7 @@ void communication_wrappers::IAM_Wrapper::write(int socket_fd, PlayerPosition po
  * correct, checks if packet name is correct and then transforms char position 
  * value to PlayerPosition enum, and checks if it is correct
 */
-int communication_wrappers::IAM_Wrapper::read(int socket_fd, PlayerPosition &position)
+int init_comm_wrappers::IAM_Wrapper::read(int socket_fd, PlayerPosition &position)
 {
     ssize_t read_length = 0;
 
@@ -122,7 +59,7 @@ int communication_wrappers::IAM_Wrapper::read(int socket_fd, PlayerPosition &pos
 
 // BUSY_Wrapper
 
-void communication_wrappers::BUSY_Wrapper::write(int socket_fd, std::vector<PlayerPosition> taken_positions)
+void init_comm_wrappers::BUSY_Wrapper::write(int socket_fd, std::vector<PlayerPosition> taken_positions)
 {
     std::vector<char> msg_vec(name);
 
@@ -149,7 +86,7 @@ void communication_wrappers::BUSY_Wrapper::write(int socket_fd, std::vector<Play
  *  We assume that first four bytes are read by function that called us, since
  * calling us means that these bytes were equal to BUSY
 */
-int communication_wrappers::BUSY_Wrapper::read(
+int init_comm_wrappers::BUSY_Wrapper::read(
     int socket_fd, std::vector<PlayerPosition> &taken_positions)
 {
     ssize_t read_length;
@@ -191,7 +128,7 @@ int communication_wrappers::BUSY_Wrapper::read(
 
 // DEAL_Wrapper
 
-void communication_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type , PlayerPosition first_player_pos, cardCls::DeckOfCards &&deck_of_cards)
+void init_comm_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type , PlayerPosition first_player_pos, cardCls::DeckOfCards &&deck_of_cards)
 {
     std::vector<char> msg_vec(name);
     std::vector<char> game_type_and_first_player_pos;
@@ -209,7 +146,7 @@ void communication_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_ty
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
-int communication_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards)
+int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards)
 {
     ssize_t read_length;
     char read_buff[DEAL_BUFF_SIZE - this->name.size()];

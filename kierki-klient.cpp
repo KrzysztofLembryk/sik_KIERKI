@@ -2,7 +2,7 @@
 #include "common.h"
 #include <netinet/in.h>
 #include "exception_wrappers.h"
-#include "communication_wrappers.h"
+#include "init_comm_wrappers.h"
 #include "TCP_handler.h"
 #include <iostream>
 // namespace po = boost::program_options;
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
         exception_wrappers::runtime_err_wrapper(" cannot connect to the server");
     }
 
-    communication_wrappers::IAM_Wrapper iam;
+    init_comm_wrappers::IAM_Wrapper iam;
     iam.write(socket_fd, PlayerPosition::N);
     
     std::string packet_name;
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     if (packet_name == "BUSY")
     {
         std::cout << "Got BUSY packet\n";
-        communication_wrappers::BUSY_Wrapper busy;
+        init_comm_wrappers::BUSY_Wrapper busy;
         std::vector<PlayerPosition> taken_positions;
         busy.read(socket_fd, taken_positions);
 
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     else if (packet_name == "DEAL")
     {
         std::cout << "Got DEAL packet\n";
-        communication_wrappers::DEAL_Wrapper deal;
+        init_comm_wrappers::DEAL_Wrapper deal;
         GameType game_type;
         PlayerPosition first_player_pos;
         cardCls::DeckOfCards deck_of_cards;

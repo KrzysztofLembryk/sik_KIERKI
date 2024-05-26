@@ -13,6 +13,7 @@
 
 #include "err.h"
 #include "common.h"
+#include "exception_wrappers.h"
 
 uint16_t port_from_str_to_ul(char const *string) {
     char *endptr;
@@ -100,5 +101,68 @@ void install_signal_handler(int signal, void (*handler)(int))
 
     if (sigaction(signal, &action, NULL) < 0 ){
         err_func::syserr("sigaction");
+    }
+}
+
+
+
+PlayerPosition char_to_playerPos(char pos)
+{
+    if (pos == 'N')
+        return PlayerPosition::N;
+    else if (pos == 'E')
+        return PlayerPosition::E;
+    else if (pos == 'S')
+        return PlayerPosition::S;
+    else if (pos == 'W')
+        return PlayerPosition::W;
+    else
+    {
+        err_func::error("Read not allowed position: " + std::string(1, pos));
+        return PlayerPosition::NONE_POS;
+    }
+}
+
+char playerPos_to_char(PlayerPosition pos)
+{
+    if (pos == PlayerPosition::N)
+        return 'N';
+    else if (pos == PlayerPosition::E)
+        return 'E';
+    else if (pos == PlayerPosition::S)
+        return 'S';
+    else if (pos == PlayerPosition::W)
+        return 'W';
+    else
+    {
+        exception_wrappers::invalid_arg_wrapper("Wrong position value");
+    }
+}
+
+uint8_t determine_value(uint8_t value)
+{
+    if (value >= 2 && value <= 10)
+    {
+        return value;
+    }
+    else if (value == 'J')
+    {
+        return J;
+    }
+    else if (value == 'Q')
+    {
+        return Q;
+    }
+    else if (value == 'K')
+    {
+        return K;
+    }
+    else if (value == 'A')
+    {
+        return A;
+    }
+    else
+    {
+        exception_wrappers::invalid_arg_wrapper("Invalid card value");
     }
 }
