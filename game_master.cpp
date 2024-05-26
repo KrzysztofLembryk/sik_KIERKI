@@ -2,7 +2,7 @@
 
 gm::GameMaster::GameMaster(std::vector<gameCls::Round> &rounds, const struct sockaddr_in6 &server_addr) : 
 curr_lewa(0), 
-seat_taken_map({{N, false}, {E, false}, {S, false}, {W, false}})
+pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}})
 {
     this->rounds = rounds;
     this->round_number = 0;
@@ -17,18 +17,18 @@ seat_taken_map({{N, false}, {E, false}, {S, false}, {W, false}})
     }
 }
 
-bool gm::GameMaster::check_if_seat_taken(PlayerPosition pos)
+bool gm::GameMaster::check_if_position_taken(PlayerPosition pos)
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
-    return seat_taken_map[pos];
+    return pos_taken_map[pos];
 }
 
-std::vector<PlayerPosition> gm::GameMaster::get_taken_seats()
+std::vector<PlayerPosition> gm::GameMaster::get_taken_positions()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
     std::vector<PlayerPosition> taken_seats;
 
-    for (auto &seat : seat_taken_map)
+    for (auto &seat : pos_taken_map)
     {
         if (seat.second)
         {
@@ -37,4 +37,11 @@ std::vector<PlayerPosition> gm::GameMaster::get_taken_seats()
     }
 
     return taken_seats;
+}
+
+void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &my_address)
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    pos_taken_map[pos] = true;
+    players[pos]->set_player_address(my_address);
 }

@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 #include "exception_wrappers.h"
 #include "communication_wrappers.h"
+#include "TCP_handler.h"
 #include <iostream>
 // namespace po = boost::program_options;
 
@@ -25,7 +26,35 @@ int main(int argc, char *argv[])
     }
 
     communication_wrappers::IAM_Wrapper iam;
-    char buff[] = {'I', 'A', 'M', 'N', '\r', '\n'};
-    std::cout << "Sending wrong msg\n";
-    writen(socket_fd, buff, sizeof(buff));
+    iam.write(socket_fd, PlayerPosition::E);
+    
+    std::string packet_name;
+    if (tcp::TCP_read_packet_name(socket_fd, INIT_CONN_PACKET_NAME_SIZE, packet_name) != SUCCESS)
+    {
+        exception_wrappers::runtime_err_wrapper("Got Wrong packet name SIZE from server");
+    }
+    if (packet_name == "BUSY")
+    {
+        std::cout << "Got BUSY packet\n";
+        communication_wrappers::BUSY_Wrapper busy;
+        std::vector<PlayerPosition> taken_positions;
+        busy.read(socket_fd, taken_positions);
+
+        for (auto pos : taken_positions)
+        {
+            std::cout << "Position " << (unsigned)pos << " is taken\n";
+        }
+    }
+    else if (packet_name == "DEAL")
+    {
+        std::cout << "Got DEAL packet\n";
+    }
+    else
+    {
+        exception_wrappers::runtime_err_wrapper("Got Wrong packet name from server");
+    }
+
+    // char buff[] = {'I', 'A', 'M', 'K', '\r', '\n'};
+    // std::cout << "Sending wrong msg\n";
+    // writen(socket_fd, buff, sizeof(buff));
 }

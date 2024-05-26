@@ -7,11 +7,13 @@ all: $(TARGETS)
 
 kierki-serwer: kierki-serwer.o common.o err.o  game_classes.o \
 exception_wrappers.o card_classes.o read_file.o parameters_handling.o \
-game_master.o player_class.o communication_wrappers.o socket_fd_wrapper.o
+game_master.o player_class.o communication_wrappers.o socket_fd_wrapper.o \
+TCP_handler.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 kierki-klient: kierki-klient.o common.o err.o game_classes.o \
-exception_wrappers.o card_classes.o communication_wrappers.o read_file.o
+exception_wrappers.o card_classes.o communication_wrappers.o read_file.o \
+socket_fd_wrapper.o TCP_handler.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 main: main.o read_file.o game_classes.o exception_wrappers.o card_classes.o

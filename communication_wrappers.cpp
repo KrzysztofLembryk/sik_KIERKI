@@ -22,7 +22,7 @@ PlayerPosition char_to_playerPos(char pos)
         return PlayerPosition::W;
     else
     {
-        err_func::error("Read wrong position");
+        err_func::error("Read not allowed position: " + std::string(1, pos));
         return PlayerPosition::NONE_POS;
     }
 }
@@ -70,14 +70,14 @@ int communication_wrappers::IAM_Wrapper::read(int socket_fd, PlayerPosition &pos
         return TIMEOUT;
     }
 
-    if (strncmp(read_buff, "IAM", 3) != 0)
-    {
-        err_func::error("packet name not equal 'IAM'");
-        return ERROR;
-    }
     if (read_length != IAM_BUFF_SIZE)
     {
         err_func::error("read_length != IAM_BUFF_SIZE");
+        return ERROR;
+    }
+    if (strncmp(read_buff, "IAM", 3) != 0)
+    {
+        err_func::error("packet name not equal 'IAM'");
         return ERROR;
     }
 
@@ -147,7 +147,7 @@ int communication_wrappers::BUSY_Wrapper::read(
     }
     else 
     {
-        for (size_t i = 0; i < read_length - 2; i++)
+        for (size_t i = 0; i < (size_t)(read_length - 2); i++)
         {
             PlayerPosition pos = char_to_playerPos(read_buff[i]);
 

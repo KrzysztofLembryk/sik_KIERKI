@@ -18,8 +18,10 @@ namespace gm
                                         const struct sockaddr_in6 &server_addr);
         ~GameMaster() = default;
 
-        bool check_if_seat_taken(PlayerPosition pos);
-        std::vector<PlayerPosition> get_taken_seats();
+        bool check_if_position_taken(PlayerPosition pos);
+        std::vector<PlayerPosition> get_taken_positions();
+        void add_new_player(PlayerPosition pos, 
+                            struct sockaddr_in6 &my_address);
 
     private:
         std::map<PlayerPosition, std::shared_ptr<Player>> players;
@@ -28,7 +30,7 @@ namespace gm
         PlayerPosition whose_turn;
         size_t round_number;
         gameCls::CardCounter card_counter;
-        std::map<PlayerPosition, bool> seat_taken_map;
+        std::map<PlayerPosition, bool> pos_taken_map;
         std::mutex mutex_gm;
     };
 }

@@ -15,6 +15,9 @@ constexpr int BUFFER_SIZE = 1024;
 
 
 // COMMUNICATION WRAPPERS CONSTANTS
+constexpr size_t INIT_CONN_PACKET_NAME_SIZE = 4;
+constexpr size_t GAME_PACKET_NAME_SIZE = 5;
+constexpr size_t MAX_PACKET_NAME_SIZE = 5;
 constexpr size_t IAM_BUFF_SIZE = 6;
 constexpr size_t BUSY_BUFF_SIZE = 10;
 
