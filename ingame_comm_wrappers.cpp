@@ -140,3 +140,47 @@ int ingame_comm_wrappers::TAKEN_Wrapper::read(int socket_fd,
 
     return SUCCESS;
 }
+
+// SCORE_Wrapper impl
+
+void SCORE_Wrapper::write(int socket_fd, const std::map<PlayerPosition, uint8_t> &scores)
+{
+    std::vector<char> msg_vec(name);
+
+    for (const auto &score : scores)
+    {
+        msg_vec.push_back(playerPos_to_char(score.first));
+        msg_vec.push_back(static_cast<char>(score.second));
+    }
+    msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
+
+    tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+}
+
+int SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores)
+{
+    ssize_t read_length;
+    char read_buff[SCORE_BUFF_SIZE - this->name.size()];
+    std::memset(read_buff, 0, SCORE_BUFF_SIZE - this->name.size());
+
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, SCORE_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    {
+        return ERROR;
+    }
+
+    if (read_length != SCORE_BUFF_SIZE - this->name.size())
+    {
+        err_func::error(" read_length != 10 -- 10 bytes are required to be sent");
+        return ERROR;
+    }
+
+    for (size_t i = 0; i < (size_t)(read_length - 2); i+=2)
+    {
+        PlayerPosition pos = char_to_playerPos(read_buff[i]);
+        uint8_t score = static_cast<uint8_t>(read_buff[i + 1]);
+
+        scores[pos] = score;
+    }
+
+    return SUCCESS;
+}

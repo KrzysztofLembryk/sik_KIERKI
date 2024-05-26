@@ -50,4 +50,20 @@ namespace ingame_comm_wrappers
         std::vector<char> name{'T', 'A', 'K', 'E', 'N'};
     };
 }
+
+class SCORE_Wrapper
+{
+public:
+    SCORE_Wrapper() = default;
+    ~SCORE_Wrapper() = default;
+
+    void write(int socket_fd, const std::map<PlayerPosition, uint8_t> &scores);
+
+    int read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores);
+
+private:
+    std::vector<char> name{'S', 'C', 'O', 'R', 'E'};
+};
+
+
 #endif // MAIN_COMM_WRAPPERS_H
