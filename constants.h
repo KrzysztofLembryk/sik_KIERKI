@@ -22,6 +22,7 @@ constexpr size_t IAM_BUFF_SIZE = 6;
 constexpr size_t BUSY_BUFF_SIZE = 10;
 constexpr size_t DEAL_BUFF_SIZE = 50;
 constexpr size_t TRICK_BUFF_SIZE = 16;
+constexpr size_t WRONG_BUFF_SIZE = 8;
 
 
 // GAME_CLASSES CONSTANTS

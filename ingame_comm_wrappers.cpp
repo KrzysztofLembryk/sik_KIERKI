@@ -56,3 +56,36 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     }
     return SUCCESS;
 }
+
+// WRONG_Wrapper impl
+
+void ingame_comm_wrappers::WRONG_Wrapper::write(int socket_fd, uint8_t lewa_id)
+{
+    std::vector<char> msg_vec(name);
+    msg_vec.push_back(static_cast<char>(lewa_id));
+    msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
+
+    tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+}
+
+int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, uint8_t &lewa_id)
+{
+    ssize_t read_length;
+    char read_buff[WRONG_BUFF_SIZE - this->name.size()];
+    std::memset(read_buff, 0, WRONG_BUFF_SIZE - this->name.size());
+
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, WRONG_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    {
+        return ERROR;
+    }
+
+    if (read_length != 3)
+    {
+        err_func::error(" read_length != 3 - 3 bytes are required to be sent");
+        return ERROR;
+    }
+
+    lewa_id = static_cast<uint8_t>(read_buff[0]);
+
+    return SUCCESS;
+}

@@ -29,7 +29,7 @@ namespace ingame_comm_wrappers
 
         void write(int socket_fd, uint8_t lewa_id);
 
-        void read(int socket_fd);
+        int read(int socket_fd, uint8_t &lewa_id);
 
     private:
         std::vector<char> name{'W', 'R', 'O', 'N', 'G'};
