@@ -209,8 +209,18 @@ void ingame_comm_wrappers::SCORE_Wrapper::write(int socket_fd, const std::map<Pl
     for (const auto &score : scores)
     {
         msg_vec.push_back(playerPos_to_char(score.first));
-        msg_vec.push_back(static_cast<char>(score.second));
+
+        std::string score_str = std::to_string(score.second);
+        std::vector<char> score_vec(score_str.begin(), score_str.end());
+        if (score_str[score_str.size() - 1] == '\0')
+        {
+            std::cout << "NA KONCU STRING W SCORE WRITE JEST NULL BYTE\n";
+            fflush(stdout);
+        }
+        score_vec.pop_back(); // remove '\0' from string
+        msg_vec.insert(msg_vec.end(), score_vec.begin(), score_vec.end());
     }
+
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
@@ -219,27 +229,77 @@ void ingame_comm_wrappers::SCORE_Wrapper::write(int socket_fd, const std::map<Pl
 int ingame_comm_wrappers::SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores)
 {
     ssize_t read_length;
-    char read_buff[MAX_SCORE_BUFF_SIZE - this->name.size()];
-    std::memset(read_buff, 0, MAX_SCORE_BUFF_SIZE - this->name.size());
+    char read_buff[MAX_SCORE_BUFF_SIZE];
+    std::memset(read_buff, 0, MAX_SCORE_BUFF_SIZE );
 
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_SCORE_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_SCORE_BUFF_SIZE, read_length) != SUCCESS)
     {
         return ERROR;
     }
-
-    if ((size_t)read_length != MAX_SCORE_BUFF_SIZE - this->name.size())
+    
+    if ((size_t)read_length < MIN_SCORE_BUFF_SIZE)
     {
-        err_func::error(" read_length != 10 -- 10 bytes are required to be sent");
+        err_func::error(" read_length < MIN_SCORE_BUFF_SIZE");
         return ERROR;
     }
 
-    for (size_t i = 0; i < (size_t)(read_length - 2); i+=2)
+    std::map<PlayerPosition, bool> player_checked( {{N, false}, {E, false}, {S, false}, {W, false}});
+    std::string score_str;
+    char prev_pos = '1';
+    
+    for (size_t i = 0; i < (size_t)(read_length - 2); i++)
     {
-        PlayerPosition pos = char_to_playerPos(read_buff[i]);
-        uint8_t score = static_cast<uint8_t>(read_buff[i + 1]);
+        if (read_buff[i] == 'N' || read_buff[i] == 'E' || read_buff[i] == 'S' || read_buff[i] == 'W')
+        {
+            if (player_checked[char_to_playerPos(read_buff[i])])
+            {
+                err_func::error("Player already checked");
+                return ERROR;
+            }
+            // We need to remember previous position to be able to parse this 
+            // position score
+            if (prev_pos == '1')
+            {
+                prev_pos = read_buff[i];
+            }
+            else 
+            {
+                uint16_t score = (uint16_t)std::stoi(score_str);
+                if (score > 255)
+                {
+                    err_func::error("Score > 255");
+                    return ERROR;
+                }
 
-        scores[pos] = score;
+                scores[char_to_playerPos(prev_pos)] = (uint8_t)std::stoi(score_str);
+                prev_pos = read_buff[i];
+            }
+            player_checked[char_to_playerPos(read_buff[i])] = true;
+            score_str.clear();
+        }
+        else
+        {
+            if (read_buff[i] >= '0' && read_buff[i] <= '9')
+            {
+                score_str.push_back(read_buff[i]);
+            }
+            else 
+            {
+                err_func::error("Read char is not a digit but is in score");
+                return ERROR;
+            }
+        }
     }
+
+    // after loop ends last position score is not added so we need to do it
+    uint16_t score = (uint16_t)std::stoi(score_str);
+    if (score > 255)
+    {
+        err_func::error("Score > 255");
+        return ERROR;
+    }
+
+    scores[char_to_playerPos(prev_pos)] = (uint8_t)std::stoi(score_str);
 
     return SUCCESS;
 }
