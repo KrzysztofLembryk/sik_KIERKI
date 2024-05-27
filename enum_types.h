@@ -3,15 +3,15 @@
 
 #include <cstdint>
 
-enum GameType : uint8_t
+enum GameType : char
 {
-    NO_LEWA = 1,
-    NO_HEART,
-    NO_QUEEN,
-    NO_MISTER,
-    NO_KING_HEART,
-    NO_SEVEN_AND_LAST,
-    BANDIT
+    NO_LEWA = '1',
+    NO_HEART = '2',
+    NO_QUEEN = '3',
+    NO_MISTER = '4',
+    NO_KING_HEART = '5',
+    NO_SEVEN_AND_LAST = '6',
+    BANDIT = '7'
 };
 
 /**
