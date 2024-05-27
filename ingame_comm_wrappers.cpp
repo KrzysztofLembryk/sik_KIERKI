@@ -3,6 +3,7 @@
 #include "TCP_handler.h"
 #include "constants.h"
 #include "err.h"
+#include <endian.h>
 
 std::vector<char> end_chars{'\r', '\n'};
 
@@ -180,6 +181,59 @@ int SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores
         uint8_t score = static_cast<uint8_t>(read_buff[i + 1]);
 
         scores[pos] = score;
+    }
+
+    return SUCCESS;
+}
+
+void TOTAL_Wrapper::write(int socket_fd, 
+    const std::map<PlayerPosition, uint16_t> &total_scores)
+{
+    std::vector<char> msg_vec(name);
+
+    for (const auto &score : total_scores)
+    {
+        msg_vec.push_back(playerPos_to_char(score.first));
+        // Depending on score value, we need to send 1 or 2 bytes
+        std::cout << "sending pos: " << playerPos_to_char(score.first) << "\n";
+        std::cout << "sending score: " << (unsigned)score.second << "\n";
+        uint16_t score_val_be = htobe16(score.second);
+        char lo = score_val_be & 0xFF;
+        char hi = score_val_be >> 8;
+        msg_vec.push_back(hi);
+        msg_vec.push_back(lo);
+        
+    }
+    msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
+
+    tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+}
+
+int TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint16_t> &total_scores)
+{
+    ssize_t read_length;
+    char read_buff[TOTAL_BUFF_SIZE - this->name.size()];
+    std::memset(read_buff, 0, TOTAL_BUFF_SIZE - this->name.size());
+
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, TOTAL_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    {
+        return ERROR;
+    }
+
+    if (read_length < TOTAL_BUFF_SIZE - this->name.size())
+    {
+        err_func::error(" read_length != 14 -- 14 bytes are required to be sent");
+        return ERROR;
+    }
+
+    for (size_t i = 0; i < (size_t)(read_length - 2); i+=3)
+    {
+        PlayerPosition pos = char_to_playerPos(read_buff[i]);
+        uint16_t score = (uint16_t)read_buff[i + 1] << 8 | (uint16_t)read_buff[i + 2];
+        score = be16toh(score);
+        std::cout << "pos: " << read_buff[i] << "\n";
+        std::cout << "Read Score: " << (unsigned)score << "\n";
+        total_scores[pos] = score;
     }
 
     return SUCCESS;

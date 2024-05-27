@@ -25,6 +25,7 @@ constexpr size_t TRICK_BUFF_SIZE = 16;
 constexpr size_t WRONG_BUFF_SIZE = 8;
 constexpr size_t TAKEN_BUFF_SIZE = 17;
 constexpr size_t SCORE_BUFF_SIZE = 15;
+constexpr size_t TOTAL_BUFF_SIZE = 19;
 
 
 // GAME_CLASSES CONSTANTS

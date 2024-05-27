@@ -65,5 +65,18 @@ private:
     std::vector<char> name{'S', 'C', 'O', 'R', 'E'};
 };
 
+class TOTAL_Wrapper
+{
+public:
+    TOTAL_Wrapper() = default;
+    ~TOTAL_Wrapper() = default;
 
+    void write(int socket_fd, 
+        const std::map<PlayerPosition, uint16_t> &total_scores);
+
+    int read(int socket_fd, std::map<PlayerPosition, uint16_t> &total_scores);
+
+private:
+    std::vector<char> name{'T', 'O', 'T', 'A', 'L'};
+};
 #endif // MAIN_COMM_WRAPPERS_H
