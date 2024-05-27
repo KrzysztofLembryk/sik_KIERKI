@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include "enum_types.h"
+#include <vector>
 
 uint16_t port_from_str_to_ul(char const *string);
 struct sockaddr_in get_server_address(char const *host, uint16_t port);
@@ -17,8 +18,10 @@ PlayerPosition char_to_playerPos(char pos);
 
 char playerPos_to_char(PlayerPosition pos);
 
-uint8_t determine_value(uint8_t value);
+uint8_t determine_value(std::vector<char> values);
 
 Suit determine_suit(char suit);
+
+GameType determine_game_type(char game_type);
 
 #endif

@@ -28,14 +28,14 @@ int init_comm_wrappers::IAM_Wrapper::read(int socket_fd, PlayerPosition &positio
 {
     ssize_t read_length = 0;
 
-    std::memset(read_buff, 0, IAM_BUFF_SIZE);
+    std::memset(read_buff, 0, MAX_IAM_BUFF_SIZE);
     
-    if (tcp::TCP_read_packet(socket_fd, read_buff, IAM_BUFF_SIZE, read_length) == TIMEOUT)
+    if (tcp::TCP_read_packet(socket_fd, read_buff, MAX_IAM_BUFF_SIZE, read_length) == TIMEOUT)
     {
         return TIMEOUT;
     }
 
-    if (read_length != IAM_BUFF_SIZE)
+    if (read_length != MAX_IAM_BUFF_SIZE)
     {
         err_func::error("read_length != IAM_BUFF_SIZE");
         return ERROR;
@@ -89,21 +89,21 @@ int init_comm_wrappers::BUSY_Wrapper::read(
     int socket_fd, std::vector<PlayerPosition> &taken_positions)
 {
     ssize_t read_length;
-    char read_buff[BUSY_BUFF_SIZE - this->name.size()];
-    std::memset(read_buff, 0, BUSY_BUFF_SIZE - this->name.size());
+    char read_buff[MAX_BUSY_BUFF_SIZE]; 
+    std::memset(read_buff, 0, MAX_BUSY_BUFF_SIZE); 
 
     // BUSY_BUFF_SIZE is maximally equal to 10 - 4 bytes for packet name = BUSY
     // 2 bytes for end chars and maximally 4 bytes for player positions thus
     // we can read maximally BUSY_BUFF_SIZE - this->name.size() bytes
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, BUSY_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_BUSY_BUFF_SIZE, read_length) != SUCCESS)
     {
         return ERROR;
     }
 
-    if (read_length <= 2)
+    if (read_length < MIN_BUSY_BUFF_SIZE)
     {
         // Msg was BUSY\r\n thus no positions were taken
-        err_func::error(" read_length <= 2 ");
+        err_func::error(" read_length < MIN_BUSY_BUFF_SIZE");
         return ERROR;
     }
     else 
@@ -148,33 +148,52 @@ void init_comm_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type ,
 int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards)
 {
     ssize_t read_length;
-    char read_buff[DEAL_BUFF_SIZE - this->name.size()];
-    std::memset(read_buff, 0, DEAL_BUFF_SIZE - this->name.size());
+    char read_buff[MAX_DEAL_BUFF_SIZE]; 
+    std::memset(read_buff, 0, MAX_DEAL_BUFF_SIZE);
 
     // DEAL_BUFF_SIZE is maximally equal to 50 - 4 bytes for packet name = DEAL
     // 2 bytes for end chars and maximally 44 bytes for deck of cards thus
     // we can read maximally DEAL_BUFF_SIZE - this->name.size() bytes
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, DEAL_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_DEAL_BUFF_SIZE, read_length) != SUCCESS)
     {
         return ERROR;
     }
 
-    if (read_length < 30)
+    if (read_length < MIN_DEAL_BUFF_SIZE)
     {
-        err_func::error(" read_length < 30 which is minimal nbr of bytes required to be sent");
+        err_func::error(" read_length < MIN_DEAL_BUFF_SIZE");
         return ERROR;
     }
 
-    game_type = static_cast<GameType>(read_buff[0]); 
+    game_type = determine_game_type(read_buff[0]);
     first_player_pos = char_to_playerPos(read_buff[1]);
 
-    for (size_t i = 3; i < (size_t)read_length - 2; i+=2)
+    uint8_t value;
+    Suit suit;
+    std::vector<char> char_val_vec;
+    size_t i = 2;
+
+    while (i < (size_t)read_length - 3)
     {
-        uint8_t value = determine_value(static_cast<uint8_t>(read_buff[i - 1]));
-        Suit suit = determine_suit(read_buff[i]);
+        if (read_buff[i] == '1')
+        {
+            char_val_vec.push_back(read_buff[i]);
+            char_val_vec.push_back(read_buff[i + 1]);
+            value = determine_value(char_val_vec);
+            suit = determine_suit(read_buff[i + 2]);
+            i += 3;
+        }
+        else 
+        {
+            char_val_vec.push_back(read_buff[i]);
+            suit = determine_suit(read_buff[i + 1]);
+            i += 2;
+        }
 
         deck_of_cards.add_card(cardCls::CardClassWrapper(suit, value));
+        char_val_vec.clear();
     }
+
     if (deck_of_cards.size() != 13)
     {
         err_func::error("Deck of cards size is not equal to 13");

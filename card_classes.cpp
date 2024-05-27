@@ -12,9 +12,15 @@ std::vector<char> cardVec_to_charVec(std::vector<cardCls::CardClassWrapper> card
     for (const auto &card : cards)
     {
         uint8_t value = card.get_value();
-        if (value >= 2 && value <= 10)
+        if (value >= 2 && value != 10)
         {
-            deck.push_back(static_cast<char>(value));
+            deck.push_back(std::to_string(value)[0]);
+            std::cout << "value of card in cardVec_to_charVec: " << std::to_string(value)[0] << "\n";
+        }
+        else if (value == 10)
+        {
+            deck.push_back('1');
+            deck.push_back('0');
         }
         else
         {

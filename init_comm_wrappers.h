@@ -34,7 +34,7 @@ namespace init_comm_wrappers
         } IAM;
 
         IAM iam;
-        char read_buff[IAM_BUFF_SIZE];
+        char read_buff[MAX_IAM_BUFF_SIZE];
     };
 
     class BUSY_Wrapper

@@ -24,10 +24,10 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     cardCls::Lewa &lewa)
 {
     ssize_t read_length;
-    char read_buff[TRICK_BUFF_SIZE - this->name.size()];
-    std::memset(read_buff, 0, TRICK_BUFF_SIZE - this->name.size());
+    char read_buff[MAX_TRICK_BUFF_SIZE - this->name.size()];
+    std::memset(read_buff, 0, MAX_TRICK_BUFF_SIZE - this->name.size());
 
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, DEAL_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_DEAL_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
     {
         return ERROR;
     }
@@ -70,10 +70,10 @@ void ingame_comm_wrappers::WRONG_Wrapper::write(int socket_fd, uint8_t lewa_id)
 int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, uint8_t &lewa_id)
 {
     ssize_t read_length;
-    char read_buff[WRONG_BUFF_SIZE - this->name.size()];
-    std::memset(read_buff, 0, WRONG_BUFF_SIZE - this->name.size());
+    char read_buff[MAX_WRONG_BUFF_SIZE - this->name.size()];
+    std::memset(read_buff, 0, MAX_WRONG_BUFF_SIZE - this->name.size());
 
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, WRONG_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_WRONG_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
     {
         return ERROR;
     }
@@ -111,15 +111,15 @@ int ingame_comm_wrappers::TAKEN_Wrapper::read(int socket_fd,
                                     PlayerPosition &player_who_took_lewa)
 {
     ssize_t read_length;
-    char read_buff[TAKEN_BUFF_SIZE - this->name.size()];
-    std::memset(read_buff, 0, TAKEN_BUFF_SIZE - this->name.size());
+    char read_buff[MAX_TAKEN_BUFF_SIZE - this->name.size()];
+    std::memset(read_buff, 0, MAX_TAKEN_BUFF_SIZE - this->name.size());
 
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, TAKEN_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TAKEN_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
     {
         return ERROR;
     }
 
-    if ((size_t)read_length != TAKEN_BUFF_SIZE - this->name.size())
+    if ((size_t)read_length != MAX_TAKEN_BUFF_SIZE - this->name.size())
     {
         err_func::error(" read_length != 17 - 17 bytes are required to be sent");
         return ERROR;
@@ -159,15 +159,15 @@ void ingame_comm_wrappers::SCORE_Wrapper::write(int socket_fd, const std::map<Pl
 int ingame_comm_wrappers::SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores)
 {
     ssize_t read_length;
-    char read_buff[SCORE_BUFF_SIZE - this->name.size()];
-    std::memset(read_buff, 0, SCORE_BUFF_SIZE - this->name.size());
+    char read_buff[MAX_SCORE_BUFF_SIZE - this->name.size()];
+    std::memset(read_buff, 0, MAX_SCORE_BUFF_SIZE - this->name.size());
 
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, SCORE_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_SCORE_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
     {
         return ERROR;
     }
 
-    if ((size_t)read_length != SCORE_BUFF_SIZE - this->name.size())
+    if ((size_t)read_length != MAX_SCORE_BUFF_SIZE - this->name.size())
     {
         err_func::error(" read_length != 10 -- 10 bytes are required to be sent");
         return ERROR;
@@ -209,15 +209,15 @@ void ingame_comm_wrappers::TOTAL_Wrapper::write(int socket_fd,
 int ingame_comm_wrappers::TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint16_t> &total_scores)
 {
     ssize_t read_length;
-    char read_buff[TOTAL_BUFF_SIZE - this->name.size()];
-    std::memset(read_buff, 0, TOTAL_BUFF_SIZE - this->name.size());
+    char read_buff[MAX_TOTAL_BUFF_SIZE - this->name.size()];
+    std::memset(read_buff, 0, MAX_TOTAL_BUFF_SIZE - this->name.size());
 
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, TOTAL_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TOTAL_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
     {
         return ERROR;
     }
 
-    if ((size_t)read_length != TOTAL_BUFF_SIZE - this->name.size())
+    if ((size_t)read_length != MAX_TOTAL_BUFF_SIZE - this->name.size())
     {
         err_func::error(" read_length != 14 -- 14 bytes are required to be sent");
         return ERROR;

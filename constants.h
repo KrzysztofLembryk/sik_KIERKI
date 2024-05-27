@@ -19,14 +19,33 @@ constexpr int BUFFER_SIZE = 1024;
 constexpr size_t INIT_PACKET_NAME_SIZE = 4;
 constexpr size_t INGAME_PACKET_NAME_SIZE = 5;
 constexpr size_t MAX_PACKET_NAME_SIZE = 5;
-constexpr size_t IAM_BUFF_SIZE = 6;
-constexpr size_t BUSY_BUFF_SIZE = 10;
-constexpr size_t DEAL_BUFF_SIZE = 50;
-constexpr size_t TRICK_BUFF_SIZE = 16;
-constexpr size_t WRONG_BUFF_SIZE = 8;
-constexpr size_t TAKEN_BUFF_SIZE = 17;
-constexpr size_t SCORE_BUFF_SIZE = 15;
-constexpr size_t TOTAL_BUFF_SIZE = 19;
+
+// Buffor sizes for each available packet, we need to know max and min sizes of
+// every packet to be able to discern when we got to little/many bytes.
+constexpr size_t MAX_IAM_BUFF_SIZE = 6;
+constexpr size_t MIN_IAM_BUFF_SIZE = 6;
+
+constexpr size_t MAX_BUSY_BUFF_SIZE = 6;
+constexpr size_t MIN_BUSY_BUFF_SIZE = 3;
+
+constexpr size_t MAX_DEAL_BUFF_SIZE = 34;
+constexpr size_t MIN_DEAL_BUFF_SIZE = 30;
+
+constexpr size_t MAX_TRICK_BUFF_SIZE = 13;
+constexpr size_t MIN_TRICK_BUFF_SIZE = 4;
+
+constexpr size_t MAX_WRONG_BUFF_SIZE = 4;
+constexpr size_t MIN_WRONG_BUFF_SIZE = 3;
+
+constexpr size_t MAX_TAKEN_BUFF_SIZE = 17;
+constexpr size_t MIN_TAKEN_BUFF_SIZE = 12;
+
+constexpr size_t MAX_SCORE_BUFF_SIZE = 18;
+constexpr size_t MIN_SCORE_BUFF_SIZE = 10;
+
+constexpr size_t MAX_TOTAL_BUFF_SIZE = 95;
+constexpr size_t MAX_TOTAL_BUFF_SIZE = 10;
+
 const std::vector<char> end_chars{'\r', '\n'};
 
 

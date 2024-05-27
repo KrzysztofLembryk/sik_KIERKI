@@ -10,22 +10,24 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
-
 #include "err.h"
 #include "common.h"
 #include "exception_wrappers.h"
 
-uint16_t port_from_str_to_ul(char const *string) {
+uint16_t port_from_str_to_ul(char const *string)
+{
     char *endptr;
     errno = 0;
     unsigned long port = strtoul(string, &endptr, 10);
-    if (errno != 0 || *endptr != 0 || port > UINT16_MAX) {
+    if (errno != 0 || *endptr != 0 || port > UINT16_MAX)
+    {
         err_func::fatal("%s is not a valid port number", string);
     }
-    return (uint16_t) port;
+    return (uint16_t)port;
 }
 
-struct sockaddr_in get_server_address(char const *host, uint16_t port) {
+struct sockaddr_in get_server_address(char const *host, uint16_t port)
+{
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET; // IPv4
@@ -34,14 +36,15 @@ struct sockaddr_in get_server_address(char const *host, uint16_t port) {
 
     struct addrinfo *address_result;
     int errcode = getaddrinfo(host, NULL, &hints, &address_result);
-    if (errcode != 0) {
+    if (errcode != 0)
+    {
         err_func::fatal("getaddrinfo: %s", gai_strerror(errcode));
     }
 
     struct sockaddr_in send_address;
-    send_address.sin_family = AF_INET;   // IPv4
-    send_address.sin_addr.s_addr =       // IP address
-            ((struct sockaddr_in *) (address_result->ai_addr))->sin_addr.s_addr;
+    send_address.sin_family = AF_INET; // IPv4
+    send_address.sin_addr.s_addr =     // IP address
+        ((struct sockaddr_in *)(address_result->ai_addr))->sin_addr.s_addr;
     send_address.sin_port = htons(port); // port from the command line
 
     freeaddrinfo(address_result);
@@ -51,36 +54,39 @@ struct sockaddr_in get_server_address(char const *host, uint16_t port) {
 
 // Following two functions come from Stevens' "UNIX Network Programming" book.
 // Read n bytes from a descriptor. Use in place of read() when fd is a stream socket.
-ssize_t readn(int fd, void *vptr, size_t n) {
+ssize_t readn(int fd, void *vptr, size_t n)
+{
     ssize_t nleft, nread;
     char *ptr;
 
-    ptr = (char*)vptr;
+    ptr = (char *)vptr;
     nleft = n;
-    while (nleft > 0) {
+    while (nleft > 0)
+    {
         if ((nread = read(fd, ptr, nleft)) < 0)
-            return nread;     // When error, return < 0.
+            return nread; // When error, return < 0.
         else if (nread == 0)
-            break;            // EOF
+            break; // EOF
 
         nleft -= nread;
         ptr += nread;
     }
-    return n - nleft;         // return >= 0
+    return n - nleft; // return >= 0
 }
 
 // Write n bytes to a descriptor.
-ssize_t writen(int fd, const void *vptr, size_t n){
+ssize_t writen(int fd, const void *vptr, size_t n)
+{
     ssize_t nleft, nwritten;
     const char *ptr;
 
-    ptr = (char*)vptr;               // Can't do pointer arithmetic on void*.
+    ptr = (char *)vptr; // Can't do pointer arithmetic on void*.
     nleft = n;
-    while (nleft > 0) 
+    while (nleft > 0)
     {
         if ((nwritten = write(fd, ptr, nleft)) <= 0)
         {
-            return nwritten;  // error
+            return nwritten; // error
         }
 
         nleft -= nwritten;
@@ -99,12 +105,11 @@ void install_signal_handler(int signal, void (*handler)(int))
     action.sa_mask = block_mask;
     action.sa_flags = 0;
 
-    if (sigaction(signal, &action, NULL) < 0 ){
+    if (sigaction(signal, &action, NULL) < 0)
+    {
         err_func::syserr("sigaction");
     }
 }
-
-
 
 PlayerPosition char_to_playerPos(char pos)
 {
@@ -139,31 +144,43 @@ char playerPos_to_char(PlayerPosition pos)
     }
 }
 
-uint8_t determine_value(uint8_t value)
+uint8_t determine_value(std::vector<char> values)
 {
-    if (value >= 2 && value <= 10)
+    if (values.size() == 1)
     {
-        return value;
+
+        if (values[0] == 'J')
+        {
+            return J;
+        }
+        else if (values[0] == 'Q')
+        {
+            return Q;
+        }
+        else if (values[0] == 'K')
+        {
+            return K;
+        }
+        else if (values[0] == 'A')
+        {
+            return A;
+        }
+        else if (values[0] >= '2' && values[0] <= '9')
+        {
+            return static_cast<uint8_t>(values[0] - '0');
+        }
+        else
+        {
+            exception_wrappers::invalid_arg_wrapper("Invalid card value read from socket");
+        }
     }
-    else if (value == 'J')
+    else if (values[0] == '1' && values[1] == '0')
     {
-        return J;
-    }
-    else if (value == 'Q')
-    {
-        return Q;
-    }
-    else if (value == 'K')
-    {
-        return K;
-    }
-    else if (value == 'A')
-    {
-        return A;
+        return 10;
     }
     else
     {
-        exception_wrappers::invalid_arg_wrapper("Invalid card value");
+        exception_wrappers::invalid_arg_wrapper("Invalid card value read from socket");
     }
 }
 
@@ -176,5 +193,17 @@ Suit determine_suit(char suit)
     else
     {
         exception_wrappers::invalid_arg_wrapper("Invalid card suit");
+    }
+}
+
+GameType determine_game_type(char game_type)
+{
+    if (game_type == NO_LEWA || game_type == NO_HEART || game_type == NO_QUEEN || game_type == NO_MISTER || game_type == NO_KING_HEART || game_type == NO_SEVEN_AND_LAST || game_type == BANDIT)
+    {
+        return static_cast<GameType>(game_type);
+    }
+    else
+    {
+        exception_wrappers::invalid_arg_wrapper("Invalid game type read from socket");
     }
 }
