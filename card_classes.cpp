@@ -225,6 +225,27 @@ void cardCls::Lewa::set_lewa_id(uint8_t id)
     lewa_id = id;
 }
 
+void cardCls::Lewa::set_lewa_id(const std::vector<char> &id)
+{
+    if (id.size() == 1)
+    {
+        lewa_id = id[0] - '0';
+    }
+    else if (id.size() == 2)
+    {
+        lewa_id = (id[0] - '0') * 10 + (id[1] - '0');
+    }
+    else
+    {
+        exception_wrappers::invalid_arg_wrapper("Invalid lewa id size");
+    }
+
+    if (lewa_id < 1 || lewa_id > 13)
+    {
+        exception_wrappers::invalid_arg_wrapper("Invalid lewa id value");
+    }
+}
+
 bool cardCls::Lewa::lewa_full() const
 {
     return lewa.size() == MAX_LEWA_SIZE;
@@ -254,6 +275,19 @@ std::vector<char> cardCls::Lewa::to_char_vector() const
     return cardVec_to_charVec(this->lewa);
 }
 
+
+std::vector<char> cardCls::Lewa::get_lewa_id_as_char() const
+{
+    if (lewa_id < 10)
+    {
+        return {static_cast<char>(lewa_id + '0')};
+    }
+    else
+    {
+        std::string id = std::to_string(lewa_id);
+        return {id[0], id[1]};
+    }
+}
 
 cardCls::CardClassWrapper cardCls::Lewa::get_top_card() const
 {

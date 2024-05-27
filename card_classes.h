@@ -114,7 +114,12 @@ namespace cardCls
         CardClassWrapper get_top_card() const;
 
         uint8_t get_lewa_id() const;
+
+        std::vector<char> get_lewa_id_as_char() const;
+
         void set_lewa_id(uint8_t id);
+
+        void set_lewa_id(const std::vector<char> &id);
 
         bool lewa_full() const;
 

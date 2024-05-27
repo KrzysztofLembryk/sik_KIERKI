@@ -15,7 +15,7 @@ namespace ingame_comm_wrappers
 
         void write(int socket_fd, cardCls::Lewa &lewa);
 
-        int read(int socket_fd, cardCls::Lewa &lewa);
+        int read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_round);
 
         private:
         std::vector<char> name{'T', 'R', 'I', 'C', 'K'};
@@ -27,9 +27,9 @@ namespace ingame_comm_wrappers
         WRONG_Wrapper() = default;
         ~WRONG_Wrapper() = default;
 
-        void write(int socket_fd, uint8_t lewa_id);
+        void write(int socket_fd, const cardCls::Lewa &lewa);
 
-        int read(int socket_fd, uint8_t &lewa_id);
+        int read(int socket_fd, cardCls::Lewa &lewa);
 
     private:
         std::vector<char> name{'W', 'R', 'O', 'N', 'G'};

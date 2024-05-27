@@ -10,9 +10,10 @@ void ingame_comm_wrappers::TRICK_Wrapper::write(int socket_fd,
     cardCls::Lewa  &lewa)
 {
     std::vector<char> msg_vec(name);
+    std::vector<char> lewa_id = lewa.get_lewa_id_as_char(); 
     std::vector<char> lewa_vec = lewa.to_char_vector();
-    
-    msg_vec.push_back(static_cast<char>(lewa.get_lewa_id()));
+
+    msg_vec.insert(msg_vec.end(), lewa_id.begin(), lewa_id.end());
     msg_vec.insert(msg_vec.end(), lewa_vec.begin(), lewa_vec.end());
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
@@ -21,34 +22,67 @@ void ingame_comm_wrappers::TRICK_Wrapper::write(int socket_fd,
 
 
 int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd, 
-    cardCls::Lewa &lewa)
+    cardCls::Lewa &lewa, uint8_t curr_round)
 {
     ssize_t read_length;
-    char read_buff[MAX_TRICK_BUFF_SIZE - this->name.size()];
-    std::memset(read_buff, 0, MAX_TRICK_BUFF_SIZE - this->name.size());
+    char read_buff[MAX_TRICK_BUFF_SIZE];
+    std::memset(read_buff, 0, MAX_TRICK_BUFF_SIZE); 
 
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_DEAL_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TRICK_BUFF_SIZE, read_length) != SUCCESS)
     {
         return ERROR;
     }
 
-    if (read_length < 2)
+    if (read_length < MIN_TRICK_BUFF_SIZE)
     {
-        err_func::error(" read_length < 2 which is minimal nbr of bytes required to be sent");
+        err_func::error(" read_length < MIN_TRICK_BUFF_SIZE");
         return ERROR;
     }
 
-    lewa.set_lewa_id(static_cast<uint8_t>(read_buff[0]));
-
-    for (size_t i = 2; i < (size_t)(read_length - 2); i+=2)
+    // We check id of lewa, it can be from '1' to '13' thus thanks to curr_round
+    // variable we know how many bytes we need to read, set_lewa_id method 
+    // checks if read lewa id is in correct range
+    size_t start_idx = 0;
+    if (curr_round >= 10)
     {
-        uint8_t value = determine_value(static_cast<uint8_t>(read_buff[i - 1]));
-        Suit suit = determine_suit(read_buff[i]);
+        lewa.set_lewa_id({read_buff[0], read_buff[1]});
+        start_idx = 2;
+    }
+    else
+    {
+        lewa.set_lewa_id(std::vector<char>{read_buff[0]});
+        start_idx = 1;
+    }
+
+    uint8_t value;
+    Suit suit;
+    std::vector<char> char_val_vec;
+    size_t i = start_idx;
+
+    // We can substract - 3 from read_length since we know that read_length is 
+    // >= MIN_TRICK_BUFF_SIZE == 3
+    while (i < (size_t)read_length - 2)
+    {
+        if (read_buff[i] == '1')
+        {
+            char_val_vec.push_back(read_buff[i]);
+            char_val_vec.push_back(read_buff[i + 1]);
+            value = determine_value(char_val_vec);
+            suit = determine_suit(read_buff[i + 2]);
+            i += 3;
+        }
+        else 
+        {
+            char_val_vec.push_back(read_buff[i]);
+            suit = determine_suit(read_buff[i + 1]);
+            i += 2;
+        }
 
         lewa.add_card(cardCls::CardClassWrapper(suit, value));
+        char_val_vec.clear();
     }
 
-    if (lewa.size() > 4)
+    if (lewa.size() > MAX_LEWA_SIZE)
     {
         err_func::error("Lewa size > 4");
         return ERROR;
@@ -58,33 +92,47 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
 
 // WRONG_Wrapper impl
 
-void ingame_comm_wrappers::WRONG_Wrapper::write(int socket_fd, uint8_t lewa_id)
+void ingame_comm_wrappers::WRONG_Wrapper::write(int socket_fd, const cardCls::Lewa &lewa)
 {
     std::vector<char> msg_vec(name);
-    msg_vec.push_back(static_cast<char>(lewa_id));
+    std::vector<char> lewa_id = lewa.get_lewa_id_as_char(); 
+    
+    msg_vec.insert(msg_vec.end(), lewa_id.begin(), lewa_id.end());
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
-int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, uint8_t &lewa_id)
+int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, cardCls::Lewa &lewa)
 {
     ssize_t read_length;
-    char read_buff[MAX_WRONG_BUFF_SIZE - this->name.size()];
-    std::memset(read_buff, 0, MAX_WRONG_BUFF_SIZE - this->name.size());
+    char read_buff[MAX_WRONG_BUFF_SIZE];
+    std::memset(read_buff, 0, MAX_WRONG_BUFF_SIZE);
 
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_WRONG_BUFF_SIZE - this->name.size(), read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_WRONG_BUFF_SIZE, read_length) != SUCCESS)
     {
         return ERROR;
     }
 
-    if (read_length != 3)
+    if (read_length < MIN_WRONG_BUFF_SIZE)
     {
-        err_func::error(" read_length != 3 - 3 bytes are required to be sent");
+        err_func::error(" read_length < MIN_WRONG_BUFF_SIZE");
         return ERROR;
     }
 
-    lewa_id = static_cast<uint8_t>(read_buff[0]);
+    if (read_length == 4)
+    {
+        lewa.set_lewa_id({read_buff[0], read_buff[1]});
+    }
+    else if (read_length == 3)
+    {
+        lewa.set_lewa_id(std::vector<char>{read_buff[0]});
+    }
+    else
+    {
+        err_func::error(" read_length != 3 or 4");
+        return ERROR;
+    }
 
     return SUCCESS;
 }

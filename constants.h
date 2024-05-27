@@ -32,7 +32,7 @@ constexpr size_t MAX_DEAL_BUFF_SIZE = 34;
 constexpr size_t MIN_DEAL_BUFF_SIZE = 30;
 
 constexpr size_t MAX_TRICK_BUFF_SIZE = 13;
-constexpr size_t MIN_TRICK_BUFF_SIZE = 4;
+constexpr size_t MIN_TRICK_BUFF_SIZE = 3;
 
 constexpr size_t MAX_WRONG_BUFF_SIZE = 4;
 constexpr size_t MIN_WRONG_BUFF_SIZE = 3;
