@@ -5,8 +5,7 @@
 #include <cstring>
 #include <iostream>
 #include "TCP_handler.h"
-
-std::vector<char> end_chars{'\r', '\n'};
+#include "constants.h"
 
 // IAM_Wrapper impl
 

@@ -5,8 +5,6 @@
 #include "err.h"
 #include <endian.h>
 
-std::vector<char> end_chars{'\r', '\n'};
-
 // TRICK_Wrapper impl
 void ingame_comm_wrappers::TRICK_Wrapper::write(int socket_fd, 
     cardCls::Lewa  &lewa)
@@ -121,7 +119,7 @@ int ingame_comm_wrappers::TAKEN_Wrapper::read(int socket_fd,
         return ERROR;
     }
 
-    if (read_length != TAKEN_BUFF_SIZE - this->name.size())
+    if ((size_t)read_length != TAKEN_BUFF_SIZE - this->name.size())
     {
         err_func::error(" read_length != 17 - 17 bytes are required to be sent");
         return ERROR;
@@ -144,7 +142,7 @@ int ingame_comm_wrappers::TAKEN_Wrapper::read(int socket_fd,
 
 // SCORE_Wrapper impl
 
-void SCORE_Wrapper::write(int socket_fd, const std::map<PlayerPosition, uint8_t> &scores)
+void ingame_comm_wrappers::SCORE_Wrapper::write(int socket_fd, const std::map<PlayerPosition, uint8_t> &scores)
 {
     std::vector<char> msg_vec(name);
 
@@ -158,7 +156,7 @@ void SCORE_Wrapper::write(int socket_fd, const std::map<PlayerPosition, uint8_t>
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
-int SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores)
+int ingame_comm_wrappers::SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores)
 {
     ssize_t read_length;
     char read_buff[SCORE_BUFF_SIZE - this->name.size()];
@@ -169,7 +167,7 @@ int SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores
         return ERROR;
     }
 
-    if (read_length != SCORE_BUFF_SIZE - this->name.size())
+    if ((size_t)read_length != SCORE_BUFF_SIZE - this->name.size())
     {
         err_func::error(" read_length != 10 -- 10 bytes are required to be sent");
         return ERROR;
@@ -186,7 +184,7 @@ int SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores
     return SUCCESS;
 }
 
-void TOTAL_Wrapper::write(int socket_fd, 
+void ingame_comm_wrappers::TOTAL_Wrapper::write(int socket_fd, 
     const std::map<PlayerPosition, uint16_t> &total_scores)
 {
     std::vector<char> msg_vec(name);
@@ -194,22 +192,21 @@ void TOTAL_Wrapper::write(int socket_fd,
     for (const auto &score : total_scores)
     {
         msg_vec.push_back(playerPos_to_char(score.first));
-        // Depending on score value, we need to send 1 or 2 bytes
-        std::cout << "sending pos: " << playerPos_to_char(score.first) << "\n";
-        std::cout << "sending score: " << (unsigned)score.second << "\n";
+
+        // We need to convert score to big endian and then send it
         uint16_t score_val_be = htobe16(score.second);
-        char lo = score_val_be & 0xFF;
         char hi = score_val_be >> 8;
+        char lo = score_val_be & 0xFF;
+
         msg_vec.push_back(hi);
         msg_vec.push_back(lo);
-        
     }
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
-int TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint16_t> &total_scores)
+int ingame_comm_wrappers::TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint16_t> &total_scores)
 {
     ssize_t read_length;
     char read_buff[TOTAL_BUFF_SIZE - this->name.size()];
@@ -220,7 +217,7 @@ int TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint16_t> &total
         return ERROR;
     }
 
-    if (read_length < TOTAL_BUFF_SIZE - this->name.size())
+    if ((size_t)read_length != TOTAL_BUFF_SIZE - this->name.size())
     {
         err_func::error(" read_length != 14 -- 14 bytes are required to be sent");
         return ERROR;
@@ -229,10 +226,11 @@ int TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint16_t> &total
     for (size_t i = 0; i < (size_t)(read_length - 2); i+=3)
     {
         PlayerPosition pos = char_to_playerPos(read_buff[i]);
-        uint16_t score = (uint16_t)read_buff[i + 1] << 8 | (uint16_t)read_buff[i + 2];
-        score = be16toh(score);
-        std::cout << "pos: " << read_buff[i] << "\n";
-        std::cout << "Read Score: " << (unsigned)score << "\n";
+
+        uint8_t hi = static_cast<uint8_t>(read_buff[i + 1]);
+        uint8_t lo = static_cast<uint8_t>(read_buff[i + 2]);
+        uint16_t score = (uint16_t)hi | (uint16_t)lo << 8;
+
         total_scores[pos] = score;
     }
 

@@ -13,7 +13,7 @@ TCP_handler.o ingame_comm_wrappers.o
 
 kierki-klient: kierki-klient.o common.o err.o game_classes.o \
 exception_wrappers.o card_classes.o init_comm_wrappers.o read_file.o \
-socket_fd_wrapper.o TCP_handler.o ingame_comm_wrappers.o 
+socket_fd_wrapper.o TCP_handler.o ingame_comm_wrappers.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 card_classes.o: card_classes.cpp card_classes.h enum_types.h constants.h \
@@ -26,17 +26,17 @@ game_classes.o: game_classes.cpp game_classes.h card_classes.h \
 game_master.o: game_master.cpp game_master.h player_class.h \
  game_classes.h card_classes.h enum_types.h
 ingame_comm_wrappers.o: ingame_comm_wrappers.cpp ingame_comm_wrappers.h \
- card_classes.h enum_types.h common.h
+ card_classes.h enum_types.h common.h TCP_handler.h constants.h err.h
 init_comm_wrappers.o: init_comm_wrappers.cpp init_comm_wrappers.h \
  card_classes.h enum_types.h constants.h common.h err.h \
  exception_wrappers.h TCP_handler.h
 kierki-klient.o: kierki-klient.cpp common.h enum_types.h \
  exception_wrappers.h init_comm_wrappers.h card_classes.h constants.h \
- TCP_handler.h
+ ingame_comm_wrappers.h TCP_handler.h
 kierki-serwer.o: kierki-serwer.cpp parameters_handling.h constants.h \
  exception_wrappers.h read_file.h game_classes.h card_classes.h \
  enum_types.h game_master.h player_class.h init_comm_wrappers.h \
- socket_fd_wrapper.h
+ socket_fd_wrapper.h ingame_comm_wrappers.h
 main.o: main.cpp card_classes.h enum_types.h read_file.h game_classes.h
 parameters_handling.o: parameters_handling.cpp parameters_handling.h \
  exception_wrappers.h

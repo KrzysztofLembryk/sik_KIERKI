@@ -49,7 +49,7 @@ namespace ingame_comm_wrappers
     private:
         std::vector<char> name{'T', 'A', 'K', 'E', 'N'};
     };
-}
+
 
 class SCORE_Wrapper
 {
@@ -79,4 +79,6 @@ public:
 private:
     std::vector<char> name{'T', 'O', 'T', 'A', 'L'};
 };
+
+}
 #endif // MAIN_COMM_WRAPPERS_H

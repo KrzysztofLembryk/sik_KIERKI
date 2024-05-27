@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cstdint>
+#include <vector>
 
 constexpr int SUCCESS = 0;
 constexpr int FAILURE = 1;
@@ -15,8 +16,8 @@ constexpr int BUFFER_SIZE = 1024;
 
 
 // COMMUNICATION WRAPPERS CONSTANTS
-constexpr size_t INIT_CONN_PACKET_NAME_SIZE = 4;
-constexpr size_t GAME_PACKET_NAME_SIZE = 5;
+constexpr size_t INIT_PACKET_NAME_SIZE = 4;
+constexpr size_t INGAME_PACKET_NAME_SIZE = 5;
 constexpr size_t MAX_PACKET_NAME_SIZE = 5;
 constexpr size_t IAM_BUFF_SIZE = 6;
 constexpr size_t BUSY_BUFF_SIZE = 10;
@@ -26,6 +27,7 @@ constexpr size_t WRONG_BUFF_SIZE = 8;
 constexpr size_t TAKEN_BUFF_SIZE = 17;
 constexpr size_t SCORE_BUFF_SIZE = 15;
 constexpr size_t TOTAL_BUFF_SIZE = 19;
+const std::vector<char> end_chars{'\r', '\n'};
 
 
 // GAME_CLASSES CONSTANTS
