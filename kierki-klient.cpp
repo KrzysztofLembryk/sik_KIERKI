@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     {
         std::cout << "Got TOTAL packet\n";
         ingame_comm_wrappers::TOTAL_Wrapper total;
-        std::map<PlayerPosition, uint16_t> total_scores;
+        std::map<PlayerPosition, uint32_t> total_scores;
         total.read(socket_fd, total_scores);
         for (auto elem : total_scores)
         {

@@ -100,7 +100,7 @@ int init_comm_wrappers::BUSY_Wrapper::read(
         return ERROR;
     }
 
-    if (read_length < MIN_BUSY_BUFF_SIZE)
+    if ((size_t)read_length < MIN_BUSY_BUFF_SIZE)
     {
         // Msg was BUSY\r\n thus no positions were taken
         err_func::error(" read_length < MIN_BUSY_BUFF_SIZE");
@@ -159,7 +159,7 @@ int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, P
         return ERROR;
     }
 
-    if (read_length < MIN_DEAL_BUFF_SIZE)
+    if ((size_t)read_length < MIN_DEAL_BUFF_SIZE)
     {
         err_func::error(" read_length < MIN_DEAL_BUFF_SIZE");
         return ERROR;
@@ -179,7 +179,6 @@ int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, P
         {
             char_val_vec.push_back(read_buff[i]);
             char_val_vec.push_back(read_buff[i + 1]);
-            value = determine_value(char_val_vec);
             suit = determine_suit(read_buff[i + 2]);
             i += 3;
         }
@@ -189,6 +188,7 @@ int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, P
             suit = determine_suit(read_buff[i + 1]);
             i += 2;
         }
+        value = determine_value(char_val_vec);
 
         deck_of_cards.add_card(cardCls::CardClassWrapper(suit, value));
         char_val_vec.clear();

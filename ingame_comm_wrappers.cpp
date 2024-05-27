@@ -5,6 +5,7 @@
 #include "err.h"
 #include <endian.h>
 #include "exception_wrappers.h"
+#include <type_traits>
 
 // We check id of lewa, it can be from '1' to '13' thus thanks to curr_round
 // variable we know how many bytes we need to read, set_lewa_id method 
@@ -49,6 +50,79 @@ void parse_char_and_add_card_to_lewa(char *read_buff,
     char_val_vec.clear();
 }
 
+template <typename T>
+void get_scores_from_buffer(ssize_t read_length, char *read_buff, std::map<PlayerPosition, T> &scores)
+{
+    std::map<PlayerPosition, bool> player_checked( {{N, false}, {E, false}, {S, false}, {W, false}});
+    std::string score_str;
+    char prev_pos = '1';
+    
+    for (size_t i = 0; i < (size_t)(read_length - 2); i++)
+    {
+        if (read_buff[i] == 'N' || read_buff[i] == 'E' || read_buff[i] == 'S' || read_buff[i] == 'W')
+        {
+            if (player_checked[char_to_playerPos(read_buff[i])])
+            {
+                exception_wrappers::runtime_err_wrapper("Player already checked");
+            }
+            // We need to remember previous position to be able to parse this 
+            // position score
+            if (prev_pos == '1')
+            {
+                prev_pos = read_buff[i];
+            }
+            else 
+            {
+                if (std::is_same<T, uint8_t>::value)
+                {
+                    uint16_t score = (uint16_t)std::stoi(score_str);
+                    if (score >= 255)
+                    {
+                        exception_wrappers::invalid_arg_wrapper("Score > 255");
+                    }
+
+                    scores[char_to_playerPos(prev_pos)] = (T)std::stoi(score_str);
+                }
+                else 
+                {
+                    scores[char_to_playerPos(prev_pos)] = (T)std::stoul(score_str);
+                }
+                prev_pos = read_buff[i];
+            }
+            player_checked[char_to_playerPos(read_buff[i])] = true;
+            score_str.clear();
+        }
+        else
+        {
+            if (read_buff[i] >= '0' && read_buff[i] <= '9')
+            {
+                score_str.push_back(read_buff[i]);
+            }
+            else 
+            {
+                exception_wrappers::invalid_arg_wrapper("Read char is not a digit but is in score");
+            }
+        }
+    }
+
+    // after loop ends last position score is not added so we need to do it
+    if (std::is_same<T, uint8_t>::value)
+    {
+        uint16_t score = (uint16_t)std::stoi(score_str);
+        if (score >= 255)
+        {
+            exception_wrappers::invalid_arg_wrapper("Score > 255");
+        }
+
+        scores[char_to_playerPos(prev_pos)] = (T)std::stoi(score_str);
+    }
+    else 
+    {
+        scores[char_to_playerPos(prev_pos)] = (T)std::stoul(score_str);
+    }
+}
+
+
 // TRICK_Wrapper impl
 void ingame_comm_wrappers::TRICK_Wrapper::write(int socket_fd, 
     cardCls::Lewa  &lewa)
@@ -77,7 +151,7 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
         return ERROR;
     }
 
-    if (read_length < MIN_TRICK_BUFF_SIZE)
+    if ((size_t)read_length < MIN_TRICK_BUFF_SIZE)
     {
         err_func::error(" read_length < MIN_TRICK_BUFF_SIZE");
         return ERROR;
@@ -128,7 +202,7 @@ int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, cardCls::Lewa &lewa
         return ERROR;
     }
 
-    if (read_length < MIN_WRONG_BUFF_SIZE)
+    if ((size_t)read_length < MIN_WRONG_BUFF_SIZE)
     {
         err_func::error(" read_length < MIN_WRONG_BUFF_SIZE");
         return ERROR;
@@ -244,63 +318,64 @@ int ingame_comm_wrappers::SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosi
         return ERROR;
     }
 
-    std::map<PlayerPosition, bool> player_checked( {{N, false}, {E, false}, {S, false}, {W, false}});
-    std::string score_str;
-    char prev_pos = '1';
+    get_scores_from_buffer(read_length, read_buff, scores);
+    // std::map<PlayerPosition, bool> player_checked( {{N, false}, {E, false}, {S, false}, {W, false}});
+    // std::string score_str;
+    // char prev_pos = '1';
     
-    for (size_t i = 0; i < (size_t)(read_length - 2); i++)
-    {
-        if (read_buff[i] == 'N' || read_buff[i] == 'E' || read_buff[i] == 'S' || read_buff[i] == 'W')
-        {
-            if (player_checked[char_to_playerPos(read_buff[i])])
-            {
-                err_func::error("Player already checked");
-                return ERROR;
-            }
-            // We need to remember previous position to be able to parse this 
-            // position score
-            if (prev_pos == '1')
-            {
-                prev_pos = read_buff[i];
-            }
-            else 
-            {
-                uint16_t score = (uint16_t)std::stoi(score_str);
-                if (score > 255)
-                {
-                    err_func::error("Score > 255");
-                    return ERROR;
-                }
+    // for (size_t i = 0; i < (size_t)(read_length - 2); i++)
+    // {
+    //     if (read_buff[i] == 'N' || read_buff[i] == 'E' || read_buff[i] == 'S' || read_buff[i] == 'W')
+    //     {
+    //         if (player_checked[char_to_playerPos(read_buff[i])])
+    //         {
+    //             err_func::error("Player already checked");
+    //             return ERROR;
+    //         }
+    //         // We need to remember previous position to be able to parse this 
+    //         // position score
+    //         if (prev_pos == '1')
+    //         {
+    //             prev_pos = read_buff[i];
+    //         }
+    //         else 
+    //         {
+    //             uint16_t score = (uint16_t)std::stoi(score_str);
+    //             if (score > 255)
+    //             {
+    //                 err_func::error("Score > 255");
+    //                 return ERROR;
+    //             }
 
-                scores[char_to_playerPos(prev_pos)] = (uint8_t)std::stoi(score_str);
-                prev_pos = read_buff[i];
-            }
-            player_checked[char_to_playerPos(read_buff[i])] = true;
-            score_str.clear();
-        }
-        else
-        {
-            if (read_buff[i] >= '0' && read_buff[i] <= '9')
-            {
-                score_str.push_back(read_buff[i]);
-            }
-            else 
-            {
-                err_func::error("Read char is not a digit but is in score");
-                return ERROR;
-            }
-        }
-    }
+    //             scores[char_to_playerPos(prev_pos)] = (uint8_t)std::stoi(score_str);
+    //             prev_pos = read_buff[i];
+    //         }
+    //         player_checked[char_to_playerPos(read_buff[i])] = true;
+    //         score_str.clear();
+    //     }
+    //     else
+    //     {
+    //         if (read_buff[i] >= '0' && read_buff[i] <= '9')
+    //         {
+    //             score_str.push_back(read_buff[i]);
+    //         }
+    //         else 
+    //         {
+    //             err_func::error("Read char is not a digit but is in score");
+    //             return ERROR;
+    //         }
+    //     }
+    // }
 
-    // after loop ends last position score is not added so we need to do it
-    uint16_t score = (uint16_t)std::stoi(score_str);
-    if (score > 255)
-    {
-        err_func::error("Score > 255");
-        return ERROR;
-    }
+    // // after loop ends last position score is not added so we need to do it
+    // uint16_t score = (uint16_t)std::stoi(score_str);
+    // if (score > 255)
+    // {
+    //     err_func::error("Score > 255");
+    //     return ERROR;
+    // }
 
-    scores[char_to_playerPos(prev_pos)] = (uint8_t)std::stoi(score_str);
+    // scores[char_to_playerPos(prev_pos)] = (uint8_t)std::stoi(score_str);
 
     return SUCCESS;
 }
@@ -346,49 +421,49 @@ int ingame_comm_wrappers::TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosi
         return ERROR;
     }
 
-
-    std::map<PlayerPosition, bool> player_checked( {{N, false}, {E, false}, {S, false}, {W, false}});
-    std::string score_str;
-    char prev_pos = '1';
+    get_scores_from_buffer(read_length, read_buff, total_scores); 
+    // std::map<PlayerPosition, bool> player_checked( {{N, false}, {E, false}, {S, false}, {W, false}});
+    // std::string score_str;
+    // char prev_pos = '1';
     
-    for (size_t i = 0; i < (size_t)(read_length - 2); i++)
-    {
-        if (read_buff[i] == 'N' || read_buff[i] == 'E' || read_buff[i] == 'S' || read_buff[i] == 'W')
-        {
-            if (player_checked[char_to_playerPos(read_buff[i])])
-            {
-                err_func::error("Player already checked");
-                return ERROR;
-            }
-            // We need to remember previous position to be able to parse this 
-            // position score
-            if (prev_pos == '1')
-            {
-                prev_pos = read_buff[i];
-            }
-            else 
-            {
-                total_scores[char_to_playerPos(prev_pos)] = (uint32_t)std::stoul(score_str);
-                prev_pos = read_buff[i];
-            }
-            player_checked[char_to_playerPos(read_buff[i])] = true;
-            score_str.clear();
-        }
-        else
-        {
-            if (read_buff[i] >= '0' && read_buff[i] <= '9')
-            {
-                score_str.push_back(read_buff[i]);
-            }
-            else 
-            {
-                err_func::error("Read char is not a digit but is in score");
-                return ERROR;
-            }
-        }
-    }
+    // for (size_t i = 0; i < (size_t)(read_length - 2); i++)
+    // {
+    //     if (read_buff[i] == 'N' || read_buff[i] == 'E' || read_buff[i] == 'S' || read_buff[i] == 'W')
+    //     {
+    //         if (player_checked[char_to_playerPos(read_buff[i])])
+    //         {
+    //             err_func::error("Player already checked");
+    //             return ERROR;
+    //         }
+    //         // We need to remember previous position to be able to parse this 
+    //         // position score
+    //         if (prev_pos == '1')
+    //         {
+    //             prev_pos = read_buff[i];
+    //         }
+    //         else 
+    //         {
+    //             total_scores[char_to_playerPos(prev_pos)] = (uint32_t)std::stoul(score_str);
+    //             prev_pos = read_buff[i];
+    //         }
+    //         player_checked[char_to_playerPos(read_buff[i])] = true;
+    //         score_str.clear();
+    //     }
+    //     else
+    //     {
+    //         if (read_buff[i] >= '0' && read_buff[i] <= '9')
+    //         {
+    //             score_str.push_back(read_buff[i]);
+    //         }
+    //         else 
+    //         {
+    //             err_func::error("Read char is not a digit but is in score");
+    //             return ERROR;
+    //         }
+    //     }
+    // }
 
-    total_scores[char_to_playerPos(prev_pos)] = (uint32_t)std::stoul(score_str);
+    // total_scores[char_to_playerPos(prev_pos)] = (uint32_t)std::stoul(score_str);
 
     return SUCCESS;
 }
