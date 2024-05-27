@@ -44,7 +44,7 @@ constexpr size_t MAX_SCORE_BUFF_SIZE = 18;
 constexpr size_t MIN_SCORE_BUFF_SIZE = 10;
 
 constexpr size_t MAX_TOTAL_BUFF_SIZE = 95;
-constexpr size_t MAX_TOTAL_BUFF_SIZE = 10;
+constexpr size_t MIN_TOTAL_BUFF_SIZE = 10;
 
 const std::vector<char> end_chars{'\r', '\n'};
 

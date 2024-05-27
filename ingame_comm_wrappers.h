@@ -72,9 +72,9 @@ public:
     ~TOTAL_Wrapper() = default;
 
     void write(int socket_fd, 
-        const std::map<PlayerPosition, uint16_t> &total_scores);
+        const std::map<PlayerPosition, uint32_t> &total_scores);
 
-    int read(int socket_fd, std::map<PlayerPosition, uint16_t> &total_scores);
+    int read(int socket_fd, std::map<PlayerPosition, uint32_t> &total_scores);
 
 private:
     std::vector<char> name{'T', 'O', 'T', 'A', 'L'};
