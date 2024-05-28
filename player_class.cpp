@@ -14,3 +14,8 @@ cardCls::DeckOfCards Player::get_hand()
 {
     return hand;
 }
+
+PlayerPosition Player::get_position()
+{
+    return position;
+}

@@ -1,12 +1,19 @@
 #include "game_master.h"
 
-gm::GameMaster::GameMaster(std::vector<gameCls::Round> &rounds, const struct sockaddr_in6 &server_addr) : 
+gm::GameMaster::GameMaster(std::vector<gameCls::Round> &rounds, const struct sockaddr_in6 &server_addr) :
 pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}})
 {
+    this->semaphore_map.emplace(N, std::binary_semaphore(0));
+    this->semaphore_map.emplace(E, std::binary_semaphore(0));
+    this->semaphore_map.emplace(S, std::binary_semaphore(0));
+    this->semaphore_map.emplace(W, std::binary_semaphore(0));
+
     this->rounds = rounds;
     this->round_number = 0;
     this->whose_turn = rounds[0].get_first_player();
+    this->semaphore_map[whose_turn].release();
     this->card_counter.new_game(rounds[0].get_game_type());
+    this->number_of_players_present = 0;
 
     std::vector<PlayerPosition> player_pos({N, E, S, W});
 
@@ -43,6 +50,11 @@ void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &my_
     std::lock_guard<std::mutex> lock(mutex_gm);
     pos_taken_map[pos] = true;
     players[pos]->set_player_address(my_address);
+}
+
+void gm::GameMaster::wait_for_turn(PlayerPosition pos)
+{
+    semaphore_map[pos].acquire();    
 }
 
 PlayerPosition gm::GameMaster::get_whose_turn() 

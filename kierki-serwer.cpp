@@ -52,7 +52,7 @@ void print_client_address(struct sockaddr_in6 &client_address)
     printf("accepted connection from %s:%" PRIu16 "\n", client_ip, client_port);
 }
 
-int handle_table_joining_request(int socket_fd, unsigned timeout, std::shared_ptr<gm::GameMaster> game_master_sp, int pipe_write_fd)
+int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr<gm::GameMaster> game_master_sp, int pipe_write_fd)
 {
     struct sockaddr_in6 client_address;
     socklen_t client_address_len = sizeof client_address;
@@ -163,7 +163,7 @@ int main(int ac, char *av[])
                 }
                 if (poll_descriptors[TCP_SOCKET_POLLS_ID].revents & POLLIN)
                 {
-                    if (handle_table_joining_request(socket_fd, timeout, game_master_sp, pipe_fd[PIPE_WRITE_DSCR]) != SUCCESS)
+                    if (handle_game_joining_request(socket_fd, timeout, game_master_sp, pipe_fd[PIPE_WRITE_DSCR]) != SUCCESS)
                     {
                         continue;
                     }

@@ -4,6 +4,7 @@
 #include "player_class.h"
 #include <memory>
 #include <mutex>
+#include <semaphore>
 
 namespace gm
 {
@@ -23,6 +24,8 @@ namespace gm
         void add_new_player(PlayerPosition pos, 
                             struct sockaddr_in6 &my_address);
         
+        void wait_for_turn(PlayerPosition pos);
+
         PlayerPosition get_whose_turn();
         GameType get_game_type();
 
@@ -32,6 +35,7 @@ namespace gm
 
 
     private:
+        std::map<PlayerPosition, std::binary_semaphore> semaphore_map;
         std::map<PlayerPosition, std::shared_ptr<Player>> players;
         std::vector<gameCls::Round> rounds;
         cardCls::Lewa curr_lewa;
@@ -39,6 +43,7 @@ namespace gm
         uint8_t round_number;
         gameCls::CardCounter card_counter;
         std::map<PlayerPosition, bool> pos_taken_map;
+        uint8_t number_of_players_present;
         std::mutex mutex_gm;
     };
 }
