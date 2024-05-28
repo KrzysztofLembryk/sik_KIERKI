@@ -20,12 +20,18 @@ private:
     bool should_be_closed;
 };
 
-void set_timeout_for_socket(int client_fd, int max_wait);
+namespace socket_func
+{
+    
+    void set_timeout_for_socket(int client_fd, int max_wait);
 
-void init_socket_fd(int &socket_fd);
+    void init_socket_fd(int &socket_fd);
 
-void handle_socket_init(uint16_t &port,
-                        int &socket_fd,
-                        struct sockaddr_in6 &server_address);
+    void handle_socket_init(uint16_t &port,
+                            int &socket_fd,
+                            struct sockaddr_in6 &server_address);
+} // namespace socket_func
+
+
 
 #endif

@@ -51,7 +51,7 @@ polls_func.o: polls_func.cpp polls_func.h exception_wrappers.h \
 read_file.o: read_file.cpp read_file.h game_classes.h card_classes.h \
  enum_types.h exception_wrappers.h constants.h
 socket_fd_handler.o: socket_fd_handler.cpp socket_fd_handler.h \
- exception_wrappers.h err.h
+ exception_wrappers.h err.h constants.h
 TCP_handler.o: TCP_handler.cpp TCP_handler.h err.h exception_wrappers.h \
  common.h enum_types.h constants.h
 tests.o: tests.cpp card_classes.h enum_types.h exception_wrappers.h

@@ -34,7 +34,7 @@ int init_server(int ac, char *av[], po::variables_map &vm,
         assign_programme_parameters_server(vm, port, timeout, file_name);
         print_parameters(port, timeout, file_name);
         // Read from file_name
-        handle_socket_init(port, socket_fd, server_address);
+        socket_func::handle_socket_init(port, socket_fd, server_address);
         return SUCCESS;
     }
     catch (const std::exception &e)
@@ -52,16 +52,15 @@ void print_client_address(struct sockaddr_in6 &client_address)
     printf("accepted connection from %s:%" PRIu16 "\n", client_ip, client_port);
 }
 
-
-int handle_table_joining_request(int socket_fd, unsigned timeout, std::shared_ptr<gm::GameMaster> game_master_sp)
+int handle_table_joining_request(int socket_fd, unsigned timeout, std::shared_ptr<gm::GameMaster> game_master_sp, int pipe_write_fd)
 {
     struct sockaddr_in6 client_address;
     socklen_t client_address_len = sizeof client_address;
 
     std::shared_ptr<ClientFdWrapper> client_fd_sp =
-    std::make_shared<ClientFdWrapper>(accept(socket_fd,
-            (struct sockaddr *)&client_address,
-            &client_address_len));
+        std::make_shared<ClientFdWrapper>(accept(socket_fd,
+                                                 (struct sockaddr *)&client_address,
+                                                 &client_address_len));
 
     client_fd_sp->set_timeout_for_socket(timeout);
 
@@ -87,7 +86,16 @@ int handle_table_joining_request(int socket_fd, unsigned timeout, std::shared_pt
         game_master_sp->add_new_player(new_p_position, client_address);
     }
 
-    std::thread t(thread_func::thread_main, client_fd_sp, game_master_sp, game_master_sp->get_player(new_p_position));
+    thread_nmspc::MyThread my_thread;
+
+    std::thread t(
+        [client_fd_sp, game_master_sp, new_p_position, pipe_write_fd, my_thread]() mutable {
+            my_thread.thread_main(client_fd_sp,
+                                    game_master_sp,
+                                    game_master_sp->get_player(new_p_position),
+                                    pipe_write_fd); 
+        }
+    );
 
     t.detach();
 
@@ -155,7 +163,7 @@ int main(int ac, char *av[])
                 }
                 if (poll_descriptors[TCP_SOCKET_POLLS_ID].revents & POLLIN)
                 {
-                    if (handle_table_joining_request(socket_fd, timeout, game_master_sp) != SUCCESS)
+                    if (handle_table_joining_request(socket_fd, timeout, game_master_sp, pipe_fd[PIPE_WRITE_DSCR]) != SUCCESS)
                     {
                         continue;
                     }
