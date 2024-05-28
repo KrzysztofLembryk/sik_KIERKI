@@ -13,6 +13,7 @@ void thread_nmspc::MyThread::thread_main(
         std::shared_ptr<Player> player_sp,
         int pipe_write_fd)
 {
+    game_master_sp->wait_for_game_start();
     game_master_sp->wait_for_turn(player_sp->get_position()); 
     
     
