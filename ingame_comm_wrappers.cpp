@@ -10,41 +10,42 @@
 // We check id of lewa, it can be from '1' to '13' thus thanks to curr_round
 // variable we know how many bytes we need to read, set_lewa_id method 
 // checks if read lewa id is in correct range
-void determine_lewa_id(size_t &i, const char *read_buff, cardCls::Lewa &lewa, uint8_t curr_round)
+void determine_lewa_id(size_t &read_buff_start_pos, const char *read_buff, cardCls::Lewa &lewa, uint8_t curr_round)
 {
     if (curr_round >= 10)
     {
         lewa.set_lewa_id({read_buff[0], read_buff[1]});
-        i = 2;
+        read_buff_start_pos = 2;
     }
     else
     {
         lewa.set_lewa_id(std::vector<char>{read_buff[0]});
-        i = 1;
+        read_buff_start_pos = 1;
     }
 }
 
 void parse_char_and_add_card_to_lewa(char *read_buff, 
-                                        size_t &i, 
+                                        size_t &idx, 
                                         cardCls::Lewa &lewa, 
                                         std::vector<char> &char_val_vec, 
                                         uint8_t &value, 
                                         Suit &suit)
 {
-    if (read_buff[i] == '1')
+    if (read_buff[idx] == '1')
     {
-        char_val_vec.push_back(read_buff[i]);
-        char_val_vec.push_back(read_buff[i + 1]);
-        value = determine_value(char_val_vec);
-        suit = determine_suit(read_buff[i + 2]);
-        i += 3;
+        char_val_vec.push_back(read_buff[idx]);
+        char_val_vec.push_back(read_buff[idx + 1]);
+        suit = determine_suit(read_buff[idx + 2]);
+        idx += 3;
     }
     else 
     {
-        char_val_vec.push_back(read_buff[i]);
-        suit = determine_suit(read_buff[i + 1]);
-        i += 2;
+        char_val_vec.push_back(read_buff[idx]);
+        suit = determine_suit(read_buff[idx + 1]);
+        idx += 2;
     }
+
+    value = determine_value(char_val_vec);
 
     lewa.add_card(cardCls::CardClassWrapper(suit, value));
     char_val_vec.clear();
@@ -176,6 +177,7 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     size_t i;
 
     determine_lewa_id(i, read_buff, lewa, curr_round);
+    std::cout << "TRICK read lewa_id: " << (unsigned)lewa.get_lewa_id() << '\n';
     // We can substract - 3 from read_length since we know that read_length is 
     // >= MIN_TRICK_BUFF_SIZE == 3
     while (i < (size_t)read_length - 2)
@@ -261,8 +263,7 @@ int ingame_comm_wrappers::TAKEN_Wrapper::read(int socket_fd,
 
     if ((size_t)read_length < MIN_TAKEN_BUFF_SIZE)
     {
-        err_func::error(" read_length < MIN_TAKEN_BUFF_SIZE");
-        return ERROR;
+        exception_wrappers::runtime_err_wrapper(" read_length < MIN_TAKEN_BUFF_SIZE");
     }
 
     uint8_t value;
@@ -279,8 +280,7 @@ int ingame_comm_wrappers::TAKEN_Wrapper::read(int socket_fd,
 
     if (i != (size_t)read_length - 3)
     {
-        err_func::error(" i != read_length - 3 - but it should since we should read lewa_id and 4 cards in lewa");
-        return ERROR;
+        exception_wrappers::runtime_err_wrapper(" i != read_length - 3 - but it should since we should read lewa_id and 4 cards in lewa and then on read_length - 3 position we should have player who took lewa");
     }
 
     player_who_took_lewa = char_to_playerPos(read_buff[read_length - 3]);

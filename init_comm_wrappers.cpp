@@ -30,9 +30,9 @@ int init_comm_wrappers::IAM_Wrapper::read(int socket_fd, PlayerPosition &positio
 
     std::memset(read_buff, 0, MAX_IAM_BUFF_SIZE);
     
-    if (tcp::TCP_read_packet(socket_fd, read_buff, MAX_IAM_BUFF_SIZE, read_length) == TIMEOUT)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_IAM_BUFF_SIZE, read_length) != SUCCESS)
     {
-        return TIMEOUT;
+        return ERROR;
     }
 
     if (read_length != MAX_IAM_BUFF_SIZE)

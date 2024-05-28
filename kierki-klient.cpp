@@ -99,6 +99,24 @@ int main(int argc, char *argv[])
             std::cout << "Position: " << (unsigned)elem.first << " score: " << (unsigned)elem.second << "\n";
         }
     }
+    else if (packet_name == "WRONG")
+    {
+        std::cout << "Got WRONG packet\n";
+        ingame_comm_wrappers::WRONG_Wrapper wrong;
+        cardCls::Lewa lewa;
+        wrong.read(socket_fd, lewa, 1);
+        lewa.print();
+    }
+    else if (packet_name == "TAKEN")
+    {
+        std::cout << "Got TAKEN packet\n";
+        ingame_comm_wrappers::TAKEN_Wrapper taken;
+        PlayerPosition taken_pos;
+        cardCls::Lewa lewa;
+        taken.read(socket_fd, lewa, taken_pos, 1);
+        lewa.print();
+        std::cout << "player who took the trick: " << (unsigned)taken_pos << "\n";
+    }
     else
     {
         exception_wrappers::runtime_err_wrapper("Got Wrong packet name from server");

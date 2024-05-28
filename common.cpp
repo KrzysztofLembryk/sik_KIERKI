@@ -123,8 +123,7 @@ PlayerPosition char_to_playerPos(char pos)
         return PlayerPosition::W;
     else
     {
-        err_func::error("Read not allowed position: " + std::string(1, pos));
-        return PlayerPosition::NONE_POS;
+        exception_wrappers::invalid_arg_wrapper("Read not allowed position: " + std::string(1, pos));
     }
 }
 

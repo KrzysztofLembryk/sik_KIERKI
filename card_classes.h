@@ -103,7 +103,7 @@ namespace cardCls
     class Lewa
     {
     public:
-        Lewa() = default;
+        Lewa() : lewa_id(1), player_who_took_lewa(NONE_POS) {};
         Lewa(uint8_t nbr) : player_who_took_lewa(NONE_POS) 
         {
             if (nbr >= 1 && nbr <= 13)

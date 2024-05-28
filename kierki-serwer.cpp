@@ -172,16 +172,6 @@ int main(int ac, char *av[])
             init_comm_wrappers::DEAL_Wrapper deal_wrapper;
             deal_wrapper.write(client_fd_sp->to_int(), game_master_sp->get_game_type(), game_master_sp->get_whose_turn(), game_master_sp->get_player_cards(new_p_position));
 
-            ingame_comm_wrappers::TRICK_Wrapper trick_wrapper;
-            cardCls::Lewa lewa(1);
-            trick_wrapper.write(client_fd_sp->to_int(), lewa);
-            // ingame_comm_wrappers::TOTAL_Wrapper total_wrapper;
-            // total_wrapper.write(client_fd_sp->to_int(), std::map<PlayerPosition, uint32_t> {
-            //     {N, 33333}, {E, 255}, {S, 1}, {W, 2137}});
-            // ingame_comm_wrappers::SCORE_Wrapper score_wrapper;
-            // score_wrapper.write(client_fd_sp->to_int(), std::map<PlayerPosition, uint8_t>{
-            //     {N, 1}, {E, 27}, {S, 0}, {W, 69}
-            // });
 
             // std::thread t(
             //     [client_fd_sp, client_address, timeout]() mutable
