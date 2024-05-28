@@ -54,6 +54,8 @@ int main(int argc, char *argv[])
         PlayerPosition first_player_pos;
         cardCls::DeckOfCards deck_of_cards;
         deal.read(socket_fd, game_type, first_player_pos, deck_of_cards);
+        std::cout << "first_player_pos " << (unsigned)first_player_pos << "\n";
+        deck_of_cards.print_deck();
     }
     else
     {
@@ -71,7 +73,7 @@ int main(int argc, char *argv[])
         std::cout << "Got TRICK packet\n";
         ingame_comm_wrappers::TRICK_Wrapper trick;
         cardCls::Lewa lewa;
-        uint8_t curr_round = 0;
+        uint8_t curr_round = 1;
         trick.read(socket_fd, lewa, curr_round);
         lewa.print();
     }
@@ -85,6 +87,21 @@ int main(int argc, char *argv[])
         {
             std::cout << "Position: " << (unsigned)elem.first << " score: " << elem.second << "\n";
         }
+    }
+    else if (packet_name == "SCORE")
+    {
+        std::cout << "Got SCORE packet\n";
+        ingame_comm_wrappers::SCORE_Wrapper score;
+        std::map<PlayerPosition, uint8_t> scores;
+        score.read(socket_fd, scores);
+        for (auto elem : scores)
+        {
+            std::cout << "Position: " << (unsigned)elem.first << " score: " << (unsigned)elem.second << "\n";
+        }
+    }
+    else
+    {
+        exception_wrappers::runtime_err_wrapper("Got Wrong packet name from server");
     }
 
 

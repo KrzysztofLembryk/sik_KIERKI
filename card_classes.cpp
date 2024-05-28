@@ -218,6 +218,8 @@ uint8_t cardCls::Lewa::get_lewa_id() const
 
 void cardCls::Lewa::set_lewa_id(uint8_t id)
 {
+    if (id < 1 || id > 13)
+        exception_wrappers::invalid_arg_wrapper("Invalid lewa id value");
     lewa_id = id;
 }
 
@@ -297,6 +299,13 @@ cardCls::CardClassWrapper cardCls::Lewa::get_top_card() const
 
 void cardCls::Lewa::print()
 {
+    std::cout << "lewa id: " << (unsigned)lewa_id << "\n";
+    if (lewa.size() == 0)
+    {
+        std::cout << "Empty lewa\n";
+        return;
+    }
+
     for (const auto &card : lewa)
     {
         card.print();

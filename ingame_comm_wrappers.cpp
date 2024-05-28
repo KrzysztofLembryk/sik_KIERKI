@@ -185,7 +185,7 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
 
     if (lewa.size() > MAX_LEWA_SIZE)
     {
-        err_func::error("Lewa size > 4");
+        err_func::error("Lewa size > MAX_LEWA_SIZE");
         return ERROR;
     }
     return SUCCESS;

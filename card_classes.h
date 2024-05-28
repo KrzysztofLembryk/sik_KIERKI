@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <vector>
 #include "enum_types.h"
+#include "exception_wrappers.h"
 
 namespace cardCls
 {
@@ -103,7 +104,13 @@ namespace cardCls
     {
     public:
         Lewa() = default;
-        Lewa(uint8_t nbr) : lewa_id(nbr), player_who_took_lewa(NONE_POS) {}
+        Lewa(uint8_t nbr) : player_who_took_lewa(NONE_POS) 
+        {
+            if (nbr >= 1 && nbr <= 13)
+                lewa_id = nbr;
+            else 
+                exception_wrappers::invalid_arg_wrapper("Invalid lewa id value");
+        }
         ~Lewa() = default;
 
         void add_card(const CardClassWrapper &card);

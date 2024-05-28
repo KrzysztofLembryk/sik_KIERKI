@@ -26,6 +26,7 @@ namespace gm
         PlayerPosition get_whose_turn();
         GameType get_game_type();
 
+
         cardCls::DeckOfCards get_player_cards(PlayerPosition pos);
 
 
@@ -34,7 +35,7 @@ namespace gm
         std::vector<gameCls::Round> rounds;
         cardCls::Lewa curr_lewa;
         PlayerPosition whose_turn;
-        size_t round_number;
+        uint8_t round_number;
         gameCls::CardCounter card_counter;
         std::map<PlayerPosition, bool> pos_taken_map;
         std::mutex mutex_gm;

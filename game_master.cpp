@@ -1,7 +1,7 @@
 #include "game_master.h"
 
 gm::GameMaster::GameMaster(std::vector<gameCls::Round> &rounds, const struct sockaddr_in6 &server_addr) : 
-curr_lewa(0), 
+curr_lewa(1), 
 pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}})
 {
     this->rounds = rounds;
