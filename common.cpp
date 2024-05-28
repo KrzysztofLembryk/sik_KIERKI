@@ -144,6 +144,50 @@ char playerPos_to_char(PlayerPosition pos)
     }
 }
 
+char gameType_to_char(GameType game_type)
+{
+    if (game_type == NO_LEWA)
+        return '1';
+    else if (game_type == NO_HEART)
+        return '2';
+    else if (game_type == NO_QUEEN)
+        return '3';
+    else if (game_type == NO_MISTER)
+        return '4';
+    else if (game_type == NO_KING_HEART)
+        return '5';
+    else if (game_type == NO_SEVEN_AND_LAST)
+        return '6';
+    else if (game_type == BANDIT)
+        return '7';
+    else
+    {
+        exception_wrappers::invalid_arg_wrapper("Wrong game type value");
+    }
+}
+
+GameType char_to_gameType(char game_type)
+{
+    if (game_type == '1')
+        return NO_LEWA;
+    else if (game_type == '2')
+        return NO_HEART;
+    else if (game_type == '3')
+        return NO_QUEEN;
+    else if (game_type == '4')
+        return NO_MISTER;
+    else if (game_type == '5')
+        return NO_KING_HEART;
+    else if (game_type == '6')
+        return NO_SEVEN_AND_LAST;
+    else if (game_type == '7')
+        return BANDIT;
+    else
+    {
+        exception_wrappers::invalid_arg_wrapper("Wrong char game type value read from socket");
+    }
+}
+
 uint8_t determine_value(std::vector<char> values)
 {
     if (values.size() == 1)
@@ -196,14 +240,16 @@ Suit determine_suit(char suit)
     }
 }
 
-GameType determine_game_type(char game_type)
-{
-    if (game_type == NO_LEWA || game_type == NO_HEART || game_type == NO_QUEEN || game_type == NO_MISTER || game_type == NO_KING_HEART || game_type == NO_SEVEN_AND_LAST || game_type == BANDIT)
-    {
-        return static_cast<GameType>(game_type);
-    }
-    else
-    {
-        exception_wrappers::invalid_arg_wrapper("Invalid game type read from socket");
-    }
-}
+// GameType determine_game_type(char game_type)
+// {
+//     if (game_type == NO_LEWA || game_type == NO_HEART || game_type == NO_QUEEN || game_type == NO_MISTER || game_type == NO_KING_HEART || game_type == NO_SEVEN_AND_LAST || game_type == BANDIT)
+//     {
+//         return static_cast<GameType>(game_type);
+//     }
+//     else
+//     {
+//         printf("wrong game type: %c\n", game_type);
+//         fflush(stdout);
+//         exception_wrappers::invalid_arg_wrapper("Invalid game type read from socket");
+//     }
+// }

@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     iam.write(socket_fd, PlayerPosition::N);
     
     std::string packet_name;
-    if (tcp::TCP_read_packet_name(socket_fd, INGAME_PACKET_NAME_SIZE, packet_name) != SUCCESS)
+    if (tcp::TCP_read_packet_name(socket_fd, INIT_PACKET_NAME_SIZE, packet_name) != SUCCESS)
     {
         exception_wrappers::runtime_err_wrapper("Got Wrong packet name SIZE from server");
     }
@@ -55,6 +55,26 @@ int main(int argc, char *argv[])
         cardCls::DeckOfCards deck_of_cards;
         deal.read(socket_fd, game_type, first_player_pos, deck_of_cards);
     }
+    else
+    {
+        exception_wrappers::runtime_err_wrapper("Got Wrong packet name from server");
+    }
+
+
+    if (tcp::TCP_read_packet_name(socket_fd, INGAME_PACKET_NAME_SIZE, packet_name) != SUCCESS)
+    {
+        exception_wrappers::runtime_err_wrapper("Got Wrong packet name SIZE from server");
+    }
+
+    if (packet_name == "TRICK")
+    {
+        std::cout << "Got TRICK packet\n";
+        ingame_comm_wrappers::TRICK_Wrapper trick;
+        cardCls::Lewa lewa;
+        uint8_t curr_round = 0;
+        trick.read(socket_fd, lewa, curr_round);
+        lewa.print();
+    }
     else if (packet_name == "TOTAL")
     {
         std::cout << "Got TOTAL packet\n";
@@ -66,10 +86,8 @@ int main(int argc, char *argv[])
             std::cout << "Position: " << (unsigned)elem.first << " score: " << elem.second << "\n";
         }
     }
-    else
-    {
-        exception_wrappers::runtime_err_wrapper("Got Wrong packet name from server");
-    }
+
+
 
     // char buff[] = {'I', 'A', 'M', 'K', '\r', '\n'};
     // std::cout << "Sending wrong msg\n";

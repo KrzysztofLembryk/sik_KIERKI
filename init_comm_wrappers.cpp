@@ -132,7 +132,7 @@ void init_comm_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type ,
     std::vector<char> msg_vec(name);
     std::vector<char> game_type_and_first_player_pos;
 
-    game_type_and_first_player_pos.push_back(game_type);
+    game_type_and_first_player_pos.push_back(gameType_to_char(game_type));
     game_type_and_first_player_pos.push_back(playerPos_to_char(first_player_pos));
 
     msg_vec.insert(msg_vec.end(), game_type_and_first_player_pos.begin(), game_type_and_first_player_pos.end());
@@ -165,8 +165,9 @@ int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, P
         return ERROR;
     }
 
-    game_type = determine_game_type(read_buff[0]);
+    game_type = char_to_gameType(read_buff[0]);
     first_player_pos = char_to_playerPos(read_buff[1]);
+    std::cout << "game type: " << read_buff[0] << '\n';
 
     uint8_t value;
     Suit suit;

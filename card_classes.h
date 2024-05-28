@@ -102,6 +102,7 @@ namespace cardCls
     class Lewa
     {
     public:
+        Lewa() = default;
         Lewa(uint8_t nbr) : lewa_id(nbr), player_who_took_lewa(NONE_POS) {}
         ~Lewa() = default;
 
@@ -128,6 +129,8 @@ namespace cardCls
         void set_player_who_took_lewa(PlayerPosition player);
 
         std::vector<char> to_char_vector() const;
+
+        void print();
 
     private:
         uint8_t lewa_id;

@@ -18,10 +18,14 @@ PlayerPosition char_to_playerPos(char pos);
 
 char playerPos_to_char(PlayerPosition pos);
 
+char gameType_to_char(GameType game_type);
+
+GameType char_to_gameType(char game_type);
+
 uint8_t determine_value(std::vector<char> values);
 
 Suit determine_suit(char suit);
 
-GameType determine_game_type(char game_type);
+// GameType determine_game_type(char game_type);
 
 #endif

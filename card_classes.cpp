@@ -12,7 +12,7 @@ std::vector<char> cardVec_to_charVec(std::vector<cardCls::CardClassWrapper> card
     for (const auto &card : cards)
     {
         uint8_t value = card.get_value();
-        if (value >= 2 && value != 10)
+        if (value >= 2 && value < 10)
         {
             deck.push_back(std::to_string(value)[0]);
             std::cout << "value of card in cardVec_to_charVec: " << std::to_string(value)[0] << "\n";
@@ -297,4 +297,14 @@ cardCls::CardClassWrapper cardCls::Lewa::get_top_card() const
                                                 std::to_string(this->lewa_id) + " is empty");
     }
     return lewa.back();
+}
+
+void cardCls::Lewa::print()
+{
+    for (const auto &card : lewa)
+    {
+        card.print();
+        std::cout << " ";
+    }
+    std::cout << "\n";
 }

@@ -2,16 +2,17 @@
 #define ENUM_TYPES_H
 
 #include <cstdint>
+#include <iostream>
 
-enum GameType : char
+enum GameType : uint8_t
 {
-    NO_LEWA = '1',
-    NO_HEART = '2',
-    NO_QUEEN = '3',
-    NO_MISTER = '4',
-    NO_KING_HEART = '5',
-    NO_SEVEN_AND_LAST = '6',
-    BANDIT = '7'
+    NO_LEWA = 1,
+    NO_HEART,
+    NO_QUEEN,
+    NO_MISTER,
+    NO_KING_HEART,
+    NO_SEVEN_AND_LAST,
+    BANDIT,
 };
 
 /**
