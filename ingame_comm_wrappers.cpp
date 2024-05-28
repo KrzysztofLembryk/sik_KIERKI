@@ -113,6 +113,11 @@ void get_scores_from_buffer(ssize_t read_length, char *read_buff, std::map<Playe
         }
     }
 
+
+    if (!at_least_one_byte_score)
+    {
+        exception_wrappers::invalid_arg_wrapper("Last player's Score is empty");
+    }
     // after loop ends last position score is not added so we need to do it
     if (std::is_same<T, uint8_t>::value)
     {
