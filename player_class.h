@@ -28,7 +28,7 @@ public:
 private:
     cardCls::DeckOfCards hand;
     const PlayerPosition position;
-    uint16_t all_points;
+    uint32_t all_points;
     uint8_t curr_game_points;
     gameCls::PointCounter point_counter;
     std::vector<cardCls::Lewa> lewas_taken;

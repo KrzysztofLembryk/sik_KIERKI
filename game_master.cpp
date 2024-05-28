@@ -62,3 +62,9 @@ cardCls::DeckOfCards gm::GameMaster::get_player_cards(PlayerPosition pos)
     std::lock_guard<std::mutex> lock(mutex_gm);
     return players[pos]->get_hand();
 }
+
+std::shared_ptr<Player> gm::GameMaster::get_player(PlayerPosition pos)
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return players[pos];
+}

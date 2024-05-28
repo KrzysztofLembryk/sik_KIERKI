@@ -28,6 +28,7 @@ namespace gm
 
 
         cardCls::DeckOfCards get_player_cards(PlayerPosition pos);
+        std::shared_ptr<Player> get_player(PlayerPosition pos);
 
 
     private:
