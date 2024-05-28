@@ -2,6 +2,7 @@
 
 namespace po = boost::program_options;
 
+#include <unistd.h>
 #include <iostream>
 #include <cinttypes>
 #include <stdexcept>
@@ -16,72 +17,14 @@ namespace po = boost::program_options;
 #include "read_file.h"
 #include "game_master.h"
 #include "init_comm_wrappers.h"
-#include "socket_fd_wrapper.h"
+#include "socket_fd_handler.h"
 #include "ingame_comm_wrappers.h"
 #include "thread_func.h"
-
-void set_timeout_for_socket(int client_fd, int max_wait)
-{
-    struct timeval time_o = {.tv_sec = max_wait, .tv_usec = 0};
-    if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &time_o, sizeof(time_o)) < 0)
-    {
-        exception_wrappers::runtime_err_wrapper("setsockopt() failed");
-    }
-}
-
-void init_socket_fd(int &socket_fd)
-{
-    socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
-    if (socket_fd < 0)
-    {
-        exception_wrappers::runtime_err_wrapper("socket() failed");
-    }
-
-    // Disabling IPV6_V6ONLY option so that we can use both IPv4 and IPv6 on
-    // the same socket.
-    int no = 0;
-    if (setsockopt(socket_fd, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&no, sizeof(no)) == -1)
-    {
-        exception_wrappers::runtime_err_wrapper("setsockopt() failed");
-    }
-}
-
-void handle_socket_init(uint16_t &port,
-                        int &socket_fd,
-                        struct sockaddr_in6 &server_address)
-{
-    // std::signal(SIGPIPE, SIG_IGN);
-    init_socket_fd(socket_fd);
-
-    server_address.sin6_family = AF_INET6;
-    server_address.sin6_addr = in6addr_any;
-    server_address.sin6_port = htons(port);
-
-    // Now we need to bind created address to our socket.
-    std::cout << "Binding to port " << port << "\n";
-
-    if (bind(socket_fd, (struct sockaddr *)(&server_address),
-             (socklen_t)sizeof (server_address)) < 0)
-    {
-        exception_wrappers::runtime_err_wrapper("binding socket with address unsuccesful");
-    }
-
-    // Switch the socket to listening.
-    if (listen(socket_fd, QUEUE_LENGTH) < 0)
-    {
-        exception_wrappers::runtime_err_wrapper("listen() failed");
-    }
-
-    socklen_t length = (socklen_t) sizeof (server_address);
-    if (getsockname(socket_fd, (struct sockaddr *) &server_address, &length) < 0)
-    {
-        exception_wrappers::runtime_err_wrapper("getsockname() failed");
-    }
-}
+#include "polls_func.h"
 
 int init_server(int ac, char *av[], po::variables_map &vm,
-                 uint16_t &port, unsigned &timeout, std::string &file_name,
-                 int &socket_fd, struct sockaddr_in6 &server_address)
+                uint16_t &port, unsigned &timeout, std::string &file_name,
+                int &socket_fd, struct sockaddr_in6 &server_address)
 {
     try
     {
@@ -94,12 +37,11 @@ int init_server(int ac, char *av[], po::variables_map &vm,
         handle_socket_init(port, socket_fd, server_address);
         return SUCCESS;
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
         std::cerr << e.what() << '\n';
         return FAILURE;
     }
-    
 }
 
 void print_client_address(struct sockaddr_in6 &client_address)
@@ -108,6 +50,48 @@ void print_client_address(struct sockaddr_in6 &client_address)
     inet_ntop(AF_INET6, &(client_address.sin6_addr), client_ip, INET6_ADDRSTRLEN);
     uint16_t client_port = ntohs(client_address.sin6_port);
     printf("accepted connection from %s:%" PRIu16 "\n", client_ip, client_port);
+}
+
+
+int handle_table_joining_request(int socket_fd, unsigned timeout, std::shared_ptr<gm::GameMaster> game_master_sp)
+{
+    struct sockaddr_in6 client_address;
+    socklen_t client_address_len = sizeof client_address;
+
+    std::shared_ptr<ClientFdWrapper> client_fd_sp =
+    std::make_shared<ClientFdWrapper>(accept(socket_fd,
+            (struct sockaddr *)&client_address,
+            &client_address_len));
+
+    client_fd_sp->set_timeout_for_socket(timeout);
+
+    print_client_address(client_address);
+
+    init_comm_wrappers::IAM_Wrapper iam_wrapper;
+    PlayerPosition new_p_position;
+
+    if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position) != SUCCESS)
+    {
+        return CONTINUE;
+    }
+
+    if (game_master_sp->check_if_position_taken(new_p_position))
+    {
+        init_comm_wrappers::BUSY_Wrapper busy_wrapper;
+        std::cout << "Sending BUSY packet\n";
+        busy_wrapper.write(client_fd_sp->to_int(), game_master_sp->get_taken_positions());
+        return CONTINUE;
+    }
+    else
+    {
+        game_master_sp->add_new_player(new_p_position, client_address);
+    }
+
+    std::thread t(thread_func::thread_main, client_fd_sp, game_master_sp, game_master_sp->get_player(new_p_position));
+
+    t.detach();
+
+    return SUCCESS;
 }
 
 int main(int ac, char *av[])
@@ -119,66 +103,75 @@ int main(int ac, char *av[])
     int socket_fd;
     struct sockaddr_in6 server_address;
 
-    if (init_server(ac, av, vm, port, timeout, file_name, socket_fd, 
-    server_address) != SUCCESS)
+    if (init_server(ac, av, vm, port, timeout, file_name, socket_fd,
+                    server_address) != SUCCESS)
         return FAILURE;
 
     std::vector<gameCls::Round> vec_of_rounds;
 
     try
     {
-     vec_of_rounds = fHandler::read_rounds_from_file(file_name);
+        vec_of_rounds = fHandler::read_rounds_from_file(file_name);
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
         std::cerr << e.what() << '\n';
         return FAILURE;
     }
-     
+
+    int pipe_fd[2];
+    char pipe_buff[PIPE_BUFF_SIZE];
+    if (pipe(pipe_fd) == -1)
+    {
+        std::cerr << "Failed to create pipe" << "\n";
+        return FAILURE;
+    }
+
     std::shared_ptr<gm::GameMaster> game_master_sp = std::make_shared<gm::GameMaster>(vec_of_rounds, server_address);
+
+    struct pollfd poll_descriptors[POLLS_NBR_OF_DSCR];
+    int poll_status;
+
+    // We wait for event on socket_fd and pipe_fd.
+    poll_descriptors[TCP_SOCKET_POLLS_ID].fd = socket_fd;
+    poll_descriptors[TCP_SOCKET_POLLS_ID].events = POLLIN;
+    poll_descriptors[PIPE_POLLS_ID].fd = pipe_fd[PIPE_READ_DSCR];
+    poll_descriptors[PIPE_POLLS_ID].events = POLLIN;
 
     while (true)
     {
-        try 
+        try
         {
-            struct sockaddr_in6 client_address;
-            socklen_t client_address_len = sizeof client_address;
-            
-            std::shared_ptr<ClientFdWrapper> client_fd_sp = std::make_shared<ClientFdWrapper>(
-                accept(socket_fd, (struct sockaddr *) &client_address, 
-                &client_address_len)
-            );
-            client_fd_sp->set_timeout_for_socket(timeout);
+            polls_func::handle_polls_waiting(poll_status, poll_descriptors);
 
-            print_client_address(client_address);
-
-            init_comm_wrappers::IAM_Wrapper iam_wrapper;
-            PlayerPosition new_p_position;
-            if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position) != SUCCESS)
+            if (poll_status > 0)
             {
-                continue;
+                // First we check if we got END signal from threads, and if not
+                // then we can check if we got any new connections.
+                if (poll_descriptors[PIPE_POLLS_ID].revents & POLLIN)
+                {
+                    polls_func::handle_polls_read(pipe_buff, pipe_fd);
+                    break;
+                }
+                if (poll_descriptors[TCP_SOCKET_POLLS_ID].revents & POLLIN)
+                {
+                    if (handle_table_joining_request(socket_fd, timeout, game_master_sp) != SUCCESS)
+                    {
+                        continue;
+                    }
+                }
             }
-
-            if (game_master_sp->check_if_position_taken(new_p_position))
-            {
-                init_comm_wrappers::BUSY_Wrapper busy_wrapper;
-                std::cout << "Sending BUSY packet\n";
-                busy_wrapper.write(client_fd_sp->to_int(), game_master_sp->get_taken_positions());
-                continue;
-            }
-            else 
-            {
-                game_master_sp->add_new_player(new_p_position, client_address);
-            }
-
-            std::thread t(thread_func::thread_main, client_fd_sp, game_master_sp, game_master_sp->get_player(new_p_position)
-            );
-            t.detach(); 
         }
         catch (std::exception &e)
         {
             std::cerr << e.what() << "\n";
         }
     }
+
+    std::cout << "Closing server\n";
+    close(socket_fd);
+    close(pipe_fd[PIPE_READ_DSCR]);
+    close(pipe_fd[PIPE_WRITE_DSCR]);
+
     return SUCCESS;
 }

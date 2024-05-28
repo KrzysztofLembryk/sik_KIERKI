@@ -7,13 +7,19 @@
 
 constexpr int SUCCESS = 0;
 constexpr int FAILURE = 1;
+constexpr int CONTINUE = 3;
 constexpr int ERROR = -1;
 constexpr int TIMEOUT = -2;
 
 // TCP SERVER CONSTANTS
 constexpr uint8_t QUEUE_LENGTH = 5;
 constexpr int BUFFER_SIZE = 1024;
-
+constexpr int PIPE_READ_DSCR = 0;
+constexpr int PIPE_WRITE_DSCR = 1;
+constexpr int PIPE_BUFF_SIZE = 3;
+constexpr int POLLS_NBR_OF_DSCR = 2;
+constexpr int TCP_SOCKET_POLLS_ID = 0;
+constexpr int PIPE_POLLS_ID = 1;
 
 // COMMUNICATION WRAPPERS CONSTANTS
 constexpr size_t INIT_PACKET_NAME_SIZE = 4;
