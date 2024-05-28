@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
         exception_wrappers::runtime_err_wrapper("Got Wrong packet name from server");
     }
 
-
+    std::cout << "Waiting for Ingame packets\n";
     if (tcp::TCP_read_packet_name(socket_fd, INGAME_PACKET_NAME_SIZE, packet_name) != SUCCESS)
     {
         exception_wrappers::runtime_err_wrapper("Got Wrong packet name SIZE from server");

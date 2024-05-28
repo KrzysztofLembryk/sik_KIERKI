@@ -15,7 +15,7 @@ std::vector<char> cardVec_to_charVec(std::vector<cardCls::CardClassWrapper> card
         if (value >= 2 && value < 10)
         {
             deck.push_back(std::to_string(value)[0]);
-            std::cout << "value of card in cardVec_to_charVec: " << std::to_string(value)[0] << "\n";
+            // std::cout << "value of card in cardVec_to_charVec: " << std::to_string(value)[0] << "\n";
         }
         else if (value == 10)
         {
@@ -46,10 +46,6 @@ std::vector<char> cardVec_to_charVec(std::vector<cardCls::CardClassWrapper> card
     }
     return deck;
 }
-
-
-
-
 
 
 // CARD CLASS WRAPPER

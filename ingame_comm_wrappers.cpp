@@ -285,14 +285,10 @@ void ingame_comm_wrappers::SCORE_Wrapper::write(int socket_fd, const std::map<Pl
     {
         msg_vec.push_back(playerPos_to_char(score.first));
 
+        // We dont need to remove '\0' from vector since it is not at the end
         std::string score_str = std::to_string(score.second);
         std::vector<char> score_vec(score_str.begin(), score_str.end());
-        if (score_str[score_str.size() - 1] == '\0')
-        {
-            std::cout << "NA KONCU STRING W SCORE WRITE JEST NULL BYTE\n";
-            fflush(stdout);
-        }
-        score_vec.pop_back(); // remove '\0' from string
+
         msg_vec.insert(msg_vec.end(), score_vec.begin(), score_vec.end());
     }
 
@@ -387,16 +383,13 @@ void ingame_comm_wrappers::TOTAL_Wrapper::write(int socket_fd,
 
     for (const auto &score : total_scores)
     {
+        std::cout << "Player: " << playerPos_to_char(score.first) << " score: " << score.second << '\n';
         msg_vec.push_back(playerPos_to_char(score.first));
 
+        // At the end there is no '\0' character so we dont need to remove it
         std::string score_str = std::to_string(score.second);
         std::vector<char> score_vec(score_str.begin(), score_str.end());
-        if (score_str[score_str.size() - 1] == '\0')
-        {
-            std::cout << "NA KONCU STRING W SCORE WRITE JEST NULL BYTE\n";
-            fflush(stdout);
-        }
-        score_vec.pop_back(); // remove '\0' from string
+
         msg_vec.insert(msg_vec.end(), score_vec.begin(), score_vec.end());
     }
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
