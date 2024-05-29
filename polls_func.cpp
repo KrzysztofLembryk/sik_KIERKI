@@ -4,8 +4,9 @@
 #include <memory>
 #include <iostream>
 #include <cstring>
+#include "err.h"
 
-void polls_func::handle_polls_waiting(int &poll_status, struct pollfd *poll_descriptors)
+int polls_func::handle_polls_waiting(int &poll_status, struct pollfd *poll_descriptors)
 {
     for (int i = 0; i < POLLS_NBR_OF_DSCR; i++)
     {
@@ -19,11 +20,17 @@ void polls_func::handle_polls_waiting(int &poll_status, struct pollfd *poll_desc
         {
             exception_wrappers::runtime_err_wrapper("interrupted system call");
         }
+        else if (poll_descriptors[TCP_SOCKET_POLLS_ID].revents & POLLHUP)
+        {
+            err_func::error("in polls client has disconnected");
+            return DISCONNECTED;
+        }
         else
         {
             exception_wrappers::runtime_err_wrapper("poll() failed");
         }
     }
+    return SUCCESS;
 }
 
 void polls_func::handle_polls_read(int pipe_fd, std::string &msg)

@@ -18,7 +18,8 @@ namespace TCP_threads
             std::shared_ptr<gm::GameMaster> game_master_sp,
             std::shared_ptr<Player> player_sp,
             std::shared_ptr<std::binary_semaphore> TCP_sem,
-            int parent_pipe_read_fd);
+            int parent_pipe_read_fd,
+            std::shared_ptr<bool> thread_ended_sp);
     };
 } // namespace TCP_threads
 

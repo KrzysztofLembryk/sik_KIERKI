@@ -11,7 +11,7 @@ pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}}), sync_barrier(MA
 
     this->curr_lewa = std::make_shared<cardCls::Lewa>(1);
     this->rounds = rounds;
-    this->round_number = 0;
+    this->round_number = 1;
     this->whose_turn = rounds[0].get_first_player();
     this->semaphore_map[whose_turn].release();
     this->card_counter.new_game(rounds[0].get_game_type());
@@ -97,6 +97,12 @@ std::shared_ptr<cardCls::Lewa> gm::GameMaster::get_curr_lewa()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
     return curr_lewa;
+}
+
+uint8_t gm::GameMaster::get_curr_round_nbr()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return round_number;
 }
 
 bool gm::GameMaster::check_if_game_started()

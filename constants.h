@@ -10,6 +10,7 @@ constexpr int FAILURE = 1;
 constexpr int CONTINUE = 3;
 constexpr int ERROR = -1;
 constexpr int TIMEOUT = -2;
+constexpr int DISCONNECTED = -3;
 
 // TCP SERVER CONSTANTS
 constexpr uint8_t QUEUE_LENGTH = 5;

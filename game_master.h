@@ -32,7 +32,7 @@ namespace gm
         PlayerPosition get_whose_turn();
         GameType get_game_type();
         std::shared_ptr<cardCls::Lewa> get_curr_lewa();
-
+        uint8_t get_curr_round_nbr();
 
         bool check_if_game_started();
 
