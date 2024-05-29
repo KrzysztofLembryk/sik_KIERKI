@@ -26,21 +26,16 @@ void polls_func::handle_polls_waiting(int &poll_status, struct pollfd *poll_desc
     }
 }
 
-void polls_func::handle_polls_read(char *pipe_buff, int *pipe_fd)
+void polls_func::handle_polls_read(int pipe_fd, std::string &msg)
 {
+    char pipe_buff[INGAME_PACKET_NAME_SIZE];
+    std::memset(pipe_buff, 0, INGAME_PACKET_NAME_SIZE);
 
-    std::memset(pipe_buff, 0, PIPE_BUFF_SIZE);
-    int bytes_read = read(pipe_fd[PIPE_READ_DSCR], pipe_buff, PIPE_BUFF_SIZE);
-    if (bytes_read != PIPE_BUFF_SIZE)
-    {
-        exception_wrappers::runtime_err_wrapper("read() failed - wrong number of bytes read != 3");
-    }
-    if (strncmp(pipe_buff, "END", 3) == 0)
-    {
-        std::cout << "Received END signal\n";
-    }
-    else
+    int bytes_read = read(pipe_fd, pipe_buff, INGAME_PACKET_NAME_SIZE);
+    if (bytes_read < 0 )
     {
         exception_wrappers::runtime_err_wrapper("read() failed - wrong message received");
     }
+
+    msg = std::string(pipe_buff, bytes_read);
 }

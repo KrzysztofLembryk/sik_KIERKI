@@ -2,12 +2,13 @@
 #define POLL_FUNC_H
 
 #include <poll.h>
+#include <string>
 
 namespace polls_func
 {
     void handle_polls_waiting(int &poll_status, struct pollfd *poll_descriptors);
 
-    void handle_polls_read(char *pipe_buff, int *pipe_fd);
+    void handle_polls_read(int pipe_fd, std::string &msg);
 
 } // namespace polls_func
 

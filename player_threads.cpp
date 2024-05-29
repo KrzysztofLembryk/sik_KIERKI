@@ -1,9 +1,11 @@
-#include "player_thread_func.h"
+#include "player_threads.h"
 #include <iostream>
 #include "ingame_comm_wrappers.h"
 #include "constants.h"
 #include <semaphore>
+#include <thread>
 #include "card_classes.h"
+#include "btwn_thread_comm.h"
 
 void signal_end_to_main_thread(int parent_pipe_write_fd)
 {
@@ -34,16 +36,26 @@ void player_threads::MyThread::thread_main(
         // game to start
         if (!game_master_sp->check_if_game_started())
             game_master_sp->wait_for_game_start();
-        else 
-        {
-            // We should send all lewas etc to the player
-        }
+
+        // Here we send DEAL to All players 
+        btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "DEAL");
+        
         game_master_sp->wait_for_turn(player_sp->get_position()); 
+
+        // Player whose turn is needs to get TRICK from server
+        btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "TRICK");
+
+        // After we told helping thread to send TRICK, we wait for player 
+        // response, once we get it helping thread checks if it is valid and if
+        // it is it releases the semaphore
+        TCP_comm_sem->acquire();
 
         std::shared_ptr<cardCls::Lewa> curr_lewa = 
                                                 game_master_sp->get_curr_lewa();
+        
 
     }
     
-    
+    close(child_pipe_fd[PIPE_READ_DSCR]);
+    close(child_pipe_fd[PIPE_WRITE_DSCR]); 
 }

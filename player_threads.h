@@ -1,5 +1,5 @@
-#ifndef PLAYER_THREAD_FUNC_H
-#define PLAYER_THREAD_FUNC_H
+#ifndef PLAYER_THREADS_H
+#define PLAYER_THREADS_H
 
 #include <memory>
 #include "socket_fd_handler.h"
@@ -22,4 +22,4 @@ namespace player_threads
     };
 };
 
-#endif // THREAD_FUNC_H
+#endif // PLAYER_THREADS_H

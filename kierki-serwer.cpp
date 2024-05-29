@@ -19,7 +19,7 @@ namespace po = boost::program_options;
 #include "init_comm_wrappers.h"
 #include "socket_fd_handler.h"
 #include "ingame_comm_wrappers.h"
-#include "player_thread_func.h"
+#include "player_threads.h"
 #include "polls_func.h"
 
 int init_server(int ac, char *av[], po::variables_map &vm,
@@ -158,7 +158,8 @@ int main(int ac, char *av[])
                 // then we can check if we got any new connections.
                 if (poll_descriptors[PIPE_POLLS_ID].revents & POLLIN)
                 {
-                    polls_func::handle_polls_read(pipe_buff, pipe_fd);
+                    std::string msg;
+                    polls_func::handle_polls_read(pipe_fd[PIPE_READ_DSCR], msg);
                     break;
                 }
                 if (poll_descriptors[TCP_SOCKET_POLLS_ID].revents & POLLIN)
