@@ -41,7 +41,7 @@ namespace gm
 
 
     private:
-        std::map<PlayerPosition, std::binary_semaphore> semaphore_map;
+        std::map<PlayerPosition, std::shared_ptr<std::binary_semaphore>> semaphore_map;
         std::map<PlayerPosition, std::shared_ptr<Player>> players;
         std::vector<gameCls::Round> rounds;
         std::vector<cardCls::Lewa> lewas_played;

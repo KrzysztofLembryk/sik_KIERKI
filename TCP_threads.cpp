@@ -1,4 +1,4 @@
-#include "TCP_comm_threads.h"
+#include "TCP_threads.h"
 #include "constants.h"
 #include <poll.h>
 #include "polls_func.h"
@@ -49,10 +49,6 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round)
 }
 
 
-
-
-
-
 void TCP_threads::TCPThread::TCP_thread_main(
     std::shared_ptr<ClientFdWrapper> client_fd_sp,
     std::shared_ptr<gm::GameMaster> game_master_sp,
@@ -84,20 +80,23 @@ void TCP_threads::TCPThread::TCP_thread_main(
 
         if (poll_status > 0)
         {
+            std::cout << "TCP thread got sth on polls\n";
             // First we check if we got END signal from threads, and if not
             // then we can check if we got any new connections.
             if (poll_descriptors[PIPE_POLLS_ID].revents & POLLIN)
             {
                 std::string msg;
-                polls_func::handle_polls_read(parent_pipe_read_fd, msg);
-
+                polls_func::handle_polls_read(parent_pipe_read_fd, msg, true);
+                std::cout << "Got msg: " << msg << "\n";
                 if (msg == "DEAL")
                 {
-
+                    std::cout << "DEAL\n";
+                    fflush(stdout);
                 }
                 else if (msg == "TRICK")
                 {
-
+                    std::cout << "TRICK\n";
+                    fflush(stdout);
                 }
                 else if (msg == "TAKEN")
                 {
@@ -110,6 +109,10 @@ void TCP_threads::TCPThread::TCP_thread_main(
                 else if (msg == "TOTAL")
                 {
 
+                }
+                else
+                {
+                    exception_wrappers::runtime_err_wrapper("Got wrong msg from parent thread");
                 }
                 
             }

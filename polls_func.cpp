@@ -33,12 +33,26 @@ int polls_func::handle_polls_waiting(int &poll_status, struct pollfd *poll_descr
     return SUCCESS;
 }
 
-void polls_func::handle_polls_read(int pipe_fd, std::string &msg)
+void polls_func::handle_polls_read(int pipe_fd, std::string &msg, bool is_TCP_thread)
 {
     char pipe_buff[INGAME_PACKET_NAME_SIZE];
     std::memset(pipe_buff, 0, INGAME_PACKET_NAME_SIZE);
+    int bytes_read;
+    if (is_TCP_thread)
+    {
+        bytes_read = read(pipe_fd, pipe_buff, 1);
+        if (pipe_buff[0] == 'D')
+        {
+            bytes_read += read(pipe_fd, pipe_buff + 1, 3);
+        }
+        else 
+        {
+            bytes_read += read(pipe_fd, pipe_buff + 1, 4);
+        }
+    }
+    else 
+        bytes_read = read(pipe_fd, pipe_buff, INGAME_PACKET_NAME_SIZE);
 
-    int bytes_read = read(pipe_fd, pipe_buff, INGAME_PACKET_NAME_SIZE);
     if (bytes_read < 0 )
     {
         exception_wrappers::runtime_err_wrapper("read() failed - wrong message received");

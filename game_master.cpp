@@ -1,19 +1,19 @@
 #include "game_master.h"
 #include "constants.h"
 
-gm::GameMaster::GameMaster(std::vector<gameCls::Round> &rounds, const struct sockaddr_in6 &server_addr) :
-pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}}), sync_barrier(MAX_PLAYERS, [](){})
+gm::GameMaster::GameMaster(std::vector<gameCls::Round> &rounds, const struct sockaddr_in6 &server_addr) : 
+pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}}), 
+sync_barrier(MAX_PLAYERS, [](){})
 {
-    this->semaphore_map.emplace(N, std::binary_semaphore(0));
-    this->semaphore_map.emplace(E, std::binary_semaphore(0));
-    this->semaphore_map.emplace(S, std::binary_semaphore(0));
-    this->semaphore_map.emplace(W, std::binary_semaphore(0));
-
+    this->semaphore_map[N] = std::make_shared<std::binary_semaphore>(0);
+    this->semaphore_map[E] = std::make_shared<std::binary_semaphore>(0);
+    this->semaphore_map[S] = std::make_shared<std::binary_semaphore>(0);
+    this->semaphore_map[W] = std::make_shared<std::binary_semaphore>(0);
     this->curr_lewa = std::make_shared<cardCls::Lewa>(1);
     this->rounds = rounds;
     this->round_number = 1;
     this->whose_turn = rounds[0].get_first_player();
-    this->semaphore_map[whose_turn].release();
+    this->semaphore_map[whose_turn]->release();
     this->card_counter.new_game(rounds[0].get_game_type());
     this->number_of_players_present = 0;
     this->is_game_started = false;
@@ -72,7 +72,7 @@ void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &my_
 */
 void gm::GameMaster::wait_for_turn(PlayerPosition pos)
 {
-    semaphore_map[pos].acquire();    
+    semaphore_map[pos]->acquire();    
 }
 
 void gm::GameMaster::wait_for_game_start()

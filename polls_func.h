@@ -8,7 +8,7 @@ namespace polls_func
 {
     int handle_polls_waiting(int &poll_status, struct pollfd *poll_descriptors);
 
-    void handle_polls_read(int pipe_fd, std::string &msg);
+    void handle_polls_read(int pipe_fd, std::string &msg, bool is_TCP_thread);
 
 } // namespace polls_func
 
