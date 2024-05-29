@@ -1,7 +1,8 @@
 #include "game_master.h"
+#include "constants.h"
 
 gm::GameMaster::GameMaster(std::vector<gameCls::Round> &rounds, const struct sockaddr_in6 &server_addr) :
-pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}}), barrier_first(0), barrier_second(0)
+pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}}), sync_barrier(MAX_PLAYERS, [](){})
 {
     this->semaphore_map.emplace(N, std::binary_semaphore(0));
     this->semaphore_map.emplace(E, std::binary_semaphore(0));
@@ -15,8 +16,6 @@ pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}}), barrier_first(0
     this->card_counter.new_game(rounds[0].get_game_type());
     this->number_of_players_present = 0;
     this->is_game_started = false;
-    // this->barrier_first = std::counting_semaphore<4>(0);
-    // this->barrier_first = std::counting_semaphore<4>(0);
 
     std::vector<PlayerPosition> player_pos({N, E, S, W});
 
@@ -60,9 +59,9 @@ void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &my_
     players[pos]->set_player_address(my_address);
     number_of_players_present++;
 
-    if (number_of_players_present == 4)
+    if (number_of_players_present == MAX_PLAYERS)
     {
-        barrier_first.release(4);
+        is_game_started = true;
     }
 }
 
@@ -77,7 +76,7 @@ void gm::GameMaster::wait_for_turn(PlayerPosition pos)
 
 void gm::GameMaster::wait_for_game_start()
 {
-    barrier_first.acquire();
+    sync_barrier.arrive_and_wait();
 }
 
 

@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include <semaphore>
+#include <barrier>
 
 namespace gm
 {
@@ -49,8 +50,7 @@ namespace gm
         uint8_t number_of_players_present;
         bool is_game_started;
         std::mutex mutex_gm;
-        std::counting_semaphore<4> barrier_first;
-        std::counting_semaphore<4> barrier_second;
+        std::barrier<void(*)()> sync_barrier;
     };
 }
 
