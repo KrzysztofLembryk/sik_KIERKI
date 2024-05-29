@@ -9,6 +9,7 @@ pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}}), sync_barrier(MA
     this->semaphore_map.emplace(S, std::binary_semaphore(0));
     this->semaphore_map.emplace(W, std::binary_semaphore(0));
 
+    this->curr_lewa = std::make_shared<cardCls::Lewa>(1);
     this->rounds = rounds;
     this->round_number = 0;
     this->whose_turn = rounds[0].get_first_player();
@@ -92,17 +93,23 @@ GameType gm::GameMaster::get_game_type()
     return rounds[round_number].get_game_type();
 }
 
+std::shared_ptr<cardCls::Lewa> gm::GameMaster::get_curr_lewa()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return curr_lewa;
+}
+
 bool gm::GameMaster::check_if_game_started()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
     return is_game_started;
 }
 
-cardCls::DeckOfCards gm::GameMaster::get_player_cards(PlayerPosition pos)
-{
-    std::lock_guard<std::mutex> lock(mutex_gm);
-    return players[pos]->get_hand();
-}
+// cardCls::DeckOfCards gm::GameMaster::get_player_cards(PlayerPosition pos)
+// {
+//     std::lock_guard<std::mutex> lock(mutex_gm);
+//     return players[pos]->get_hand();
+// }
 
 std::shared_ptr<Player> gm::GameMaster::get_player(PlayerPosition pos)
 {

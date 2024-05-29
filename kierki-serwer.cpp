@@ -19,7 +19,7 @@ namespace po = boost::program_options;
 #include "init_comm_wrappers.h"
 #include "socket_fd_handler.h"
 #include "ingame_comm_wrappers.h"
-#include "thread_func.h"
+#include "player_thread_func.h"
 #include "polls_func.h"
 
 int init_server(int ac, char *av[], po::variables_map &vm,
@@ -86,7 +86,7 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
         game_master_sp->add_new_player(new_p_position, client_address);
     }
 
-    thread_nmspc::MyThread my_thread;
+    player_threads::MyThread my_thread;
 
     std::thread t(
         [client_fd_sp, game_master_sp, new_p_position, pipe_write_fd, my_thread]() mutable {

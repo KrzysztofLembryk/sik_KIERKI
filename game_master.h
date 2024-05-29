@@ -31,9 +31,12 @@ namespace gm
 
         PlayerPosition get_whose_turn();
         GameType get_game_type();
+        std::shared_ptr<cardCls::Lewa> get_curr_lewa();
+
+
         bool check_if_game_started();
 
-        cardCls::DeckOfCards get_player_cards(PlayerPosition pos);
+        // cardCls::DeckOfCards get_player_cards(PlayerPosition pos);
         std::shared_ptr<Player> get_player(PlayerPosition pos);
 
 
@@ -42,7 +45,7 @@ namespace gm
         std::map<PlayerPosition, std::shared_ptr<Player>> players;
         std::vector<gameCls::Round> rounds;
         std::vector<cardCls::Lewa> lewas_played;
-        cardCls::Lewa curr_lewa;
+        std::shared_ptr<cardCls::Lewa> curr_lewa;
         PlayerPosition whose_turn;
         uint8_t round_number;
         gameCls::CardCounter card_counter;
