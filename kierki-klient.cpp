@@ -10,8 +10,8 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3) 
-        printf("usage: %s <protocol type> <host> <port>\n", argv[0]);
+    if (argc != 4) 
+        exception_wrappers::invalid_arg_wrapper("usage: <host> <port> <position>");
 
     
     const char *host = argv[1]; 
@@ -27,7 +27,8 @@ int main(int argc, char *argv[])
     }
 
     init_comm_wrappers::IAM_Wrapper iam;
-    iam.write(socket_fd, PlayerPosition::N);
+    PlayerPosition pos = char_to_playerPos(argv[3][0]); 
+    iam.write(socket_fd, pos);
     
     std::string packet_name;
     if (tcp::TCP_read_packet_name(socket_fd, INIT_PACKET_NAME_SIZE, packet_name) != SUCCESS)

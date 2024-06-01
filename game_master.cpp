@@ -12,8 +12,10 @@ sync_barrier(MAX_PLAYERS, [](){})
     this->curr_lewa = std::make_shared<cardCls::Lewa>(1);
     this->rounds = rounds;
     this->round_number = 1;
-    this->whose_turn = rounds[0].get_first_player();
-    this->semaphore_map[whose_turn]->release();
+    this->first_player = rounds[0].get_first_player();
+    this->whose_turn = first_player;
+    this->who_won = NONE_POS;
+    this->semaphore_map[first_player]->release();
     this->card_counter.new_game(rounds[0].get_game_type());
     this->number_of_players_present = 0;
     this->is_game_started = false;
@@ -80,6 +82,10 @@ void gm::GameMaster::wait_for_game_start()
     sync_barrier.arrive_and_wait();
 }
 
+void gm::GameMaster::wait_for_all_players()
+{
+    sync_barrier.arrive_and_wait();
+}
 
 PlayerPosition gm::GameMaster::get_whose_turn() 
 {
@@ -111,6 +117,42 @@ bool gm::GameMaster::check_if_game_started()
     return is_game_started;
 }
 
+bool gm::GameMaster::check_if_curr_lewa_full()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return this->curr_lewa->lewa_full();
+}
+
+void gm::GameMaster::check_who_won_lewa()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    auto lewas_cards = curr_lewa->get_cards_in_lewa();
+    Suit bottom_card_suit = lewas_cards[0].get_suit();
+    int i = 1;
+    cardCls::CardClassWrapper winner_card = lewas_cards[0];
+    PlayerPosition winner = this->first_player;
+    while (i < MAX_LEWA_SIZE)
+    {
+        if (lewas_cards[i].get_suit() == bottom_card_suit)
+        {
+            if (lewas_cards[i].get_value() > winner_card.get_value())
+            {
+                winner_card = lewas_cards[i];
+                winner = static_cast<PlayerPosition>((this->first_player + i) % MAX_PLAYERS);
+            }
+        }
+        i++;
+    }
+
+    this->who_won = winner;
+}
+
+void gm::GameMaster::count_cards_played()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    
+    card_counter.count_cards(*curr_lewa);
+}
 // cardCls::DeckOfCards gm::GameMaster::get_player_cards(PlayerPosition pos)
 // {
 //     std::lock_guard<std::mutex> lock(mutex_gm);

@@ -53,8 +53,8 @@ void player_threads::MyThread::thread_main(
         // If game has started and we are here, this means that we are a new 
         // player and are just connecting to the game. Thus we shouldnt wait for
         // game to start
-        // if (!game_master_sp->check_if_game_started())
-        //     game_master_sp->wait_for_game_start();
+        if (!game_master_sp->check_if_game_started())
+            game_master_sp->wait_for_game_start();
 
         // Here we send DEAL to All players 
         btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "DEAL");
@@ -66,11 +66,19 @@ void player_threads::MyThread::thread_main(
 
         // After we told helping thread to send TRICK, we wait for player 
         // response, once we get it helping thread checks if it is valid and if
-        // it is it releases the semaphore
+        // it is, it releases the semaphore
         semaphore_TCP->acquire();
 
-        std::shared_ptr<cardCls::Lewa> curr_lewa = 
-                                                game_master_sp->get_curr_lewa();
+        if (game_master_sp->check_if_curr_lewa_full()) 
+        {
+            game_master_sp->check_who_won_lewa();
+            game_master_sp->count_cards_played();
+            game_master_sp->wait_for_all_players();
+        }
+        else 
+        {
+            game_master_sp->wait_for_all_players();
+        }
         
 
     }
