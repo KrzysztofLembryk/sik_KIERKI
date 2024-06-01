@@ -34,12 +34,21 @@ namespace gm
         GameType get_game_type();
         std::shared_ptr<cardCls::Lewa> get_curr_lewa();
         uint8_t get_curr_round_nbr();
+        uint8_t get_nbr_of_rounds();
 
         bool check_if_game_started();
         bool check_if_curr_lewa_full();
         void check_who_won_lewa();
 
+        bool check_if_round_finished();
+        bool check_if_last_round();
+
         void count_cards_played();
+        void next_player_turn();
+        void set_first_player_for_next_turn();
+        int decrement_present_players();
+        void prepare_new_lewa();
+        void prepare_new_round();
         // cardCls::DeckOfCards get_player_cards(PlayerPosition pos);
         std::shared_ptr<Player> get_player(PlayerPosition pos);
 

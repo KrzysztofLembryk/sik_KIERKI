@@ -110,6 +110,11 @@ void TCP_threads::TCPThread::TCP_thread_main(
                 {
 
                 }
+                else if (msg == "END")
+                {
+                    close(client_fd_sp->to_int());
+                    return;
+                }
                 else
                 {
                     exception_wrappers::runtime_err_wrapper("Got wrong msg from parent thread");

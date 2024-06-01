@@ -111,6 +111,12 @@ uint8_t gm::GameMaster::get_curr_round_nbr()
     return round_number;
 }
 
+uint8_t gm::GameMaster::get_nbr_of_rounds()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return (uint8_t)rounds.size();
+}
+
 bool gm::GameMaster::check_if_game_started()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
@@ -145,6 +151,7 @@ void gm::GameMaster::check_who_won_lewa()
     }
 
     this->who_won = winner;
+    curr_lewa->set_player_who_took_lewa(winner);
 }
 
 void gm::GameMaster::count_cards_played()
@@ -152,6 +159,65 @@ void gm::GameMaster::count_cards_played()
     std::lock_guard<std::mutex> lock(mutex_gm);
     
     card_counter.count_cards(*curr_lewa);
+}
+
+void gm::GameMaster::next_player_turn()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    whose_turn = static_cast<PlayerPosition>((whose_turn + 1) % MAX_PLAYERS);
+    semaphore_map[whose_turn]->release();
+}
+
+void gm::GameMaster::set_first_player_for_next_turn()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    // We need to set first player and whose turn to winner, since he will be 
+    // playing first next card, also we need to release his semaphore.
+    this->first_player = who_won;
+    this->whose_turn = who_won;
+    semaphore_map[whose_turn]->release();
+
+}
+
+int gm::GameMaster::decrement_present_players()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    if (number_of_players_present > 0)
+        number_of_players_present--;
+    else 
+        exception_wrappers::runtime_err_wrapper("Wanted to decrement Nbr of players present when it is 0");
+    return number_of_players_present;
+}
+
+void gm::GameMaster::prepare_new_lewa()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    if (curr_lewa->lewa_full())
+    {
+        lewas_played.push_back(*curr_lewa);
+        curr_lewa->clear_lewa();
+        curr_lewa->set_lewa_id(curr_lewa->get_lewa_id() + 1);
+    }
+}
+
+void gm::GameMaster::prepare_new_round()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    if (curr_lewa->lewa_full())
+    {
+        curr_lewa->clear_lewa();
+        curr_lewa->set_lewa_id(1);
+        round_number++;
+        // Since in function that checks who took lewa we release semaphore for
+        // player who took it, if round has ended we need to acquire it
+        semaphore_map[whose_turn]->acquire();
+
+        first_player = rounds[round_number - 1].get_first_player();
+        whose_turn = first_player;
+        who_won = NONE_POS;
+        semaphore_map[first_player]->release();
+        card_counter.new_game(rounds[round_number - 1].get_game_type());
+    }
 }
 // cardCls::DeckOfCards gm::GameMaster::get_player_cards(PlayerPosition pos)
 // {

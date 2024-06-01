@@ -203,6 +203,7 @@ void cardCls::Lewa::add_card(const CardClassWrapper &card)
 
 void cardCls::Lewa::clear_lewa()
 {
+    player_who_took_lewa = NONE_POS;
     lewa.clear();
 }
 
