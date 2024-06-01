@@ -154,6 +154,18 @@ void gm::GameMaster::check_who_won_lewa()
     curr_lewa->set_player_who_took_lewa(winner);
 }
 
+bool gm::GameMaster::check_if_round_finished()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return card_counter.has_game_ended();
+}
+
+bool gm::GameMaster::check_if_last_round()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return round_number == rounds.size();
+}
+
 void gm::GameMaster::count_cards_played()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
@@ -207,6 +219,7 @@ void gm::GameMaster::prepare_new_round()
     {
         curr_lewa->clear_lewa();
         curr_lewa->set_lewa_id(1);
+        lewas_played.clear();
         round_number++;
         // Since in function that checks who took lewa we release semaphore for
         // player who took it, if round has ended we need to acquire it

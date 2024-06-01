@@ -45,6 +45,7 @@ void player_threads::MyThread::thread_main(
                                        thread_ended_sp);
         });
     t.detach();
+
     uint8_t nbr_of_rounds = game_master_sp->get_nbr_of_rounds();
     for (uint8_t i = 0; i < nbr_of_rounds; i++)
     {
@@ -56,6 +57,7 @@ void player_threads::MyThread::thread_main(
 
         // Here we send DEAL to All players
         btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "DEAL");
+        semaphore_TCP->acquire();
 
         while (true)
         {
@@ -67,13 +69,14 @@ void player_threads::MyThread::thread_main(
             btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "TRICK");
 
             // After we told helping thread to send TRICK, we wait for player
-            // response, once we get it helping thread checks if it is valid and if
-            // it is, it releases the semaphore, otherwise it sends WRONG and waits
-            // for player's response again
+            // response, once we get it helping thread checks if it is valid 
+            // and if it is, it releases the semaphore, otherwise it sends 
+            // WRONG and waits for player's response again
             semaphore_TCP->acquire();
 
-            // Here if we are last player who plays card, we need to check who won
-            // lewa, count cards that has been played and then release barrier
+            // Here if we are last player who plays card, we need to check who 
+            // won lewa, count cards that has been played and then release 
+            // barrier
             if (game_master_sp->check_if_curr_lewa_full())
             {
                 game_master_sp->check_who_won_lewa();
