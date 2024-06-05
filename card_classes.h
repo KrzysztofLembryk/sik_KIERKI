@@ -117,7 +117,7 @@ namespace cardCls
 
         void clear_lewa();
 
-        const std::vector<CardClassWrapper> &get_cards_in_lewa();
+        std::vector<CardClassWrapper> &get_cards_in_lewa();
 
         CardClassWrapper get_top_card() const;
 

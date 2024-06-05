@@ -3,9 +3,13 @@
 #include <poll.h>
 #include "polls_func.h"
 #include "ingame_comm_wrappers.h"
+#include "init_comm_wrappers.h"
 #include "TCP_handler.h"
 #include "err.h"
 
+using GM_sp = std::shared_ptr<gm::GameMaster>;
+using Player_sp = std::shared_ptr<Player>;
+using BinSem_sp = std::shared_ptr<std::binary_semaphore>;
 
 int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round)
 {
@@ -48,12 +52,12 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round)
     return SUCCESS;
 }
 
-int handle_DEAL(int client_fd, std::shared_ptr<gm::GameMaster> game_master_sp, std::shared_ptr<Player> player_sp, std::shared_ptr<bool> thread_ended_sp, std::shared_ptr<std::binary_semaphore> semaphore_TCP)
+int handle_DEAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP)
 {
     std::cout << "DEAL\n";
     fflush(stdout);
-
-    player_sp->set_hand(game_master_sp->get_player_deck(player_sp->get_position()));
+    auto p_hand = game_master_sp->get_player_deck(player_sp->get_position());
+    player_sp->set_hand(p_hand);
     init_comm_wrappers::DEAL_Wrapper deal;
 
     try
@@ -75,10 +79,11 @@ int handle_DEAL(int client_fd, std::shared_ptr<gm::GameMaster> game_master_sp, s
     return SUCCESS;
 }
 
-int handle_TRICK(int client_fd, std::shared_ptr<gm::GameMaster> game_master_sp, std::shared_ptr<Player> player_sp, std::shared_ptr<bool> thread_ended_sp, std::shared_ptr<std::binary_semaphore> semaphore)
+int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore)
 {
     ingame_comm_wrappers::TRICK_Wrapper trick;
-    cardCls::Lewa lewa;
+    cardCls::Lewa lewa_with_good_id(game_master_sp->get_curr_round_nbr());
+    ingame_comm_wrappers::WRONG_Wrapper wrong;
 
     while (true)
     {
@@ -98,6 +103,20 @@ int handle_TRICK(int client_fd, std::shared_ptr<gm::GameMaster> game_master_sp, 
                 semaphore->release();
                 return ERROR;
             }
+
+            if (client_ret_lewa.size() != 1)
+            {
+                wrong.write(client_fd, lewa_with_good_id);
+                continue;
+            }
+            // We check if sent card is in players deck and if its not played
+            if (player_sp->check_card_correctness(client_ret_lewa.get_cards_in_lewa()[0]) != SUCCESS)
+            {
+                wrong.write(client_fd, lewa_with_good_id);
+                continue;
+            }
+            // Here we check if sent card is in correct color, meaning if player
+            // didnt cheat when he had color and didnt play it
         }
         catch (const std::exception &e)
         {
@@ -108,14 +127,16 @@ int handle_TRICK(int client_fd, std::shared_ptr<gm::GameMaster> game_master_sp, 
 
             return ERROR;
         }
+
     }
+    return SUCCESS;
 }
 
 void TCP_threads::TCPThread::TCP_thread_main(
     std::shared_ptr<ClientFdWrapper> client_fd_sp,
-    std::shared_ptr<gm::GameMaster> game_master_sp,
-    std::shared_ptr<Player> player_sp,
-    std::shared_ptr<std::binary_semaphore> semaphore_TCP,
+    GM_sp game_master_sp,
+    Player_sp player_sp,
+    BinSem_sp semaphore_TCP,
     int parent_pipe_read_fd,
     std::shared_ptr<bool> thread_ended_sp)
 {

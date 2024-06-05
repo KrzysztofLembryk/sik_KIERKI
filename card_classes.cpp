@@ -207,7 +207,7 @@ void cardCls::Lewa::clear_lewa()
     lewa.clear();
 }
 
-const std::vector<cardCls::CardClassWrapper> &cardCls::Lewa::get_cards_in_lewa()
+std::vector<cardCls::CardClassWrapper> &cardCls::Lewa::get_cards_in_lewa()
 {
     return lewa;
 }

@@ -8,7 +8,7 @@
 class Player
 {
 public:
-    Player() : allpoints(0), curr_game_points(0) {};
+    Player() = delete;
     Player( cardCls::DeckOfCards &hand, 
             PlayerPosition position, 
             GameType game_type, 
@@ -26,9 +26,11 @@ public:
     cardCls::DeckOfCards get_hand();
     PlayerPosition get_position();
 
+    int check_card_correctness(cardCls::CardClassWrapper &card);
+
 private:
     cardCls::DeckOfCards hand;
-    const PlayerPosition position;
+    PlayerPosition position;
     uint32_t all_points;
     uint8_t curr_game_points;
     gameCls::PointCounter point_counter;
