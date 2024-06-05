@@ -55,12 +55,17 @@ std::vector<PlayerPosition> gm::GameMaster::get_taken_positions()
  * increments number_of_players_present and if its equal to 4 it releases 4 
  * permits on barrier_first, meaning game can start.
 */
-void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &my_address)
+void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &p_address)
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
     pos_taken_map[pos] = true;
-    players[pos]->set_player_address(my_address);
-    number_of_players_present++;
+    players[pos]->set_player_address(p_address);
+
+    // Only at the beginning when we add new players we count them and set 
+    // is_game_started to true, after that when player leaves we dont change 
+    // nbr_of_players_present since game is already started
+    if (number_of_players_present < MAX_PLAYERS)
+        number_of_players_present++;
 
     if (number_of_players_present == MAX_PLAYERS)
     {
@@ -212,6 +217,10 @@ void gm::GameMaster::prepare_new_lewa()
     }
 }
 
+/**
+ * @brief Only first player who calls this function modifies lewa, other threads
+ * dont go into if since lewa is cleared and its size is 0
+*/
 void gm::GameMaster::prepare_new_round()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);

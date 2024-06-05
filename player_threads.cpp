@@ -61,7 +61,6 @@ void player_threads::MyThread::thread_main(
 
         while (true)
         {
-
             // After sending deal we wait for our turn to play card
             game_master_sp->wait_for_turn(player_sp->get_position());
 
@@ -115,12 +114,17 @@ void player_threads::MyThread::thread_main(
             }
             else if (game_master_sp->check_if_round_finished())
             {
-                game_master_sp->prepare_new_round();
+                // If round finished we wait for other players, so that they can
+                // send lewa by TCP, if we firstly called prepare_new_round we 
+                // could clear lewa before everyone would send it so we would 
+                // have race conditions and hard to detect bug
                 game_master_sp->wait_for_all_players();
+                game_master_sp->prepare_new_round();
                 break;
             }
             else
             {
+                game_master_sp->wait_for_all_players();
                 game_master_sp->prepare_new_lewa();
             }
         }
