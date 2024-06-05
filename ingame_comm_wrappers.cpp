@@ -159,8 +159,12 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     ssize_t read_length;
     char read_buff[MAX_TRICK_BUFF_SIZE];
     std::memset(read_buff, 0, MAX_TRICK_BUFF_SIZE); 
-
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TRICK_BUFF_SIZE, read_length) != SUCCESS)
+    int ret_code = tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TRICK_BUFF_SIZE, read_length);
+    if (ret_code == TIMEOUT)
+    {
+        return TIMEOUT;
+    }
+    else if (ret_code != SUCCESS)
     {
         return ERROR;
     }
