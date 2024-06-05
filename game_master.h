@@ -35,6 +35,7 @@ namespace gm
         std::shared_ptr<cardCls::Lewa> get_curr_lewa();
         uint8_t get_curr_round_nbr();
         uint8_t get_nbr_of_rounds();
+        cardCls::DeckOfCards get_player_deck(PlayerPosition pos);
 
         bool check_if_game_started();
         bool check_if_curr_lewa_full();

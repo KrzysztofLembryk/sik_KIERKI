@@ -8,7 +8,7 @@
 class Player
 {
 public:
-    Player() = default;
+    Player() : allpoints(0), curr_game_points(0) {};
     Player( cardCls::DeckOfCards &hand, 
             PlayerPosition position, 
             GameType game_type, 

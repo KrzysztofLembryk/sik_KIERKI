@@ -48,6 +48,68 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round)
     return SUCCESS;
 }
 
+int handle_DEAL(int client_fd, std::shared_ptr<gm::GameMaster> game_master_sp, std::shared_ptr<Player> player_sp, std::shared_ptr<bool> thread_ended_sp, std::shared_ptr<std::binary_semaphore> semaphore_TCP)
+{
+    std::cout << "DEAL\n";
+    fflush(stdout);
+
+    player_sp->set_hand(game_master_sp->get_player_deck(player_sp->get_position()));
+    init_comm_wrappers::DEAL_Wrapper deal;
+
+    try
+    {
+        deal.write(client_fd, game_master_sp->get_game_type(), game_master_sp->get_whose_turn(), 
+        player_sp->get_hand());
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+
+        (*thread_ended_sp) = true;
+        semaphore_TCP->release();
+
+        return ERROR;
+    }
+
+    semaphore_TCP->release();
+    return SUCCESS;
+}
+
+int handle_TRICK(int client_fd, std::shared_ptr<gm::GameMaster> game_master_sp, std::shared_ptr<Player> player_sp, std::shared_ptr<bool> thread_ended_sp, std::shared_ptr<std::binary_semaphore> semaphore)
+{
+    ingame_comm_wrappers::TRICK_Wrapper trick;
+    cardCls::Lewa lewa;
+
+    while (true)
+    {
+        try 
+        {
+            trick.write(client_fd, *(game_master_sp->get_curr_lewa()));
+
+            // trick.read() sets lewa_id and adds cards to Lewa
+            cardCls::Lewa client_ret_lewa;
+            int ret_code = trick.read(client_fd, client_ret_lewa, game_master_sp->get_curr_round_nbr());
+
+            if (ret_code == TIMEOUT)
+                continue;
+            else if (ret_code != SUCCESS)
+            {
+                (*thread_ended_sp) = true;
+                semaphore->release();
+                return ERROR;
+            }
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << e.what() << '\n';
+
+            (*thread_ended_sp) = true;
+            semaphore->release();
+
+            return ERROR;
+        }
+    }
+}
 
 void TCP_threads::TCPThread::TCP_thread_main(
     std::shared_ptr<ClientFdWrapper> client_fd_sp,
@@ -90,13 +152,19 @@ void TCP_threads::TCPThread::TCP_thread_main(
                 std::cout << "Got msg: " << msg << "\n";
                 if (msg == "DEAL")
                 {
-                    std::cout << "DEAL\n";
-                    fflush(stdout);
+                    if (handle_DEAL(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
+                    {
+                        return;
+                    }
                 }
                 else if (msg == "TRICK")
                 {
                     std::cout << "TRICK\n";
                     fflush(stdout);
+                    if (handle_TRICK(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
+                    {
+                        return;
+                    }
                 }
                 else if (msg == "TAKEN")
                 {

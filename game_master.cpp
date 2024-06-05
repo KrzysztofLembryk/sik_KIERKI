@@ -122,6 +122,12 @@ uint8_t gm::GameMaster::get_nbr_of_rounds()
     return (uint8_t)rounds.size();
 }
 
+cardCls::DeckOfCards gm::GameMaster::get_player_deck(PlayerPosition pos)
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return rounds[round_number - 1].get_player_cards(pos);
+}
+
 bool gm::GameMaster::check_if_game_started()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
