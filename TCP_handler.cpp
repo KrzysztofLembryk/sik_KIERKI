@@ -42,12 +42,14 @@ int tcp::TCP_read_packet(int socket_fd, char *buff, size_t data_size,
         } 
         else 
         {
-            exception_wrappers::runtime_err_wrapper("readn < 0");
+            // exception_wrappers::runtime_err_wrapper("readn < 0");
+            return ERROR;
         }
     }
     else if (read_length == 0) 
     {
-        exception_wrappers::runtime_err_wrapper(" - connection closed read_len == 0");
+        // exception_wrappers::runtime_err_wrapper(" - connection closed read_len == 0");
+        return ERROR;
     }
     return SUCCESS;
 }
@@ -72,12 +74,16 @@ int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size,
             } 
             else 
             {
-                exception_wrappers::runtime_err_wrapper("readn < 0");
+                // exception_wrappers::runtime_err_wrapper("readn < 0");
+                err_func::error("readn < 0");
+                return ERROR;
             }
         }
         else if (read_length == 0) 
         {
-            exception_wrappers::runtime_err_wrapper("read_len == 0 -- no newline found in packet name or sent packet is to short or connection was closed");
+            // exception_wrappers::runtime_err_wrapper("read_len == 0 -- no newline found in packet name or sent packet is to short or connection was closed");
+            err_func::error("read_len == 0 -- no newline found in packet name or sent packet is to short or connection was closed");
+            return ERROR;
         }
 
         // If curr_char is \r and then if next char is \n we end reading data

@@ -184,6 +184,22 @@ std::vector<char> cardCls::DeckOfCards::to_char_vector() const
     return deck;
 }
 
+/**
+ * @brief Checks if there is any card of given suit that was not played yet 
+ * available in deck.
+*/
+bool cardCls::DeckOfCards::check_if_suit_available(Suit suit) const
+{
+    for (const auto &pair : was_card_played_map)
+    {
+        if (pair.first.get_suit() == suit && !pair.second)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 size_t cardCls::DeckOfCards::size() const
 {
     return was_card_played_map.size();
@@ -203,10 +219,11 @@ void cardCls::Lewa::add_card(const CardClassWrapper &card)
 
 void cardCls::Lewa::clear_lewa()
 {
+    player_who_took_lewa = NONE_POS;
     lewa.clear();
 }
 
-const std::vector<cardCls::CardClassWrapper> &cardCls::Lewa::get_cards_in_lewa()
+std::vector<cardCls::CardClassWrapper> &cardCls::Lewa::get_cards_in_lewa()
 {
     return lewa;
 }
