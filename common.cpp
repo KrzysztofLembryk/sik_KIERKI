@@ -52,11 +52,23 @@ struct sockaddr_in get_server_address_ip4(char const *host, uint16_t port)
     return send_address;
 }
 
-struct sockaddr_in6 get_server_address_ip6(char const *host, uint16_t port)
+struct sockaddr get_server_address(char const *host, uint16_t port, 
+int &type_of_ip)
 {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET6; // IPv6
+    if (type_of_ip == 6)
+    {
+        hints.ai_family = AF_INET6; // IPv6
+    }
+    else if (type_of_ip == 4)
+    {
+        hints.ai_family = AF_INET; // IPv4
+    }
+    else
+    {
+        hints.ai_family = AF_UNSPEC; // IPv6
+    }
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
@@ -66,16 +78,43 @@ struct sockaddr_in6 get_server_address_ip6(char const *host, uint16_t port)
     {
         err_func::fatal("getaddrinfo: %s", gai_strerror(errcode));
     }
-
-    struct sockaddr_in6 send_address;
-    send_address.sin6_family = AF_INET6; // IPv6
-    send_address.sin6_addr =     // IP address
-        ((struct sockaddr_in6 *)(address_result->ai_addr))->sin6_addr;
-    send_address.sin6_port = htons(port); // port from the command line
+    // struct sockaddr_in6 send_address;
+    // send_address.sin6_family = AF_INET6; // IPv6
+    // send_address.sin6_addr =     // IP address
+    //     ((struct sockaddr_in6 *)(address_result->ai_addr))->sin6_addr;
+    // send_address.sin6_port = htons(port); // port from the command line
+    struct sockaddr final_addr;
+    if (address_result->ai_family == AF_INET)
+    {
+        // IPv4
+        struct sockaddr_in send_address_ip4;
+        send_address_ip4.sin_family = AF_INET;
+        send_address_ip4.sin_addr = ((struct sockaddr_in *)(address_result->ai_addr))->sin_addr;
+        send_address_ip4.sin_port = htons(port);
+        final_addr = *((struct sockaddr *)&send_address_ip4);
+        type_of_ip = 4;
+        // Use send_address
+    }
+    else if (address_result->ai_family == AF_INET6)
+    {
+        // IPv6
+        struct sockaddr_in6 send_address_ip6;
+        send_address_ip6.sin6_family = AF_INET6;
+        send_address_ip6.sin6_addr = ((struct sockaddr_in6 *)(address_result->ai_addr))->sin6_addr;
+        send_address_ip6.sin6_port = htons(port);
+        final_addr = *((struct sockaddr *)&send_address_ip6);
+        type_of_ip = 6;
+        // Use send_address
+    }
+    else
+    {
+        // Unexpected family
+        exception_wrappers::invalid_arg_wrapper("Unexpected address family");
+    }
 
     freeaddrinfo(address_result);
 
-    return send_address;
+    return final_addr;
 }
 // Following two functions come from Stevens' "UNIX Network Programming" book.
 // Read n bytes from a descriptor. Use in place of read() when fd is a stream socket.

@@ -47,13 +47,13 @@ init_comm_wrappers.o: init_comm_wrappers.cpp init_comm_wrappers.h \
 kierki-klient.o: kierki-klient.cpp common.h enum_types.h \
  exception_wrappers.h init_comm_wrappers.h card_classes.h constants.h \
  ingame_comm_wrappers.h TCP_handler.h err.h parameters_handling.h
-kierki-serwer.o: kierki-serwer.cpp parameters_handling.h constants.h \
- exception_wrappers.h read_file.h game_classes.h card_classes.h \
- enum_types.h game_master.h player_class.h init_comm_wrappers.h \
+kierki-serwer.o: kierki-serwer.cpp parameters_handling.h enum_types.h \
+ constants.h exception_wrappers.h read_file.h game_classes.h \
+ card_classes.h game_master.h player_class.h init_comm_wrappers.h \
  socket_fd_handler.h ingame_comm_wrappers.h player_threads.h polls_func.h
 main.o: main.cpp
 parameters_handling.o: parameters_handling.cpp parameters_handling.h \
- exception_wrappers.h err.h constants.h enum_types.h common.h
+ enum_types.h exception_wrappers.h err.h constants.h common.h
 player_class.o: player_class.cpp player_class.h game_classes.h \
  card_classes.h enum_types.h exception_wrappers.h constants.h
 player_threads.o: player_threads.cpp player_threads.h socket_fd_handler.h \

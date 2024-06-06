@@ -19,7 +19,8 @@ int init_client(int argc,
                 std::map<PlayerPosition, bool> &positions,
                 bool &a_opt,
                 bool &ip6_opt,
-                bool &ip4_opt)
+                bool &ip4_opt,
+                struct sockaddr &server_address)
 {
     try
     {
@@ -28,8 +29,23 @@ int init_client(int argc,
         parse_programme_parameters_client(argc, argv, ports, hosts, positions, a_opt, ip6_opt, ip4_opt);
 
         assign_programme_parameters_client(port, host, ports, hosts, positions, a_opt, ip6_opt, ip4_opt); 
+        int type_of_ip;
+        if (ip6_opt)
+        {
+            type_of_ip = 6;
+            server_address = get_server_address(host.data(), port, type_of_ip);
+        }
+        else if (ip4_opt)
+        {
+            type_of_ip = 4;
+            server_address = get_server_address(host.data(), port, type_of_ip);
+        }
+        else
+        {
+            type_of_ip = 0;
+            server_address = get_server_address(host.data(), port, type_of_ip);
+        }
 
-        
     }
     catch (std::exception &e)
     {
@@ -47,14 +63,15 @@ int main(int argc, char *argv[])
     bool ip6_opt = false;
     bool ip4_opt = false;
     std::map<PlayerPosition, bool> positions;
+    struct sockaddr server_address;
+    int socket_fd;
+
     // Access the options
-    if (init_client(argc, argv, port, host, positions, a_option, ip6_opt, ip4_opt) != SUCCESS)
+    if (init_client(argc, argv, port, host, positions, a_option, ip6_opt, ip4_opt, server_address) != SUCCESS)
     {
         return ERROR;
     }
 
-    struct sockaddr_in6 server_address;
-    int socket_fd;
     // struct sockaddr_in6 server_address = get_server_address_ip4(host.data(), port);
 }
 
