@@ -145,4 +145,16 @@ void assign_programme_parameters_client(
         std::cout << "Option -a was specified\n";
         // Option -a was specified
     }
+
+    if (positions.size() == 0)
+    {
+        exception_wrappers::invalid_arg_wrapper("No position specified");
+    }
+    else
+    {
+        for (auto &pos : positions)
+        {
+            std::cout << "Chosen Position: " << (unsigned)pos.first << " " << pos.second << "\n";
+        }
+    }
 }
