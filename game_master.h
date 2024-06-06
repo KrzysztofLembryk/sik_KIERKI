@@ -38,6 +38,8 @@ namespace gm
         uint8_t get_nbr_of_rounds();
         cardCls::DeckOfCards get_player_deck(PlayerPosition pos);
         PlayerPosition get_who_won_lewa();
+        std::map<PlayerPosition, uint8_t> get_player_scores();
+        std::map<PlayerPosition, uint32_t> get_player_all_points();
 
         bool check_if_game_started();
         bool check_if_curr_lewa_full();

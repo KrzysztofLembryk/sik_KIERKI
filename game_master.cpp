@@ -140,6 +140,28 @@ PlayerPosition gm::GameMaster::get_who_won_lewa()
     return who_won_lewa;
 }
 
+std::map<PlayerPosition, uint8_t> gm::GameMaster::get_player_scores()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    std::map<PlayerPosition, uint8_t> scores;
+    for (auto &player : players)
+    {
+        scores[player.first] = player.second->get_curr_score();
+    }
+    return scores;
+}
+
+std::map<PlayerPosition, uint32_t> gm::GameMaster::get_player_all_points()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    std::map<PlayerPosition, uint32_t> all_points;
+    for (auto &player : players)
+    {
+        all_points[player.first] = player.second->get_all_points();
+    }
+    return all_points;
+}
+
 bool gm::GameMaster::check_if_game_started()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);

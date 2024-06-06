@@ -27,7 +27,9 @@ public:
     void set_game_type(GameType game_type);
 
     cardCls::DeckOfCards get_hand();
-    PlayerPosition get_position() const;
+    PlayerPosition get_position();
+    uint8_t get_curr_score();
+    uint32_t get_all_points();
 
     int check_card_correctness(cardCls::CardClassWrapper &card, 
     Suit bottom_card_suit);
@@ -36,7 +38,7 @@ public:
 
 private:
     cardCls::DeckOfCards hand;
-    const PlayerPosition position;
+    PlayerPosition position;
     uint32_t all_points;
     uint8_t curr_game_points;
     gameCls::PointCounter point_counter;

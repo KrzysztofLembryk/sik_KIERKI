@@ -93,10 +93,16 @@ void player_threads::MyThread::thread_main(
             btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "TAKEN");
             semaphore_TCP->acquire();
 
+            // We need to wait for other players so that all points for taken 
+            // lewa is added for player who took it 
+            game_master_sp->wait_for_all_players();
+
             if (game_master_sp->check_if_round_finished())
             {
                 btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "SCORE");
                 semaphore_TCP->acquire();
+
+                game_master_sp->wait_for_all_players();
 
                 btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "TOTAL");
                 semaphore_TCP->acquire();

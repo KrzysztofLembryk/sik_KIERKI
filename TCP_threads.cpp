@@ -178,16 +178,34 @@ int handle_TAKEN(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
 int handle_SCORE(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP)
 {
     ingame_comm_wrappers::SCORE_Wrapper score;
-    std::map<PlayerPosition, uint8_t> scores;
-
-    for (auto &player : game_master_sp->get_players())
-    {
-        scores[player.first] = player.second->get_score();
-    }
 
     try 
     {
-        score.write(client_fd, scores);
+        score.write(client_fd, game_master_sp->get_player_scores());
+
+        player_sp->add_points_from_round_to_allpoints();
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+
+        (*thread_ended_sp) = true;
+        semaphore_TCP->release();
+
+        return ERROR;
+    }
+
+    semaphore_TCP->release();
+    return SUCCESS;
+}
+
+int handle_TOTAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP)
+{
+    ingame_comm_wrappers::TOTAL_Wrapper total;
+
+    try 
+    {
+        total.write(client_fd, game_master_sp->get_player_all_points());
     }
     catch (const std::exception &e)
     {
@@ -276,11 +294,13 @@ void TCP_threads::TCPThread::TCP_thread_main(
                 }
                 else if (msg == "TOTAL")
                 {
-
+                    if (handle_TOTAL(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
+                    {
+                        return;
+                    }
                 }
                 else if (msg == "END")
                 {
-                    close(client_fd_sp->to_int());
                     return;
                 }
                 else

@@ -31,6 +31,16 @@ PlayerPosition Player::get_position()
     return position;
 }
 
+uint8_t Player::get_curr_score()
+{
+    return curr_game_points;
+}
+
+uint32_t Player::get_all_points()
+{
+    return all_points;
+}
+
 int Player::check_card_correctness(cardCls::CardClassWrapper &card, 
     Suit bottom_card_suit)
 {
