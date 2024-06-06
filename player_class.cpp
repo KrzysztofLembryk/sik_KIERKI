@@ -16,6 +16,11 @@ void Player::set_card_played(cardCls::CardClassWrapper &card)
     hand.set_card_played(card);
 }
 
+void Player::set_game_type(GameType game_type)
+{
+    this->point_counter.set_game_type(game_type);
+}
+
 cardCls::DeckOfCards Player::get_hand()
 {
     return hand;
@@ -61,4 +66,16 @@ int Player::check_card_correctness(cardCls::CardClassWrapper &card,
         std::cerr << e.what() << '\n';
         return ERROR;
     }
+}
+
+void Player::add_points_in_curr_round(cardCls::Lewa &lewa)
+{
+    uint8_t new_points = this->point_counter.count_points(lewa);
+    this->curr_game_points += new_points;
+}
+
+void Player::add_points_from_round_to_allpoints()
+{
+    this->all_points += (uint32_t)(this->curr_game_points);
+    this->curr_game_points = 0;
 }

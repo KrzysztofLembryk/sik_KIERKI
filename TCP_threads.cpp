@@ -58,6 +58,8 @@ int handle_DEAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::s
     fflush(stdout);
     auto p_hand = game_master_sp->get_player_deck(player_sp->get_position());
     player_sp->set_hand(p_hand);
+    player_sp->set_game_type(game_master_sp->get_game_type());
+
     init_comm_wrappers::DEAL_Wrapper deal;
 
     try
@@ -151,7 +153,41 @@ int handle_TAKEN(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
 
     try 
     {
-        taken.write(client_fd, curr_lewa, game_master_sp->get_who_won());
+        // we dont need to pushback curr lewa to lewas_vec in game_master since 
+        // its done when we prepare new lewa
+        if (player_sp->get_position() == game_master_sp->get_who_won_lewa())
+        {
+            player_sp->add_points_in_curr_round(curr_lewa);
+        }
+        taken.write(client_fd, curr_lewa, game_master_sp->get_who_won_lewa());
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+
+        (*thread_ended_sp) = true;
+        semaphore_TCP->release();
+
+        return ERROR;
+    }
+
+    semaphore_TCP->release();
+    return SUCCESS;
+}
+
+int handle_SCORE(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP)
+{
+    ingame_comm_wrappers::SCORE_Wrapper score;
+    std::map<PlayerPosition, uint8_t> scores;
+
+    for (auto &player : game_master_sp->get_players())
+    {
+        scores[player.first] = player.second->get_score();
+    }
+
+    try 
+    {
+        score.write(client_fd, scores);
     }
     catch (const std::exception &e)
     {
@@ -233,7 +269,10 @@ void TCP_threads::TCPThread::TCP_thread_main(
                 }
                 else if (msg == "SCORE")
                 {
-
+                    if (handle_SCORE(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
+                    {
+                        return;
+                    }
                 }
                 else if (msg == "TOTAL")
                 {

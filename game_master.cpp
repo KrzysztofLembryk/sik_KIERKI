@@ -14,7 +14,7 @@ sync_barrier(MAX_PLAYERS, [](){})
     this->round_number = 1;
     this->first_player = rounds[0].get_first_player();
     this->whose_turn = first_player;
-    this->who_won = NONE_POS;
+    this->who_won_lewa = NONE_POS;
     this->semaphore_map[first_player]->release();
     this->card_counter.new_game(rounds[0].get_game_type());
     this->number_of_players_present = 0;
@@ -134,10 +134,10 @@ cardCls::DeckOfCards gm::GameMaster::get_player_deck(PlayerPosition pos)
     return rounds[round_number - 1].get_player_cards(pos);
 }
 
-PlayerPosition gm::GameMaster::get_who_won()
+PlayerPosition gm::GameMaster::get_who_won_lewa()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
-    return who_won;
+    return who_won_lewa;
 }
 
 bool gm::GameMaster::check_if_game_started()
@@ -173,7 +173,7 @@ void gm::GameMaster::check_who_won_lewa()
         i++;
     }
 
-    this->who_won = winner;
+    this->who_won_lewa = winner;
     curr_lewa->set_player_who_took_lewa(winner);
 }
 
@@ -208,8 +208,8 @@ void gm::GameMaster::set_first_player_for_next_turn()
     std::lock_guard<std::mutex> lock(mutex_gm);
     // We need to set first player and whose turn to winner, since he will be 
     // playing first next card, also we need to release his semaphore.
-    this->first_player = who_won;
-    this->whose_turn = who_won;
+    this->first_player = who_won_lewa;
+    this->whose_turn = who_won_lewa;
     semaphore_map[whose_turn]->release();
 
 }
@@ -254,7 +254,7 @@ void gm::GameMaster::prepare_new_round()
 
         first_player = rounds[round_number - 1].get_first_player();
         whose_turn = first_player;
-        who_won = NONE_POS;
+        who_won_lewa = NONE_POS;
         semaphore_map[first_player]->release();
         card_counter.new_game(rounds[round_number - 1].get_game_type());
     }

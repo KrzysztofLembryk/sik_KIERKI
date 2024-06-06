@@ -93,34 +93,38 @@ void player_threads::MyThread::thread_main(
             btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "TAKEN");
             semaphore_TCP->acquire();
 
-            btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "SCORE");
-            semaphore_TCP->acquire();
-
-            btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "TOTAL");
-            semaphore_TCP->acquire();
-
-            if (game_master_sp->check_if_round_finished() && game_master_sp->check_if_last_round())
+            if (game_master_sp->check_if_round_finished())
             {
-                // Game has ended
-                if (game_master_sp->decrement_present_players() == 0)
-                {
-                    signal_end_to_main_thread(parent_pipe_write_fd);
-                }
-                btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "END");
+                btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "SCORE");
                 semaphore_TCP->acquire();
-                close(child_pipe_fd[PIPE_READ_DSCR]);
-                close(child_pipe_fd[PIPE_WRITE_DSCR]);
-                return;
-            }
-            else if (game_master_sp->check_if_round_finished())
-            {
-                // If round finished we wait for other players, so that they can
-                // send lewa by TCP, if we firstly called prepare_new_round we 
-                // could clear lewa before everyone would send it so we would 
-                // have race conditions and hard to detect bug
-                game_master_sp->wait_for_all_players();
-                game_master_sp->prepare_new_round();
-                break;
+
+                btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "TOTAL");
+                semaphore_TCP->acquire();
+                
+                if (game_master_sp->check_if_last_round())
+                {
+                    // Game has ended
+                    if (game_master_sp->decrement_present_players() == 0)
+                    {
+                        signal_end_to_main_thread(parent_pipe_write_fd);
+                    }
+                    btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "END");
+                    semaphore_TCP->acquire();
+                    close(child_pipe_fd[PIPE_READ_DSCR]);
+                    close(child_pipe_fd[PIPE_WRITE_DSCR]);
+                    return;
+                }
+                else
+                {
+                    // If round finished we wait for other players, so that 
+                    // they can send lewa by TCP, if we firstly called 
+                    // prepare_new_round we could clear lewa before everyone 
+                    // would send it so we would have race conditions and hard 
+                    // to detect bug
+                    game_master_sp->wait_for_all_players();
+                    game_master_sp->prepare_new_round();
+                    break;
+                }
             }
             else
             {

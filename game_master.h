@@ -37,7 +37,7 @@ namespace gm
         uint8_t get_curr_round_nbr();
         uint8_t get_nbr_of_rounds();
         cardCls::DeckOfCards get_player_deck(PlayerPosition pos);
-        PlayerPosition get_who_won();
+        PlayerPosition get_who_won_lewa();
 
         bool check_if_game_started();
         bool check_if_curr_lewa_full();
@@ -64,7 +64,7 @@ namespace gm
         std::shared_ptr<cardCls::Lewa> curr_lewa;
         PlayerPosition first_player;
         PlayerPosition whose_turn;
-        PlayerPosition who_won;
+        PlayerPosition who_won_lewa;
         uint8_t round_number;
         gameCls::CardCounter card_counter;
         std::map<PlayerPosition, bool> pos_taken_map;

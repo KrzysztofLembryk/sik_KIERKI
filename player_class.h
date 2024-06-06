@@ -24,15 +24,19 @@ public:
     void set_hand(cardCls::DeckOfCards &hand);
     void set_player_address(const struct sockaddr_in6 &addr);
     void set_card_played(cardCls::CardClassWrapper &card);
+    void set_game_type(GameType game_type);
+
     cardCls::DeckOfCards get_hand();
-    PlayerPosition get_position();
+    PlayerPosition get_position() const;
 
     int check_card_correctness(cardCls::CardClassWrapper &card, 
     Suit bottom_card_suit);
+    void add_points_in_curr_round(cardCls::Lewa &lewa);
+    void add_points_from_round_to_allpoints();
 
 private:
     cardCls::DeckOfCards hand;
-    PlayerPosition position;
+    const PlayerPosition position;
     uint32_t all_points;
     uint8_t curr_game_points;
     gameCls::PointCounter point_counter;
