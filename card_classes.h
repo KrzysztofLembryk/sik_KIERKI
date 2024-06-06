@@ -91,6 +91,8 @@ namespace cardCls
 
         std::vector<char> to_char_vector() const;
 
+        bool check_if_suit_available(Suit suit) const;
+
     private:
         std::map<CardClassWrapper, bool> was_card_played_map;
     };

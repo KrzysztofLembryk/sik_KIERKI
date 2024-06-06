@@ -23,10 +23,12 @@ public:
 
     void set_hand(cardCls::DeckOfCards &hand);
     void set_player_address(const struct sockaddr_in6 &addr);
+    void set_card_played(cardCls::CardClassWrapper &card);
     cardCls::DeckOfCards get_hand();
     PlayerPosition get_position();
 
-    int check_card_correctness(cardCls::CardClassWrapper &card);
+    int check_card_correctness(cardCls::CardClassWrapper &card, 
+    Suit bottom_card_suit);
 
 private:
     cardCls::DeckOfCards hand;

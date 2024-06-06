@@ -42,7 +42,7 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round)
     catch (const std::exception &e)
     {
         // end connection
-        err_func::error("ENDING CONNECTION -- GOT EXCEPTION WHILE READING TRICK - sent trick packet was invalid - either value or suit");
+        err_func::error("ENDING CONNECTION -- GOT EXCEPTION WHILE READING TRICK - sent trick packet was invalid - either value or suit was not allowed character");
         return ERROR;
     }
     // After we read trick packet, we can send WRONG msg
@@ -79,7 +79,7 @@ int handle_DEAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::s
     return SUCCESS;
 }
 
-int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore)
+int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP)
 {
     ingame_comm_wrappers::TRICK_Wrapper trick;
     cardCls::Lewa lewa_with_good_id(game_master_sp->get_curr_round_nbr());
@@ -100,7 +100,7 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
             else if (ret_code != SUCCESS)
             {
                 (*thread_ended_sp) = true;
-                semaphore->release();
+                semaphore_TCP->release();
                 return ERROR;
             }
 
@@ -109,26 +109,61 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
                 wrong.write(client_fd, lewa_with_good_id);
                 continue;
             }
+
+            cardCls::CardClassWrapper client_card = client_ret_lewa.get_cards_in_lewa()[0];
+
+            Suit bottom_card_suit = 
+            game_master_sp->get_curr_lewa()->size() == 0 ? 
+            client_card.get_suit() : game_master_sp->get_curr_lewa()->get_cards_in_lewa()[0].get_suit();
+
             // We check if sent card is in players deck and if its not played
-            if (player_sp->check_card_correctness(client_ret_lewa.get_cards_in_lewa()[0]) != SUCCESS)
+            if (player_sp->check_card_correctness(client_ret_lewa.get_cards_in_lewa()[0], bottom_card_suit) != SUCCESS)
             {
                 wrong.write(client_fd, lewa_with_good_id);
                 continue;
             }
-            // Here we check if sent card is in correct color, meaning if player
-            // didnt cheat when he had color and didnt play it
+
+            // If card is correct we add it to lewa and set that this card is 
+            // played in player hand
+            game_master_sp->add_card_to_lewa(client_card);
+            player_sp->set_card_played(client_card);
+            semaphore_TCP->release();
+            return SUCCESS;
         }
         catch (const std::exception &e)
         {
             std::cerr << e.what() << '\n';
 
             (*thread_ended_sp) = true;
-            semaphore->release();
+            semaphore_TCP->release();
 
             return ERROR;
         }
 
     }
+    return SUCCESS;
+}
+
+int handle_TAKEN(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP)
+{
+    ingame_comm_wrappers::TAKEN_Wrapper taken;
+    cardCls::Lewa curr_lewa = *(game_master_sp->get_curr_lewa());
+
+    try 
+    {
+        taken.write(client_fd, curr_lewa, game_master_sp->get_who_won());
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+
+        (*thread_ended_sp) = true;
+        semaphore_TCP->release();
+
+        return ERROR;
+    }
+
+    semaphore_TCP->release();
     return SUCCESS;
 }
 
@@ -189,7 +224,12 @@ void TCP_threads::TCPThread::TCP_thread_main(
                 }
                 else if (msg == "TAKEN")
                 {
-
+                    std::cout << "TAKEN\n";
+                    fflush(stdout);
+                    if (handle_TAKEN(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
+                    {
+                        return;
+                    }
                 }
                 else if (msg == "SCORE")
                 {

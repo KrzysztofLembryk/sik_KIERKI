@@ -11,6 +11,11 @@ void Player::set_player_address(const struct sockaddr_in6 &addr)
     this->my_address = addr;
 }
 
+void Player::set_card_played(cardCls::CardClassWrapper &card)
+{
+    hand.set_card_played(card);
+}
+
 cardCls::DeckOfCards Player::get_hand()
 {
     return hand;
@@ -21,13 +26,33 @@ PlayerPosition Player::get_position()
     return position;
 }
 
-int Player::check_card_correctness(cardCls::CardClassWrapper &card)
+int Player::check_card_correctness(cardCls::CardClassWrapper &card, 
+    Suit bottom_card_suit)
 {
     try 
     {
+        // We check if given card was played or if it is in deck. 
+        // If it was played or if is not in deck we return error
         if (this->hand.was_card_played(card))
         {
             return ERROR;
+        }
+        
+        // If card is in player's hand and has not yet been played we check if
+        // it has correct suit, meaning suit of the bottom card in lewa
+        if (card.get_suit() == bottom_card_suit)
+        {
+            return SUCCESS;
+        }
+        else 
+        {
+            // Here we check if player didnt cheat, meaning if he played card 
+            // that has wrong suit even though he has card with correct suit
+            if (hand.check_if_suit_available(bottom_card_suit))
+            {
+                return ERROR;
+            }
+
         }
         return SUCCESS;
     }

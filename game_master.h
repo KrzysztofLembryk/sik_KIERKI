@@ -25,6 +25,7 @@ namespace gm
 
         void add_new_player(PlayerPosition pos, 
                             struct sockaddr_in6 &my_address);
+        void add_card_to_lewa(cardCls::CardClassWrapper &card);
         
         void wait_for_turn(PlayerPosition pos);
         void wait_for_game_start();
@@ -36,6 +37,7 @@ namespace gm
         uint8_t get_curr_round_nbr();
         uint8_t get_nbr_of_rounds();
         cardCls::DeckOfCards get_player_deck(PlayerPosition pos);
+        PlayerPosition get_who_won();
 
         bool check_if_game_started();
         bool check_if_curr_lewa_full();

@@ -73,6 +73,12 @@ void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &p_a
     }
 }
 
+void gm::GameMaster::add_card_to_lewa(cardCls::CardClassWrapper &card)
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    curr_lewa->add_card(card);
+}
+
 /**
  * @brief Function acquires semaphore_map at pos, at a time only one of these
  * semaphores is open, since only one player can play at a time.
@@ -126,6 +132,12 @@ cardCls::DeckOfCards gm::GameMaster::get_player_deck(PlayerPosition pos)
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
     return rounds[round_number - 1].get_player_cards(pos);
+}
+
+PlayerPosition gm::GameMaster::get_who_won()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return who_won;
 }
 
 bool gm::GameMaster::check_if_game_started()

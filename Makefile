@@ -43,12 +43,11 @@ kierki-serwer.o: kierki-serwer.cpp parameters_handling.h constants.h \
  exception_wrappers.h read_file.h game_classes.h card_classes.h \
  enum_types.h game_master.h player_class.h init_comm_wrappers.h \
  socket_fd_handler.h ingame_comm_wrappers.h player_threads.h polls_func.h
-main.o: main.cpp card_classes.h enum_types.h exception_wrappers.h \
- read_file.h game_classes.h
+main.o: main.cpp
 parameters_handling.o: parameters_handling.cpp parameters_handling.h \
  exception_wrappers.h
 player_class.o: player_class.cpp player_class.h game_classes.h \
- card_classes.h enum_types.h exception_wrappers.h
+ card_classes.h enum_types.h exception_wrappers.h constants.h
 player_threads.o: player_threads.cpp player_threads.h socket_fd_handler.h \
  game_master.h player_class.h game_classes.h card_classes.h enum_types.h \
  exception_wrappers.h ingame_comm_wrappers.h constants.h \
@@ -64,7 +63,7 @@ TCP_handler.o: TCP_handler.cpp TCP_handler.h err.h exception_wrappers.h \
 TCP_threads.o: TCP_threads.cpp TCP_threads.h game_master.h player_class.h \
  game_classes.h card_classes.h enum_types.h exception_wrappers.h \
  socket_fd_handler.h constants.h polls_func.h ingame_comm_wrappers.h \
- TCP_handler.h err.h
+ init_comm_wrappers.h TCP_handler.h err.h
 tests.o: tests.cpp card_classes.h enum_types.h exception_wrappers.h
 
 clean:
