@@ -32,9 +32,8 @@ int init_server(int ac, char *av[], po::variables_map &vm,
         // Default value for port is 0, since if port is not specified by user
         // 0 means we will bind to any available port.
         assign_programme_parameters_server(vm, port, timeout, file_name);
-        print_parameters(port, timeout, file_name);
         // Read from file_name
-        socket_func::handle_socket_init(port, socket_fd, server_address);
+        socket_func::handle_server_socket_init(port, socket_fd, server_address);
         return SUCCESS;
     }
     catch (const std::exception &e)

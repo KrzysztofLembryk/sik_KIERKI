@@ -47,7 +47,7 @@ void socket_func::set_timeout_for_socket(int client_fd, int max_wait)
     }
 }
 
-void socket_func::init_socket_fd(int &socket_fd)
+void init_socket_fd(int &socket_fd)
 {
     socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
     if (socket_fd < 0)
@@ -64,7 +64,7 @@ void socket_func::init_socket_fd(int &socket_fd)
     }
 }
 
-void socket_func::handle_socket_init(uint16_t &port,
+void socket_func::handle_server_socket_init(uint16_t &port,
                         int &socket_fd,
                         struct sockaddr_in6 &server_address)
 {
@@ -95,4 +95,15 @@ void socket_func::handle_socket_init(uint16_t &port,
     {
         exception_wrappers::runtime_err_wrapper("getsockname() failed");
     }
+}
+
+void socket_func::handle_client_socket_init(uint16_t &port,
+                        int &socket_fd,
+                        struct sockaddr_in6 &server_address, 
+                        int type)
+{
+    init_socket_fd(socket_fd);
+
+    server_address.sin6_family = AF_INET6;
+    server_address.sin6_port = htons(port);
 }

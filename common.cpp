@@ -26,7 +26,7 @@ uint16_t port_from_str_to_ul(char const *string)
     return (uint16_t)port;
 }
 
-struct sockaddr_in get_server_address(char const *host, uint16_t port)
+struct sockaddr_in get_server_address_ip4(char const *host, uint16_t port)
 {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -52,6 +52,31 @@ struct sockaddr_in get_server_address(char const *host, uint16_t port)
     return send_address;
 }
 
+struct sockaddr_in6 get_server_address_ip6(char const *host, uint16_t port)
+{
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET6; // IPv6
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    struct addrinfo *address_result;
+    int errcode = getaddrinfo(host, NULL, &hints, &address_result);
+    if (errcode != 0)
+    {
+        err_func::fatal("getaddrinfo: %s", gai_strerror(errcode));
+    }
+
+    struct sockaddr_in6 send_address;
+    send_address.sin6_family = AF_INET6; // IPv6
+    send_address.sin6_addr =     // IP address
+        ((struct sockaddr_in6 *)(address_result->ai_addr))->sin6_addr;
+    send_address.sin6_port = htons(port); // port from the command line
+
+    freeaddrinfo(address_result);
+
+    return send_address;
+}
 // Following two functions come from Stevens' "UNIX Network Programming" book.
 // Read n bytes from a descriptor. Use in place of read() when fd is a stream socket.
 ssize_t readn(int fd, void *vptr, size_t n)
@@ -238,17 +263,3 @@ Suit determine_suit(char suit)
         exception_wrappers::invalid_arg_wrapper("Invalid card suit");
     }
 }
-
-// GameType determine_game_type(char game_type)
-// {
-//     if (game_type == NO_LEWA || game_type == NO_HEART || game_type == NO_QUEEN || game_type == NO_MISTER || game_type == NO_KING_HEART || game_type == NO_SEVEN_AND_LAST || game_type == BANDIT)
-//     {
-//         return static_cast<GameType>(game_type);
-//     }
-//     else
-//     {
-//         printf("wrong game type: %c\n", game_type);
-//         fflush(stdout);
-//         exception_wrappers::invalid_arg_wrapper("Invalid game type read from socket");
-//     }
-// }

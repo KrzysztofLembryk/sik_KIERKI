@@ -8,7 +8,8 @@
 #include <vector>
 
 uint16_t port_from_str_to_ul(char const *string);
-struct sockaddr_in get_server_address(char const *host, uint16_t port);
+struct sockaddr_in get_server_address_ip4(char const *host, uint16_t port);
+struct sockaddr_in6 get_server_address_ip6(char const *host, uint16_t port);
 ssize_t	readn(int fd, void *vptr, size_t n);
 ssize_t	writen(int fd, const void *vptr, size_t n);
 void install_signal_handler(int signal, void (*handler)(int));

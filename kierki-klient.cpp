@@ -8,86 +8,75 @@
 #include <iostream>
 #include "err.h"
 #include "constants.h"
+#include "parameters_handling.h"
 
 namespace po = boost::program_options;
 
-int main(int argc, char *argv[])
+int init_client(int argc,
+                char *argv[],
+                uint16_t &port,
+                std::string &host,
+                std::map<PlayerPosition, bool> &positions,
+                bool &a_opt,
+                bool &ip6_opt,
+                bool &ip4_opt)
 {
-    po::options_description desc("Allowed options");
-    desc.add_options()
-        ("p,p", po::value<std::vector<uint16_t>>()->multitoken(), "set port")
-        ("h,h", po::value<std::vector<std::string>>()->multitoken(), "set host")
-        ("a", po::value<std::vector<int>>()->zero_tokens()->multitoken(), "auto player")
-        ("N", po::value<std::vector<int>>()->zero_tokens()->multitoken(), "N")
-        ("S", po::value<std::vector<int>>()->zero_tokens()->multitoken(), "S")
-        ("W", po::value<std::vector<int>>()->zero_tokens()->multitoken(), "W")
-        ("E", po::value<std::vector<int>>()->zero_tokens()->multitoken(), "E")
-        ("6", po::value<std::vector<int>>()->zero_tokens()->multitoken(), "IP6")
-        ("4", po::value<std::vector<int>>()->zero_tokens()->multitoken(), "IP4");
-
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
-
-    if (vm.count("help")) {
-        std::cout << desc << "\n";
-        return 1;
-    }
-
-    uint16_t port = 0;
-
-    // Access the options
-    if (vm.count("port")) {
-        auto ports = vm["port"].as<std::vector<uint16_t>>();
-        port = ports[0];
-        // Use the ports...
-    }
-    else 
+    try
     {
-        err_func::error("Port not specified");    
+        std::vector<std::string> ports;
+        std::vector<std::string> hosts;
+        parse_programme_parameters_client(argc, argv, ports, hosts, positions, a_opt, ip6_opt, ip4_opt);
+
+        assign_programme_parameters_client(port, host, ports, hosts, positions, a_opt, ip6_opt, ip4_opt); 
+    }
+    catch (std::exception &e)
+    {
+        std::cerr << e.what() << "\n"; 
         return ERROR;
     }
-
-    if (vm.count("h")) {
-        std::vector<std::string> hosts = vm["host"].as<std::vector<std::string>>();
-        // Use the hosts...
-    }
-    else
-    {
-        err_func::error("Host not specified");
-        return ERROR;
-    }
-
-    // Check for options without values
-    if (vm.count("a")) {
-        // Option -a was specified
-    }
+    return SUCCESS;
 }
 
+int main(int argc, char *argv[])
+{
+    uint16_t port;
+    std::string host;
+    bool a_option = false;
+    bool ip6_opt = false;
+    bool ip4_opt = false;
+    std::map<PlayerPosition, bool> positions;
+    // Access the options
+    if (init_client(argc, argv, port, host, positions, a_option, ip6_opt, ip4_opt) != SUCCESS)
+    {
+        return ERROR;
+    }
 
+    struct sockaddr_in6 server_address;
+    int socket_fd;
+    // struct sockaddr_in6 server_address = get_server_address_ip4(host.data(), port);
+}
 
 // int main(int argc, char *argv[])
 // {
-//     if (argc != 4) 
+//     if (argc != 4)
 //         exception_wrappers::invalid_arg_wrapper("usage: <host> <port> <position>");
 
-    
-//     const char *host = argv[1]; 
-//     uint16_t port = port_from_str_to_ul(argv[2]); 
-//     struct sockaddr_in server_address = get_server_address(host, port); 
+//     const char *host = argv[1];
+//     uint16_t port = port_from_str_to_ul(argv[2]);
+//     struct sockaddr_in server_address = get_server_address_ip4(host, port);
 
 //     int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 
 //     if (connect(socket_fd, (struct sockaddr *) &server_address,
-//             (socklen_t) sizeof(server_address)) < 0) 
+//             (socklen_t) sizeof(server_address)) < 0)
 //     {
 //         exception_wrappers::runtime_err_wrapper(" cannot connect to the server");
 //     }
 
 //     init_comm_wrappers::IAM_Wrapper iam;
-//     PlayerPosition pos = char_to_playerPos(argv[3][0]); 
+//     PlayerPosition pos = char_to_playerPos(argv[3][0]);
 //     iam.write(socket_fd, pos);
-    
+
 //     std::string packet_name;
 //     if (tcp::TCP_read_packet_name(socket_fd, INIT_PACKET_NAME_SIZE, packet_name) != SUCCESS)
 //     {
@@ -180,8 +169,6 @@ int main(int argc, char *argv[])
 //     {
 //         exception_wrappers::runtime_err_wrapper("Got Wrong packet name from server");
 //     }
-
-
 
 //     // char buff[] = {'I', 'A', 'M', 'K', '\r', '\n'};
 //     // std::cout << "Sending wrong msg\n";
