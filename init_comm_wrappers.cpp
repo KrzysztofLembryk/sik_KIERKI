@@ -15,8 +15,12 @@
 */
 void init_comm_wrappers::IAM_Wrapper::write(int socket_fd, PlayerPosition position)
 {
-    iam.position = playerPos_to_char(position);
-    tcp::TCP_send_packet(socket_fd, &iam, sizeof(iam));    
+    std::vector<char> msg_vec(name);
+    msg_vec.push_back(playerPos_to_char(position));
+    msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
+    tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());    
+
+    std::cout << msg_vec.data();
 }
 
 /**
@@ -27,8 +31,8 @@ void init_comm_wrappers::IAM_Wrapper::write(int socket_fd, PlayerPosition positi
 int init_comm_wrappers::IAM_Wrapper::read(int socket_fd, PlayerPosition &position)
 {
     ssize_t read_length = 0;
-
-    std::memset(read_buff, 0, MAX_IAM_BUFF_SIZE);
+    char read_buff[MAX_IAM_BUFF_SIZE]; 
+    std::memset(read_buff, 0, MAX_IAM_BUFF_SIZE); 
     
     if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_IAM_BUFF_SIZE, read_length) != SUCCESS)
     {

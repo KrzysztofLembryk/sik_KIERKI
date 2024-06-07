@@ -70,14 +70,14 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
 
     if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position) != SUCCESS)
     {
-        std::cout << "IAM read unsucessful\n";
+        std::cerr << "IAM read unsucessful\n";
         return CONTINUE;
     }
 
     if (game_master_sp->check_if_position_taken(new_p_position))
     {
         init_comm_wrappers::BUSY_Wrapper busy_wrapper;
-        std::cout << "Sending BUSY packet\n";
+        std::cerr << "Sending BUSY packet\n";
         busy_wrapper.write(client_fd_sp->to_int(), game_master_sp->get_taken_positions());
         return CONTINUE;
     }

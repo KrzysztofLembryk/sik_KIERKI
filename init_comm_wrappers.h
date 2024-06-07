@@ -26,15 +26,15 @@ namespace init_comm_wrappers
         int read(int socket_fd, PlayerPosition &position);
 
     private:
-        typedef struct __attribute__((__packed__)) IAM
-        {
-            char name[3]{'I', 'A', 'M'};
-            char position;
-            char end[2]{'\r', '\n'};
-        } IAM;
+        // typedef struct __attribute__((__packed__)) IAM
+        // {
+        //     char name[3]{'I', 'A', 'M'};
+        //     char position;
+        //     char end[2]{'\r', '\n'};
+        // } IAM;
 
-        IAM iam;
-        char read_buff[MAX_IAM_BUFF_SIZE];
+        // IAM iam;
+        const std::vector<char> name{'I', 'A', 'M'};
     };
 
     class BUSY_Wrapper
