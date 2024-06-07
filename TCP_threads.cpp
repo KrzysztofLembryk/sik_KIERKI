@@ -117,8 +117,6 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
         try 
         {
             address_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
-            std::cout << "sending trick to player: " << player_sp->get_position() << '\n';
-            fflush(stdout);
 
             trick.write(client_fd, *(game_master_sp->get_curr_lewa()), msg_str);
             print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
@@ -127,7 +125,6 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
             address_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), true);
 
             int ret_code_read_name = tcp::TCP_read_packet_name(client_fd, INGAME_PACKET_NAME_SIZE, packet_name); 
-            std::cout << "reading trick from player: " << player_sp->get_position() << ", recv packet name: " << packet_name << '\n';
             cardCls::Lewa client_ret_lewa;
             int ret_code = trick.read(client_fd, client_ret_lewa, game_master_sp->get_curr_round_nbr(), msg_str);
 

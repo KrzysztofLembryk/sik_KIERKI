@@ -22,6 +22,7 @@ namespace po = boost::program_options;
 #include "player_threads.h"
 #include "polls_func.h"
 #include "common.h"
+#include "err.h"
 
 int init_server(int ac, char *av[], po::variables_map &vm,
                 uint16_t &port, unsigned &timeout, std::string &file_name,
@@ -78,7 +79,7 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
         // inside read, without splitting reading to read_packet name and then 
         // reading the rest of the packet.
         print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
-        std::cerr << "IAM read unsuccessful\n";
+        err_func::error("IAM read unsuccessful");
         return CONTINUE;
     }
 
@@ -87,7 +88,6 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     if (game_master_sp->check_if_position_taken(new_p_position))
     {
         init_comm_wrappers::BUSY_Wrapper busy_wrapper;
-        std::cerr << "Sending BUSY packet\n";
 
         address_str = communication_addresses_to_str(*(struct sockaddr *)&server_address, *(struct sockaddr *)&client_address, false);
 
@@ -148,7 +148,7 @@ int main(int ac, char *av[])
     char pipe_buff[PIPE_BUFF_SIZE];
     if (pipe(pipe_fd) == -1)
     {
-        std::cerr << "Failed to create pipe" << "\n";
+        err_func::syserr("Failed to create pipe");
         return FAILURE;
     }
 

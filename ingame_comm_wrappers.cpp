@@ -184,9 +184,6 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     determine_lewa_id(i, read_buff, lewa, curr_round);
     // We can substract - 3 from read_length since we know that read_length is 
     // >= MIN_TRICK_BUFF_SIZE == 3
-    std::cout << "trick read: \n";
-    std::cout << "Read length: " << read_length << '\n';
-    std::cout << "i: " << i << '\n';
     while (i < (size_t)read_length - 2)
     {
         parse_char_and_add_card_to_lewa(read_buff, i, lewa, char_val_vec, value, suit);
@@ -358,7 +355,6 @@ void ingame_comm_wrappers::TOTAL_Wrapper::write(int socket_fd,
 
     for (const auto &score : total_scores)
     {
-        // std::cout << "Player: " << playerPos_to_char(score.first) << " score: " << score.second << '\n';
         msg_vec.push_back(playerPos_to_char(score.first));
 
         // At the end there is no '\0' character so we dont need to remove it
