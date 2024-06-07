@@ -83,6 +83,8 @@ void init_comm_wrappers::BUSY_Wrapper::write(int socket_fd, std::vector<PlayerPo
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+
+    std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 /**
@@ -147,6 +149,7 @@ void init_comm_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type ,
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+    std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards)

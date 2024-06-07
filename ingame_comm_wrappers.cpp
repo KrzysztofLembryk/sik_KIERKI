@@ -150,6 +150,7 @@ void ingame_comm_wrappers::TRICK_Wrapper::write(int socket_fd,
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+    std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 
@@ -208,6 +209,7 @@ void ingame_comm_wrappers::WRONG_Wrapper::write(int socket_fd, const cardCls::Le
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+    std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_round)
@@ -249,6 +251,7 @@ void ingame_comm_wrappers::TAKEN_Wrapper::write(int socket_fd,
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+    std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 int ingame_comm_wrappers::TAKEN_Wrapper::read(int socket_fd, 
@@ -312,6 +315,7 @@ void ingame_comm_wrappers::SCORE_Wrapper::write(int socket_fd, const std::map<Pl
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+    std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 int ingame_comm_wrappers::SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores)
@@ -355,6 +359,7 @@ void ingame_comm_wrappers::TOTAL_Wrapper::write(int socket_fd,
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
+    std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 int ingame_comm_wrappers::TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint32_t> &total_scores)
