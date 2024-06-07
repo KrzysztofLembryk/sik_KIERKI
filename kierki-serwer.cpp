@@ -170,8 +170,16 @@ int main(int ac, char *av[])
                 {
                     std::cout << "New connection\n";
                     fflush(stdout);
-                    if (handle_game_joining_request(socket_fd, timeout, game_master_sp, pipe_fd[PIPE_WRITE_DSCR], server_address) != SUCCESS)
+                    try
                     {
+                        if (handle_game_joining_request(socket_fd, timeout, game_master_sp, pipe_fd[PIPE_WRITE_DSCR], server_address) != SUCCESS)
+                        {
+                            continue;
+                        }
+                    }
+                    catch(const std::exception& e)
+                    {
+                        std::cerr << e.what() << '\n';
                         continue;
                     }
                 }
@@ -180,6 +188,10 @@ int main(int ac, char *av[])
         catch (std::exception &e)
         {
             std::cerr << e.what() << "\n";
+            close(socket_fd);
+            close(pipe_fd[PIPE_READ_DSCR]);
+            close(pipe_fd[PIPE_WRITE_DSCR]);
+            return FAILURE;
         }
     }
 
