@@ -20,7 +20,7 @@ void init_comm_wrappers::IAM_Wrapper::write(int socket_fd, PlayerPosition positi
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());    
 
-    std::cout << msg_vec.data();
+    std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 /**
