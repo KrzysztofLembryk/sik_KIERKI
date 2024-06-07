@@ -14,18 +14,18 @@ using BinSem_sp = std::shared_ptr<std::binary_semaphore>;
 int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round)
 {
     std::string packet_name;
-    if (tcp::TCP_read_packet_name(client_fd, INGAME_PACKET_NAME_SIZE, packet_name) != SUCCESS)
-    {
-        // end connection
-        err_func::error("ENDING CONNECTION - GOT ERROR WHILE READING PACKET NAME");
-        return ERROR;
-    }
-    if (packet_name != "TRICK")
-    {
-        // end connection
-        err_func::error("ENDING CONNECTION - GOT WRONG PACKET NAME");
-        return ERROR;
-    }
+    int ret_code_read_name = tcp::TCP_read_packet_name(client_fd, INGAME_PACKET_NAME_SIZE, packet_name); 
+    // {
+    //     // end connection
+    //     err_func::error("ENDING CONNECTION - GOT ERROR WHILE READING PACKET NAME");
+    //     return ERROR;
+    // }
+    // if (packet_name != "TRICK")
+    // {
+    //     // end connection
+    //     err_func::error("ENDING CONNECTION - GOT WRONG PACKET NAME");
+    //     return ERROR;
+    // }
 
     ingame_comm_wrappers::TRICK_Wrapper client_trick;
     cardCls::Lewa lewa;
@@ -36,6 +36,16 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round)
         {
             // end connection
             err_func::error("ENDING CONNECTION - GOT ERROR WHILE READING TRICK - sent trick packet was invalid");
+            return ERROR;
+        }
+        if (packet_name != "TRICK")
+        {
+            // end connection
+            err_func::error("ENDING CONNECTION - GOT WRONG PACKET NAME");
+            return ERROR;
+        }
+        if (ret_code_read_name != SUCCESS)
+        {
             return ERROR;
         }
     }
