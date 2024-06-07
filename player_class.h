@@ -30,6 +30,8 @@ public:
     PlayerPosition get_position();
     uint8_t get_curr_score();
     uint32_t get_all_points();
+    struct sockaddr get_server_address();
+    struct sockaddr get_client_address();
 
     int check_card_correctness(cardCls::CardClassWrapper &card, 
     Suit bottom_card_suit);

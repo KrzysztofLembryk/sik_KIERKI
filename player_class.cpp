@@ -41,6 +41,16 @@ uint32_t Player::get_all_points()
     return all_points;
 }
 
+struct sockaddr Player::get_server_address()
+{
+    return *(struct sockaddr*)(&server_address);
+}
+
+struct sockaddr Player::get_client_address()
+{
+    return *(struct sockaddr*)&my_address;
+}
+
 int Player::check_card_correctness(cardCls::CardClassWrapper &card, 
     Suit bottom_card_suit)
 {

@@ -329,12 +329,12 @@ void print_communication_addresses(const struct sockaddr &server_address, const 
 
         if (client_sent_msg)
         {
-            std::cout << "[" << c_ip_str << ":" << ntohs(client_addr_in->sin_port) << "," << s_ip_str << ":" << ntohs(server_addr_in->sin_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "]";
+            std::cout << "[" << c_ip_str << ":" << ntohs(client_addr_in->sin_port) << "," << s_ip_str << ":" << ntohs(server_addr_in->sin_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "] ";
         }
         else
         {
 
-            std::cout << "[" << s_ip_str << ":" << ntohs(server_addr_in->sin_port) << "," << c_ip_str << ":" << ntohs(client_addr_in->sin_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "]";
+            std::cout << "[" << s_ip_str << ":" << ntohs(server_addr_in->sin_port) << "," << c_ip_str << ":" << ntohs(client_addr_in->sin_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "] ";
         }
     }
     else if (server_address.sa_family == AF_INET6)
@@ -350,11 +350,11 @@ void print_communication_addresses(const struct sockaddr &server_address, const 
 
         if (client_sent_msg)
         {
-            std::cout << "[" << c_ip_str << ":" << ntohs(client_addr_in6->sin6_port) << "," << s_ip_str << ":" << ntohs(server_addr_in6->sin6_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "]";
+            std::cout << "[" << c_ip_str << ":" << ntohs(client_addr_in6->sin6_port) << "," << s_ip_str << ":" << ntohs(server_addr_in6->sin6_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "] ";
         }
         else
         {
-            std::cout << "[" << s_ip_str << ":" << ntohs(server_addr_in6->sin6_port) << "," << c_ip_str << ":" << ntohs(client_addr_in6->sin6_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "]";
+            std::cout << "[" << s_ip_str << ":" << ntohs(server_addr_in6->sin6_port) << "," << c_ip_str << ":" << ntohs(client_addr_in6->sin6_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "] ";
         }
     }
     else
