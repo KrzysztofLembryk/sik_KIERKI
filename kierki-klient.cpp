@@ -9,6 +9,7 @@
 #include "constants.h"
 #include "parameters_handling.h"
 #include "socket_fd_handler.h"
+#include "player_class.h"
 
 int init_client(int argc,
                 char *argv[],
@@ -99,6 +100,14 @@ int main(int argc, char *argv[])
         init_comm_wrappers::IAM_Wrapper iam;
         print_communication_addresses(server_address, client_address, true);
         iam.write(socket_fd, chosen_position);
+        if (a_option)
+        {
+
+        }
+        else 
+        {
+
+        }
     }
     catch (std::exception &e)
     {

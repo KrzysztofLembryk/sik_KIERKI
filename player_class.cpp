@@ -6,7 +6,7 @@ void Player::set_hand(cardCls::DeckOfCards &hand)
     this->hand = hand;
 }
 
-void Player::set_player_address(const struct sockaddr_in6 &addr)
+void Player::set_player_address(const struct sockaddr &addr)
 {
     this->my_address = addr;
 }
@@ -43,12 +43,12 @@ uint32_t Player::get_all_points()
 
 struct sockaddr Player::get_server_address()
 {
-    return *(struct sockaddr*)(&server_address);
+    return server_address;
 }
 
 struct sockaddr Player::get_client_address()
 {
-    return *(struct sockaddr*)&my_address;
+    return my_address;
 }
 
 int Player::check_card_correctness(cardCls::CardClassWrapper &card, 
