@@ -109,9 +109,15 @@ void player_threads::MyThread::thread_main(
 
             if (game_master_sp->check_if_round_finished())
             {
+                // Thanks to previous waiting now all players have scores up to 
+                // date, and we can safely send scores to all players, while 
+                // doing so we also add points from this round
                 btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "SCORE");
                 semaphore_TCP->acquire();
 
+                // Because we add points from round in SCORE we need to wait for
+                // all players to finish adding points before we can send TOTAL
+                // with updated scores
                 game_master_sp->wait_for_all_players();
 
                 btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "TOTAL");

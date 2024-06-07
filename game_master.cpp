@@ -1,7 +1,7 @@
 #include "game_master.h"
 #include "constants.h"
 
-gm::GameMaster::GameMaster(std::vector<gameCls::Round> &rounds, const struct sockaddr_in6 &server_addr) : 
+gm::GameMaster::GameMaster(std::vector<gameCls::Round> &rounds, struct sockaddr_in6 server_addr) : 
 pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}}), 
 sync_barrier(MAX_PLAYERS, [](){})
 {

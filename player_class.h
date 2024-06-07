@@ -12,7 +12,7 @@ public:
     Player( cardCls::DeckOfCards &hand, 
             PlayerPosition position, 
             GameType game_type, 
-            const struct sockaddr &server_addr) : 
+            const struct sockaddr server_addr) : 
                                                 hand(hand), 
                                                 position(position), 
                                                 all_points(0),
@@ -49,7 +49,7 @@ private:
     uint8_t curr_game_points;
     gameCls::PointCounter point_counter;
     std::vector<cardCls::Lewa> lewas_taken;
-    const struct sockaddr server_address;
+    struct sockaddr server_address;
     struct sockaddr my_address;
 };
 

@@ -104,7 +104,6 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     }
 
     player_threads::MyThread my_thread;
-    fflush(stdout);
     std::thread t(
         [client_fd_sp, game_master_sp, new_p_position, pipe_write_fd, my_thread]() mutable {
             my_thread.thread_main(client_fd_sp,
