@@ -37,6 +37,9 @@ public:
     Suit bottom_card_suit);
     void add_points_in_curr_round(cardCls::Lewa &lewa);
     void add_points_from_round_to_allpoints();
+    void add_lewa_to_lewas_taken(cardCls::Lewa &lewa);
+
+    cardCls::CardClassWrapper play_card(Suit bottom_card_suit);
 
 private:
     cardCls::DeckOfCards hand;

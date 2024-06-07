@@ -200,6 +200,28 @@ bool cardCls::DeckOfCards::check_if_suit_available(Suit suit) const
     return false;
 }
 
+cardCls::CardClassWrapper cardCls::DeckOfCards::play_card(Suit bottom_card_suit)
+{
+    for (auto &pair : was_card_played_map)
+    {
+        if (!pair.second && pair.first.get_suit() == bottom_card_suit)
+        {
+            pair.second = true;
+            return pair.first;
+        }
+    }
+    // if we are here it means that we cant play card with correct suit, thus 
+    // we play any card
+    for (auto &pair : was_card_played_map)
+    {
+        if (!pair.second)
+        {
+            pair.second = true;
+            return pair.first;
+        }
+    }
+}
+
 size_t cardCls::DeckOfCards::size() const
 {
     return was_card_played_map.size();
@@ -330,3 +352,4 @@ void cardCls::Lewa::print()
     }
     std::cout << "\n";
 }
+

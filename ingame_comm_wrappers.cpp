@@ -323,8 +323,12 @@ int ingame_comm_wrappers::SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosi
     ssize_t read_length;
     char read_buff[MAX_SCORE_BUFF_SIZE];
     std::memset(read_buff, 0, MAX_SCORE_BUFF_SIZE );
-
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_SCORE_BUFF_SIZE, read_length) != SUCCESS)
+    int ret_code = tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_SCORE_BUFF_SIZE, read_length);
+    if (ret_code == TIMEOUT)
+    {
+        return TIMEOUT;
+    }
+    else if (ret_code != SUCCESS)
     {
         return ERROR;
     }
@@ -332,7 +336,7 @@ int ingame_comm_wrappers::SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosi
     if ((size_t)read_length < MIN_SCORE_BUFF_SIZE)
     {
         err_func::error(" read_length < MIN_SCORE_BUFF_SIZE");
-        return ERROR;
+        return FAILURE;
     }
 
     get_scores_from_buffer(read_length, read_buff, scores);
@@ -367,8 +371,12 @@ int ingame_comm_wrappers::TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosi
     ssize_t read_length;
     char read_buff[MAX_TOTAL_BUFF_SIZE];
     std::memset(read_buff, 0, MAX_TOTAL_BUFF_SIZE);
-
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TOTAL_BUFF_SIZE, read_length) != SUCCESS)
+    int ret_val = tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TOTAL_BUFF_SIZE, read_length);
+    if (ret_val == TIMEOUT)
+    {
+        return TIMEOUT;
+    }
+    else if (ret_val != SUCCESS)
     {
         return ERROR;
     }
@@ -376,7 +384,7 @@ int ingame_comm_wrappers::TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosi
     if ((size_t)read_length < MIN_TOTAL_BUFF_SIZE)
     {
         err_func::error(" read_length < MIN_TOTAL_BUFF_SIZE");
-        return ERROR;
+        return FAILURE;
     }
 
     get_scores_from_buffer(read_length, read_buff, total_scores); 

@@ -93,6 +93,8 @@ namespace cardCls
 
         bool check_if_suit_available(Suit suit) const;
 
+        cardCls::CardClassWrapper play_card(Suit bottom_card_suit);
+
     private:
         std::map<CardClassWrapper, bool> was_card_played_map;
     };
