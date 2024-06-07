@@ -69,19 +69,33 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     init_comm_wrappers::IAM_Wrapper iam_wrapper;
     PlayerPosition new_p_position;
 
-    communication_addresses_to_str(*(struct sockaddr *)&server_address, *(struct sockaddr *)&client_address, true);
-    if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position) != SUCCESS)
+    std::string address_str = communication_addresses_to_str(*(struct sockaddr *)&server_address, *(struct sockaddr *)&client_address, true);
+    std::string msg_str;
+    if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position, msg_str) != SUCCESS)
     {
+        // We print log from write even though we did reading, since at the 
+        // beginning of this project I decided that IAM will read whole msg 
+        // inside read, without splitting reading to read_packet name and then 
+        // reading the rest of the packet.
+        print_log_from_write(address_str, msg_str, game_master_sp);
         std::cerr << "IAM read unsuccessful\n";
         return CONTINUE;
     }
+
+    print_log_from_write(address_str, msg_str, game_master_sp);
 
     if (game_master_sp->check_if_position_taken(new_p_position))
     {
         init_comm_wrappers::BUSY_Wrapper busy_wrapper;
         std::cerr << "Sending BUSY packet\n";
-        communication_addresses_to_str(*(struct sockaddr *)&server_address, *(struct sockaddr *)&client_address, false);
-        busy_wrapper.write(client_fd_sp->to_int(), game_master_sp->get_taken_positions());
+
+        address_str = communication_addresses_to_str(*(struct sockaddr *)&server_address, *(struct sockaddr *)&client_address, false);
+
+        busy_wrapper.write(client_fd_sp->to_int(), 
+                            game_master_sp->get_taken_positions(), 
+                            msg_str);
+        print_log_from_write(address_str, msg_str, game_master_sp);
+
         return CONTINUE;
     }
     else
