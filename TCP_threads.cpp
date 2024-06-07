@@ -15,7 +15,7 @@ using BinSem_sp = std::shared_ptr<std::binary_semaphore>;
 int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
     struct sockaddr server_addr, struct sockaddr client_addr)
 {
-    communication_addresses_to_str(server_addr, client_addr, true);
+    std::string addreses_str = communication_addresses_to_str(server_addr, client_addr, true);
     std::string packet_name;
     int ret_code_read_name = tcp::TCP_read_packet_name(client_fd, INGAME_PACKET_NAME_SIZE, packet_name); 
     // {
@@ -29,14 +29,16 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
     //     err_func::error("ENDING CONNECTION - GOT WRONG PACKET NAME");
     //     return ERROR;
     // }
-
+    std::string msg_str;
+    std::string final_str;
     ingame_comm_wrappers::TRICK_Wrapper client_trick;
     cardCls::Lewa lewa;
 
     try 
     {
-        if (client_trick.read(client_fd, lewa, curr_round) != SUCCESS)
+        if (client_trick.read(client_fd, lewa, curr_round, msg_str) != SUCCESS)
         {
+            final_str = addreses_str + packet_name + msg_str;
             // end connection
             // err_func::error("ENDING CONNECTION - GOT ERROR WHILE READING TRICK - sent trick packet was invalid");
             return ERROR;

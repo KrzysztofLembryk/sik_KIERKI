@@ -295,3 +295,13 @@ std::shared_ptr<Player> gm::GameMaster::get_player(PlayerPosition pos)
     std::lock_guard<std::mutex> lock(mutex_gm);
     return players[pos];
 }
+
+void gm::GameMaster::acquire_print_msg_sem()
+{
+    sem_print_msg->acquire();
+}
+
+void gm::GameMaster::release_print_msg_sem()
+{
+    sem_print_msg->release();
+}

@@ -7,6 +7,7 @@
 #include "enum_types.h"
 #include <vector>
 #include <string>
+#include "game_master.h"
 
 uint16_t port_from_str_to_ul(char const *string);
 
@@ -31,5 +32,9 @@ uint8_t determine_value(std::vector<char> values);
 Suit determine_suit(char suit);
 
 std::string communication_addresses_to_str(const struct sockaddr &server_address, const struct sockaddr &client_address, bool client_sent_msg);
+
+void print_log_from_read(std::string &adresses, std::string &packet_name, std::string &msg, std::shared_ptr<gm::GameMaster> gm_sp);
+
+void print_log_from_write(std::string &adresses, std::string &msg, std::shared_ptr<gm::GameMaster> gm_sp);
 
 #endif

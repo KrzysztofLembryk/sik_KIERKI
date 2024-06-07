@@ -370,3 +370,25 @@ std::string communication_addresses_to_str(const struct sockaddr &server_address
 
     return res_msg;
 }
+
+void print_log_from_read(std::string &adresses, std::string &packet_name, std::string &msg, std::shared_ptr<gm::GameMaster> gm_sp)
+{
+    gm_sp->acquire_print_msg_sem();
+
+    std::string final_msg = adresses + packet_name + msg;
+    std::cout << final_msg;
+    fflush(stdout);
+
+    gm_sp->release_print_msg_sem();
+}
+
+void print_log_from_write(std::string &adresses, std::string &msg, std::shared_ptr<gm::GameMaster> gm_sp)
+{
+    gm_sp->acquire_print_msg_sem();
+
+    std::string final_msg = adresses + msg;
+    std::cout << final_msg;
+    fflush(stdout);
+
+    gm_sp->release_print_msg_sem();
+}
