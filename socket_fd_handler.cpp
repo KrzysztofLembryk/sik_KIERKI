@@ -97,13 +97,19 @@ void socket_func::handle_server_socket_init(uint16_t &port,
     }
 }
 
-void socket_func::handle_client_socket_init(uint16_t &port,
-                        int &socket_fd,
-                        struct sockaddr_in6 &server_address, 
-                        int type)
+void socket_func::handle_client_socket_init(int &socket_fd, int type_of_ip)
 {
-    init_socket_fd(socket_fd);
 
-    server_address.sin6_family = AF_INET6;
-    server_address.sin6_port = htons(port);
+    if (type_of_ip == IP6_OPT)
+    {
+        socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
+    }
+    else 
+    {
+        socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    }
+    if (socket_fd < 0)
+    {
+        exception_wrappers::runtime_err_wrapper("socket() failed");
+    }
 }

@@ -29,10 +29,7 @@ namespace socket_func
                             int &socket_fd,
                             struct sockaddr_in6 &server_address);
     
-    void handle_client_socket_init(uint16_t &port,
-                            int &socket_fd,
-                            struct sockaddr_in6 &server_address, 
-                            int type);
+    void handle_client_socket_init(int &socket_fd, int type_of_ip);
 } // namespace socket_func
 
 

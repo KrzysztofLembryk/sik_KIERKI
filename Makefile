@@ -30,7 +30,8 @@ btwn_thread_comm.o: btwn_thread_comm.cpp btwn_thread_comm.h constants.h \
  exception_wrappers.h
 card_classes.o: card_classes.cpp card_classes.h enum_types.h \
  exception_wrappers.h constants.h
-common.o: common.cpp err.h common.h enum_types.h exception_wrappers.h
+common.o: common.cpp err.h common.h enum_types.h exception_wrappers.h \
+ constants.h
 err.o: err.cpp err.h
 exception_wrappers.o: exception_wrappers.cpp exception_wrappers.h
 game_classes.o: game_classes.cpp game_classes.h card_classes.h \
@@ -46,7 +47,8 @@ init_comm_wrappers.o: init_comm_wrappers.cpp init_comm_wrappers.h \
  err.h TCP_handler.h
 kierki-klient.o: kierki-klient.cpp common.h enum_types.h \
  exception_wrappers.h init_comm_wrappers.h card_classes.h constants.h \
- ingame_comm_wrappers.h TCP_handler.h err.h parameters_handling.h
+ ingame_comm_wrappers.h TCP_handler.h err.h parameters_handling.h \
+ socket_fd_handler.h
 kierki-serwer.o: kierki-serwer.cpp parameters_handling.h enum_types.h \
  constants.h exception_wrappers.h read_file.h game_classes.h \
  card_classes.h game_master.h player_class.h init_comm_wrappers.h \

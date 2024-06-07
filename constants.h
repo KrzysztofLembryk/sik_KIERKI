@@ -22,6 +22,12 @@ constexpr int POLLS_NBR_OF_DSCR = 2;
 constexpr int TCP_SOCKET_POLLS_ID = 0;
 constexpr int PIPE_POLLS_ID = 1;
 
+// CLIENT CONSTANTS
+constexpr int IP6_OPT = 6;
+constexpr int IP4_OPT = 4;
+constexpr int NO_IP_OPT = 0;
+
+
 // COMMUNICATION WRAPPERS CONSTANTS
 constexpr size_t INIT_PACKET_NAME_SIZE = 4;
 constexpr size_t INGAME_PACKET_NAME_SIZE = 5;

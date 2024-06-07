@@ -30,6 +30,7 @@ void assign_programme_parameters_client(
                                 std::vector<std::string> &ports, 
                                 std::vector<std::string> &hosts, 
                                 std::map<PlayerPosition, bool> &positions, 
-                                bool &a_option, bool &ip6_opt, bool &ip4_opt);
+                                bool &a_option, bool &ip6_opt, bool &ip4_opt,
+                                PlayerPosition &chosen_pos);
 
 #endif // PARAMETERS_HANDLING_H

@@ -1,4 +1,3 @@
-#include <boost/program_options.hpp>
 #include "common.h"
 #include <netinet/in.h>
 #include "exception_wrappers.h"
@@ -9,47 +8,107 @@
 #include "err.h"
 #include "constants.h"
 #include "parameters_handling.h"
+#include "socket_fd_handler.h"
+#include <chrono>
+#include <arpa/inet.h>
+#include <iomanip>
 
-namespace po = boost::program_options;
+void print_address(const struct sockaddr &server_address, const struct sockaddr &client_address, bool client_sent_msg)
+{
+    auto now = std::chrono::high_resolution_clock::now();
+    auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+    auto epoch = now_ms.time_since_epoch();
+    auto value = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
+    std::time_t now_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::tm *now_tm = std::localtime(&now_time);
+
+    if (server_address.sa_family == AF_INET)
+    {
+        // IPv4
+        struct sockaddr_in *server_addr_in = (struct sockaddr_in *)&server_address;
+        char s_ip_str[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(server_addr_in->sin_addr), s_ip_str, INET_ADDRSTRLEN);
+
+        struct sockaddr_in *client_addr_in = (struct sockaddr_in *)&client_address;
+        char c_ip_str[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(client_addr_in->sin_addr), c_ip_str, INET_ADDRSTRLEN);
+
+        if (client_sent_msg)
+        {
+            std::cout << "[" << c_ip_str << ":" << ntohs(client_addr_in->sin_port) << "," << s_ip_str << ":" << ntohs(server_addr_in->sin_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "]";
+        }
+        else
+        {
+
+            std::cout << "[" << s_ip_str << ":" << ntohs(server_addr_in->sin_port) << "," << c_ip_str << ":" << ntohs(client_addr_in->sin_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "]";
+        }
+    }
+    else if (server_address.sa_family == AF_INET6)
+    {
+        // IPv6
+        struct sockaddr_in6 *server_addr_in6 = (struct sockaddr_in6 *)&server_address;
+        char s_ip_str[INET6_ADDRSTRLEN];
+        inet_ntop(AF_INET6, &(server_addr_in6->sin6_addr), s_ip_str, INET6_ADDRSTRLEN);
+
+        struct sockaddr_in6 *client_addr_in6 = (struct sockaddr_in6 *)&client_address;
+        char c_ip_str[INET6_ADDRSTRLEN];
+        inet_ntop(AF_INET6, &(client_addr_in6->sin6_addr), c_ip_str, INET6_ADDRSTRLEN);
+
+        if (client_sent_msg)
+        {
+            std::cout << "[" << c_ip_str << ":" << ntohs(client_addr_in6->sin6_port) << "," << s_ip_str << ":" << ntohs(server_addr_in6->sin6_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "]";
+        }
+        else
+        {
+            std::cout << "[" << s_ip_str << ":" << ntohs(server_addr_in6->sin6_port) << "," << c_ip_str << ":" << ntohs(client_addr_in6->sin6_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "]";
+        }
+    }
+    else
+    {
+        // Unexpected family
+        exception_wrappers::runtime_err_wrapper("Unexpected family");
+    }
+}
 
 int init_client(int argc,
                 char *argv[],
                 uint16_t &port,
                 std::string &host,
-                std::map<PlayerPosition, bool> &positions,
+                PlayerPosition &chosen_position,
                 bool &a_opt,
                 bool &ip6_opt,
                 bool &ip4_opt,
-                struct sockaddr &server_address)
+                struct sockaddr &server_address,
+                int &final_type_of_ip)
 {
     try
     {
         std::vector<std::string> ports;
         std::vector<std::string> hosts;
+        std::map<PlayerPosition, bool> positions;
         parse_programme_parameters_client(argc, argv, ports, hosts, positions, a_opt, ip6_opt, ip4_opt);
 
-        assign_programme_parameters_client(port, host, ports, hosts, positions, a_opt, ip6_opt, ip4_opt); 
-        int type_of_ip;
+        assign_programme_parameters_client(port, host, ports, hosts, positions, a_opt, ip6_opt, ip4_opt, chosen_position);
+
         if (ip6_opt)
         {
-            type_of_ip = 6;
-            server_address = get_server_address(host.data(), port, type_of_ip);
+            final_type_of_ip = IP6_OPT;
+            server_address = get_server_address(host.data(), port, final_type_of_ip);
         }
         else if (ip4_opt)
         {
-            type_of_ip = 4;
-            server_address = get_server_address(host.data(), port, type_of_ip);
+            final_type_of_ip = IP4_OPT;
+            server_address = get_server_address(host.data(), port, final_type_of_ip);
         }
         else
         {
-            type_of_ip = 0;
-            server_address = get_server_address(host.data(), port, type_of_ip);
+            final_type_of_ip = NO_IP_OPT;
+            server_address = get_server_address(host.data(), port, final_type_of_ip);
         }
-
     }
     catch (std::exception &e)
     {
-        std::cerr << e.what() << "\n"; 
+        std::cerr << e.what() << "\n";
         return ERROR;
     }
     return SUCCESS;
@@ -62,17 +121,39 @@ int main(int argc, char *argv[])
     bool a_option = false;
     bool ip6_opt = false;
     bool ip4_opt = false;
-    std::map<PlayerPosition, bool> positions;
+    PlayerPosition chosen_position;
     struct sockaddr server_address;
     int socket_fd;
+    int final_type_of_ip;
 
     // Access the options
-    if (init_client(argc, argv, port, host, positions, a_option, ip6_opt, ip4_opt, server_address) != SUCCESS)
+    if (init_client(argc, argv, port, host, chosen_position, a_option, ip6_opt, ip4_opt, server_address, final_type_of_ip) != SUCCESS)
     {
-        return ERROR;
+        return FAILURE;
     }
 
-    // struct sockaddr_in6 server_address = get_server_address_ip4(host.data(), port);
+    socket_func::handle_client_socket_init(socket_fd, final_type_of_ip);
+
+    struct sockaddr client_address;
+    socklen_t len;
+    
+    if (final_type_of_ip == IP4_OPT)
+        len = sizeof(struct sockaddr_in);
+    else 
+        len = sizeof(struct sockaddr_in6);
+
+    if (getsockname(socket_fd, (struct sockaddr *)&client_address, &len) == -1)
+    {
+        err_func::error("Cannot get my address");
+        return FAILURE;
+    }
+
+    if (connect(socket_fd, &server_address, (socklen_t)sizeof(server_address)) < 0)
+    {
+        err_func::error("Cannot connect to the server");
+        return FAILURE;
+    }
+
 }
 
 // int main(int argc, char *argv[])

@@ -13,6 +13,7 @@
 #include "err.h"
 #include "common.h"
 #include "exception_wrappers.h"
+#include "constants.h"
 
 uint16_t port_from_str_to_ul(char const *string)
 {
@@ -57,11 +58,11 @@ int &type_of_ip)
 {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
-    if (type_of_ip == 6)
+    if (type_of_ip == IP6_OPT)
     {
         hints.ai_family = AF_INET6; // IPv6
     }
-    else if (type_of_ip == 4)
+    else if (type_of_ip == IP4_OPT)
     {
         hints.ai_family = AF_INET; // IPv4
     }
@@ -92,7 +93,7 @@ int &type_of_ip)
         send_address_ip4.sin_addr = ((struct sockaddr_in *)(address_result->ai_addr))->sin_addr;
         send_address_ip4.sin_port = htons(port);
         final_addr = *((struct sockaddr *)&send_address_ip4);
-        type_of_ip = 4;
+        type_of_ip = IP4_OPT;
         // Use send_address
     }
     else if (address_result->ai_family == AF_INET6)
@@ -103,7 +104,7 @@ int &type_of_ip)
         send_address_ip6.sin6_addr = ((struct sockaddr_in6 *)(address_result->ai_addr))->sin6_addr;
         send_address_ip6.sin6_port = htons(port);
         final_addr = *((struct sockaddr *)&send_address_ip6);
-        type_of_ip = 6;
+        type_of_ip = IP6_OPT;
         // Use send_address
     }
     else

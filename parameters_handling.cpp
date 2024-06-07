@@ -99,7 +99,8 @@ void assign_programme_parameters_client(
                                 std::vector<std::string> &ports, 
                                 std::vector<std::string> &hosts, 
                                 std::map<PlayerPosition, bool> &positions, 
-                                bool &a_option, bool &ip6_opt, bool &ip4_opt)
+                                bool &a_option, bool &ip6_opt, bool &ip4_opt,
+                                PlayerPosition &chosen_pos)
 {
     std::cout << "Assigning parameters\n";
 
@@ -154,7 +155,8 @@ void assign_programme_parameters_client(
     {
         for (auto &pos : positions)
         {
-            std::cout << "Chosen Position: " << (unsigned)pos.first << " " << pos.second << "\n";
+            chosen_pos = pos.first;
+            break;
         }
     }
 }
