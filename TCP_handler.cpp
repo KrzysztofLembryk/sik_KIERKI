@@ -190,19 +190,19 @@ int tcp::TCP_read_packet_name(int socket_fd, size_t name_len, std::string &name)
 
     std::memset(name_buff, 0, MAX_PACKET_NAME_SIZE);
     
-    int ret_code = SUCCESS;
-    if (tcp::TCP_read_packet(socket_fd, name_buff, name_len, read_length) != SUCCESS)
+    int ret_code = tcp::TCP_read_packet(socket_fd, name_buff, name_len, read_length);
+    if (ret_code != SUCCESS)
     {
-        ret_code = ERROR;
+        return ret_code;
     }
     if (ret_code == SUCCESS && (size_t)read_length != name_len)
     {
         err_func::error("read_length != name_len");
-        ret_code = ERROR;
+        ret_code = FAILURE;
     }
 
-    if (read_length > 0)
-        std::cout.write(name_buff, read_length);
+    // if (read_length > 0)
+    //     std::cout.write(name_buff, read_length);
 
     name = std::string(name_buff, name_len);
     return ret_code;

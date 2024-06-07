@@ -161,20 +161,20 @@ int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, P
     // DEAL_BUFF_SIZE is maximally equal to 50 - 4 bytes for packet name = DEAL
     // 2 bytes for end chars and maximally 44 bytes for deck of cards thus
     // we can read maximally DEAL_BUFF_SIZE - this->name.size() bytes
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_DEAL_BUFF_SIZE, read_length) != SUCCESS)
+    int ret_code = tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_DEAL_BUFF_SIZE, read_length);
+    if (ret_code != SUCCESS)
     {
-        return ERROR;
+        return ret_code;
     }
 
     if ((size_t)read_length < MIN_DEAL_BUFF_SIZE)
     {
         err_func::error(" read_length < MIN_DEAL_BUFF_SIZE");
-        return ERROR;
+        return FAILURE;
     }
 
     game_type = char_to_gameType(read_buff[0]);
     first_player_pos = char_to_playerPos(read_buff[1]);
-    std::cout << "game type: " << read_buff[0] << '\n';
 
     uint8_t value;
     Suit suit;
@@ -205,7 +205,7 @@ int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, P
     if (deck_of_cards.size() != 13)
     {
         err_func::error("Deck of cards size is not equal to 13");
-        return ERROR;
+        return FAILURE;
     }
 
     return SUCCESS;

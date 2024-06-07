@@ -173,7 +173,7 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     if ((size_t)read_length < MIN_TRICK_BUFF_SIZE)
     {
         err_func::error(" read_length < MIN_TRICK_BUFF_SIZE");
-        return ERROR;
+        return FAILURE;
     }
 
     uint8_t value;
@@ -193,7 +193,7 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     if (lewa.size() > MAX_LEWA_SIZE)
     {
         err_func::error("Lewa size > MAX_LEWA_SIZE");
-        return ERROR;
+        return FAILURE;
     }
     return SUCCESS;
 }
