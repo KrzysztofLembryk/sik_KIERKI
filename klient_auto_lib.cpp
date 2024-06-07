@@ -22,7 +22,7 @@ void print_log_address_and_packet_name(struct sockaddr &server_address,
                                         const std::string &packet_name, 
                                         bool did_client_send_this_msg)
 {
-    print_communication_addresses(server_address, client_address, did_client_send_this_msg);
+    communication_addresses_to_str(server_address, client_address, did_client_send_this_msg);
     std::cout.write(packet_name.data(), packet_name.size());
 }
 

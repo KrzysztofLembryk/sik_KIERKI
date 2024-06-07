@@ -19,6 +19,7 @@ sync_barrier(MAX_PLAYERS, [](){})
     this->card_counter.new_game(rounds[0].get_game_type());
     this->number_of_players_present = 0;
     this->is_game_started = false;
+    this->sem_print_msg = std::make_shared<std::binary_semaphore>(1);
 
     std::vector<PlayerPosition> player_pos({N, E, S, W});
 

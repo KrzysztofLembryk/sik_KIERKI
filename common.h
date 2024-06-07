@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include "enum_types.h"
 #include <vector>
+#include <string>
 
 uint16_t port_from_str_to_ul(char const *string);
 
@@ -29,6 +30,6 @@ uint8_t determine_value(std::vector<char> values);
 
 Suit determine_suit(char suit);
 
-void print_communication_addresses(const struct sockaddr &server_address, const struct sockaddr &client_address, bool client_sent_msg);
+std::string communication_addresses_to_str(const struct sockaddr &server_address, const struct sockaddr &client_address, bool client_sent_msg);
 
 #endif

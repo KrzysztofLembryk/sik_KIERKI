@@ -15,7 +15,7 @@ using BinSem_sp = std::shared_ptr<std::binary_semaphore>;
 int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
     struct sockaddr server_addr, struct sockaddr client_addr)
 {
-    print_communication_addresses(server_addr, client_addr, true);
+    communication_addresses_to_str(server_addr, client_addr, true);
     std::string packet_name;
     int ret_code_read_name = tcp::TCP_read_packet_name(client_fd, INGAME_PACKET_NAME_SIZE, packet_name); 
     // {
@@ -59,7 +59,7 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
         return ERROR;
     }
     // After we read trick packet, we can send WRONG msg
-    print_communication_addresses(server_addr, client_addr, false);
+    communication_addresses_to_str(server_addr, client_addr, false);
     ingame_comm_wrappers::WRONG_Wrapper wrong;
     cardCls::Lewa wrong_lewa(curr_round);
     wrong.write(client_fd, wrong_lewa);
@@ -109,12 +109,12 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
     {
         try 
         {
-            print_communication_addresses(player_sp->get_server_address(), player_sp->get_client_address(), false);
+            communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
 
             trick.write(client_fd, *(game_master_sp->get_curr_lewa()));
 
             // trick.read() sets lewa_id and adds cards to Lewa
-            print_communication_addresses(player_sp->get_server_address(), player_sp->get_client_address(), true);
+            communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), true);
 
             std::string packet_name;
             int ret_code_read_name = tcp::TCP_read_packet_name(client_fd, INGAME_PACKET_NAME_SIZE, packet_name); 
@@ -139,7 +139,7 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
 
             if (client_ret_lewa.size() != 1)
             {
-                print_communication_addresses(player_sp->get_server_address(), player_sp->get_client_address(), false);
+                communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
                 wrong.write(client_fd, lewa_with_good_id);
                 continue;
             }
@@ -153,7 +153,7 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
             // We check if sent card is in players deck and if its not played
             if (player_sp->check_card_correctness(client_ret_lewa.get_cards_in_lewa()[0], bottom_card_suit) != SUCCESS)
             {
-                print_communication_addresses(player_sp->get_server_address(), player_sp->get_client_address(), false);
+                communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
                 wrong.write(client_fd, lewa_with_good_id);
                 continue;
             }
@@ -295,7 +295,7 @@ void TCP_threads::TCPThread::TCP_thread_main(
                 std::cout << "Got msg: " << msg << "\n";
                 if (msg == "DEAL")
                 {
-                    print_communication_addresses(player_sp->get_server_address(), player_sp->get_client_address(), false);
+                    communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
 
                     if (handle_DEAL(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
                     {
@@ -316,7 +316,7 @@ void TCP_threads::TCPThread::TCP_thread_main(
                 {
                     std::cout << "TAKEN\n";
                     fflush(stdout);
-                    print_communication_addresses(player_sp->get_server_address(), player_sp->get_client_address(), false);
+                    communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
 
                     if (handle_TAKEN(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
                     {
@@ -325,7 +325,7 @@ void TCP_threads::TCPThread::TCP_thread_main(
                 }
                 else if (msg == "SCORE")
                 {
-                    print_communication_addresses(player_sp->get_server_address(), player_sp->get_client_address(), false);
+                    communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
 
                     if (handle_SCORE(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
                     {
@@ -334,7 +334,7 @@ void TCP_threads::TCPThread::TCP_thread_main(
                 }
                 else if (msg == "TOTAL")
                 {
-                    print_communication_addresses(player_sp->get_server_address(), player_sp->get_client_address(), false);
+                    communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
 
                     if (handle_TOTAL(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
                     {

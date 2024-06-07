@@ -17,6 +17,7 @@
 #include <chrono>
 #include <arpa/inet.h>
 #include <iomanip>
+#include <sstream>
 
 uint16_t port_from_str_to_ul(char const *string)
 {
@@ -307,7 +308,7 @@ Suit determine_suit(char suit)
     }
 }
 
-void print_communication_addresses(const struct sockaddr &server_address, const struct sockaddr &client_address, bool client_sent_msg)
+std::string communication_addresses_to_str(const struct sockaddr &server_address, const struct sockaddr &client_address, bool client_sent_msg)
 {
     auto now = std::chrono::high_resolution_clock::now();
     auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
@@ -315,6 +316,10 @@ void print_communication_addresses(const struct sockaddr &server_address, const 
     auto value = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
     std::time_t now_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::tm *now_tm = std::localtime(&now_time);
+    std::string res_msg;
+    std::stringstream ss;
+    ss << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S");
+    std::string time_str = ss.str();
 
     if (server_address.sa_family == AF_INET)
     {
@@ -329,12 +334,11 @@ void print_communication_addresses(const struct sockaddr &server_address, const 
 
         if (client_sent_msg)
         {
-            std::cout << "[" << c_ip_str << ":" << ntohs(client_addr_in->sin_port) << "," << s_ip_str << ":" << ntohs(server_addr_in->sin_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "] ";
+            res_msg = "[" + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in->sin_port)) + "," + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in->sin_port)) + "," + time_str + '.' + std::to_string(value.count() % 1000) + "] ";
         }
         else
         {
-
-            std::cout << "[" << s_ip_str << ":" << ntohs(server_addr_in->sin_port) << "," << c_ip_str << ":" << ntohs(client_addr_in->sin_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "] ";
+            res_msg = "[" + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in->sin_port)) + "," + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in->sin_port)) + "," + time_str + '.' + std::to_string(value.count() % 1000) + "] ";
         }
     }
     else if (server_address.sa_family == AF_INET6)
@@ -350,11 +354,12 @@ void print_communication_addresses(const struct sockaddr &server_address, const 
 
         if (client_sent_msg)
         {
-            std::cout << "[" << c_ip_str << ":" << ntohs(client_addr_in6->sin6_port) << "," << s_ip_str << ":" << ntohs(server_addr_in6->sin6_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "] ";
+            res_msg = "[" + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in6->sin6_port)) + "," + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in6->sin6_port)) + "," +  
+            time_str + '.' + std::to_string(value.count() % 1000) + "] ";
         }
         else
         {
-            std::cout << "[" << s_ip_str << ":" << ntohs(server_addr_in6->sin6_port) << "," << c_ip_str << ":" << ntohs(client_addr_in6->sin6_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "] ";
+            res_msg = "[" + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in6->sin6_port)) + "," + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in6->sin6_port)) + "," + time_str + '.' + std::to_string(value.count() % 1000) + "] ";
         }
     }
     else
@@ -362,4 +367,6 @@ void print_communication_addresses(const struct sockaddr &server_address, const 
         // Unexpected family
         exception_wrappers::runtime_err_wrapper("Unexpected family");
     }
+
+    return res_msg;
 }

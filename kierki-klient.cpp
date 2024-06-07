@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         }
 
         init_comm_wrappers::IAM_Wrapper iam;
-        print_communication_addresses(server_address, client_address, true);
+        communication_addresses_to_str(server_address, client_address, true);
         iam.write(socket_fd, chosen_position);
         if (a_option)
         {

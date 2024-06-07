@@ -74,6 +74,7 @@ namespace gm
         bool is_game_started;
         std::mutex mutex_gm;
         std::barrier<void(*)()> sync_barrier;
+        std::shared_ptr<std::binary_semaphore> sem_print_msg;
     };
 }
 

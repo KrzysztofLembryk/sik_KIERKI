@@ -69,7 +69,7 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     init_comm_wrappers::IAM_Wrapper iam_wrapper;
     PlayerPosition new_p_position;
 
-    print_communication_addresses(*(struct sockaddr *)&server_address, *(struct sockaddr *)&client_address, true);
+    communication_addresses_to_str(*(struct sockaddr *)&server_address, *(struct sockaddr *)&client_address, true);
     if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position) != SUCCESS)
     {
         std::cerr << "IAM read unsuccessful\n";
@@ -80,7 +80,7 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     {
         init_comm_wrappers::BUSY_Wrapper busy_wrapper;
         std::cerr << "Sending BUSY packet\n";
-        print_communication_addresses(*(struct sockaddr *)&server_address, *(struct sockaddr *)&client_address, false);
+        communication_addresses_to_str(*(struct sockaddr *)&server_address, *(struct sockaddr *)&client_address, false);
         busy_wrapper.write(client_fd_sp->to_int(), game_master_sp->get_taken_positions());
         return CONTINUE;
     }
