@@ -9,7 +9,7 @@
 
 uint16_t port_from_str_to_ul(char const *string);
 
-struct sockaddr_in get_server_address_ip4(char const *host, uint16_t port);
+// struct sockaddr_in get_server_address_ip4(char const *host, uint16_t port);
 struct sockaddr get_server_address(char const *host, uint16_t port, int &type_of_ip);
 
 ssize_t	readn(int fd, void *vptr, size_t n);
@@ -29,6 +29,6 @@ uint8_t determine_value(std::vector<char> values);
 
 Suit determine_suit(char suit);
 
-// GameType determine_game_type(char game_type);
+void print_communication_addresses(const struct sockaddr &server_address, const struct sockaddr &client_address, bool client_sent_msg);
 
 #endif

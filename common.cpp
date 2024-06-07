@@ -14,6 +14,9 @@
 #include "common.h"
 #include "exception_wrappers.h"
 #include "constants.h"
+#include <chrono>
+#include <arpa/inet.h>
+#include <iomanip>
 
 uint16_t port_from_str_to_ul(char const *string)
 {
@@ -27,31 +30,31 @@ uint16_t port_from_str_to_ul(char const *string)
     return (uint16_t)port;
 }
 
-struct sockaddr_in get_server_address_ip4(char const *host, uint16_t port)
-{
-    struct addrinfo hints;
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET; // IPv4
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
+// struct sockaddr_in get_server_address_ip4(char const *host, uint16_t port)
+// {
+//     struct addrinfo hints;
+//     memset(&hints, 0, sizeof(struct addrinfo));
+//     hints.ai_family = AF_INET; // IPv4
+//     hints.ai_socktype = SOCK_STREAM;
+//     hints.ai_protocol = IPPROTO_TCP;
 
-    struct addrinfo *address_result;
-    int errcode = getaddrinfo(host, NULL, &hints, &address_result);
-    if (errcode != 0)
-    {
-        err_func::fatal("getaddrinfo: %s", gai_strerror(errcode));
-    }
+//     struct addrinfo *address_result;
+//     int errcode = getaddrinfo(host, NULL, &hints, &address_result);
+//     if (errcode != 0)
+//     {
+//         err_func::fatal("getaddrinfo: %s", gai_strerror(errcode));
+//     }
 
-    struct sockaddr_in send_address;
-    send_address.sin_family = AF_INET; // IPv4
-    send_address.sin_addr.s_addr =     // IP address
-        ((struct sockaddr_in *)(address_result->ai_addr))->sin_addr.s_addr;
-    send_address.sin_port = htons(port); // port from the command line
+//     struct sockaddr_in send_address;
+//     send_address.sin_family = AF_INET; // IPv4
+//     send_address.sin_addr.s_addr =     // IP address
+//         ((struct sockaddr_in *)(address_result->ai_addr))->sin_addr.s_addr;
+//     send_address.sin_port = htons(port); // port from the command line
 
-    freeaddrinfo(address_result);
+//     freeaddrinfo(address_result);
 
-    return send_address;
-}
+//     return send_address;
+// }
 
 struct sockaddr get_server_address(char const *host, uint16_t port, 
 int &type_of_ip)
@@ -301,5 +304,62 @@ Suit determine_suit(char suit)
     else
     {
         exception_wrappers::invalid_arg_wrapper("Invalid card suit");
+    }
+}
+
+void print_communication_addresses(const struct sockaddr &server_address, const struct sockaddr &client_address, bool client_sent_msg)
+{
+    auto now = std::chrono::high_resolution_clock::now();
+    auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+    auto epoch = now_ms.time_since_epoch();
+    auto value = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
+    std::time_t now_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::tm *now_tm = std::localtime(&now_time);
+
+    if (server_address.sa_family == AF_INET)
+    {
+        // IPv4
+        struct sockaddr_in *server_addr_in = (struct sockaddr_in *)&server_address;
+        char s_ip_str[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(server_addr_in->sin_addr), s_ip_str, INET_ADDRSTRLEN);
+
+        struct sockaddr_in *client_addr_in = (struct sockaddr_in *)&client_address;
+        char c_ip_str[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(client_addr_in->sin_addr), c_ip_str, INET_ADDRSTRLEN);
+
+        if (client_sent_msg)
+        {
+            std::cout << "[" << c_ip_str << ":" << ntohs(client_addr_in->sin_port) << "," << s_ip_str << ":" << ntohs(server_addr_in->sin_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "]";
+        }
+        else
+        {
+
+            std::cout << "[" << s_ip_str << ":" << ntohs(server_addr_in->sin_port) << "," << c_ip_str << ":" << ntohs(client_addr_in->sin_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "]";
+        }
+    }
+    else if (server_address.sa_family == AF_INET6)
+    {
+        // IPv6
+        struct sockaddr_in6 *server_addr_in6 = (struct sockaddr_in6 *)&server_address;
+        char s_ip_str[INET6_ADDRSTRLEN];
+        inet_ntop(AF_INET6, &(server_addr_in6->sin6_addr), s_ip_str, INET6_ADDRSTRLEN);
+
+        struct sockaddr_in6 *client_addr_in6 = (struct sockaddr_in6 *)&client_address;
+        char c_ip_str[INET6_ADDRSTRLEN];
+        inet_ntop(AF_INET6, &(client_addr_in6->sin6_addr), c_ip_str, INET6_ADDRSTRLEN);
+
+        if (client_sent_msg)
+        {
+            std::cout << "[" << c_ip_str << ":" << ntohs(client_addr_in6->sin6_port) << "," << s_ip_str << ":" << ntohs(server_addr_in6->sin6_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "]";
+        }
+        else
+        {
+            std::cout << "[" << s_ip_str << ":" << ntohs(server_addr_in6->sin6_port) << "," << c_ip_str << ":" << ntohs(client_addr_in6->sin6_port) << "," << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << value.count() % 1000 << "]";
+        }
+    }
+    else
+    {
+        // Unexpected family
+        exception_wrappers::runtime_err_wrapper("Unexpected family");
     }
 }
