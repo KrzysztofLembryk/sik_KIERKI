@@ -60,7 +60,6 @@ klient_auto_lib.o: klient_auto_lib.cpp klient_auto_lib.h enum_types.h \
  init_comm_wrappers.h card_classes.h exception_wrappers.h constants.h \
  ingame_comm_wrappers.h TCP_handler.h common.h game_master.h \
  player_class.h game_classes.h
-main.o: main.cpp
 parameters_handling.o: parameters_handling.cpp parameters_handling.h \
  enum_types.h exception_wrappers.h err.h constants.h common.h \
  game_master.h player_class.h game_classes.h card_classes.h

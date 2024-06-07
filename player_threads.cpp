@@ -14,6 +14,30 @@ void signal_end_to_main_thread(int parent_pipe_write_fd)
     write(parent_pipe_write_fd, pipe_buffer, sizeof(pipe_buffer));
 }
 
+void create_TCP_thread(
+    std::shared_ptr<ClientFdWrapper> client_fd_sp,
+    std::shared_ptr<gm::GameMaster> game_master_sp,
+    std::shared_ptr<Player> player_sp,
+    int child_pipe_fd[2],
+    std::shared_ptr<std::binary_semaphore> semaphore_TCP,
+    std::shared_ptr<bool> thread_ended_sp)
+{
+    TCP_threads::TCPThread tcp_thread;
+
+    std::thread t(
+        [client_fd_sp, game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, tcp_thread]() mutable
+        {
+            tcp_thread.TCP_thread_main(client_fd_sp,
+                                       game_master_sp,
+                                       player_sp,
+                                       semaphore_TCP,
+                                       child_pipe_fd[PIPE_READ_DSCR],
+                                       thread_ended_sp);
+        });
+    t.detach();
+
+}
+
 void player_threads::MyThread::thread_main(
     std::shared_ptr<ClientFdWrapper> client_fd_sp,
     std::shared_ptr<gm::GameMaster> game_master_sp,
@@ -31,19 +55,7 @@ void player_threads::MyThread::thread_main(
     std::shared_ptr<std::binary_semaphore> semaphore_TCP = std::make_shared<std::binary_semaphore>(0);
     std::shared_ptr<bool> thread_ended_sp = std::make_shared<bool>(false);
 
-    TCP_threads::TCPThread tcp_thread;
-
-    std::thread t(
-        [client_fd_sp, game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, tcp_thread]() mutable
-        {
-            tcp_thread.TCP_thread_main(client_fd_sp,
-                                       game_master_sp,
-                                       player_sp,
-                                       semaphore_TCP,
-                                       child_pipe_fd[PIPE_READ_DSCR],
-                                       thread_ended_sp);
-        });
-    t.detach();
+    create_TCP_thread(client_fd_sp, game_master_sp, player_sp, child_pipe_fd, semaphore_TCP, thread_ended_sp);
 
     uint8_t nbr_of_rounds = game_master_sp->get_nbr_of_rounds();
     for (uint8_t i = 0; i < nbr_of_rounds; i++)

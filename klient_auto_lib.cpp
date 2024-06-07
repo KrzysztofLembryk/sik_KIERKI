@@ -145,10 +145,17 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                 {
                     return FAILURE;
                 }
-
-                auto bottom_card = lewa.get_cards_in_lewa()[0];
+                Suit bottom_card_suit;
+                if (lewa.size() > 0)
+                {
+                    bottom_card_suit = lewa.get_cards_in_lewa()[0].get_suit();
+                }
+                else
+                {
+                    bottom_card_suit = Suit::NONE_SUIT;
+                }
                 auto playerd_card = 
-                                player_sp->play_card(bottom_card.get_suit());
+                                player_sp->play_card(bottom_card_suit);
                 cardCls::Lewa ret_lewa(lewa.get_lewa_id());
 
                 ret_lewa.add_card(playerd_card);

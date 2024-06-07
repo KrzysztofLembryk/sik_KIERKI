@@ -184,6 +184,9 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     determine_lewa_id(i, read_buff, lewa, curr_round);
     // We can substract - 3 from read_length since we know that read_length is 
     // >= MIN_TRICK_BUFF_SIZE == 3
+    std::cout << "trick read: \n";
+    std::cout << "Read length: " << read_length << '\n';
+    std::cout << "i: " << i << '\n';
     while (i < (size_t)read_length - 2)
     {
         parse_char_and_add_card_to_lewa(read_buff, i, lewa, char_val_vec, value, suit);

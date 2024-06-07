@@ -47,7 +47,8 @@ enum Suit : char
     HEARTS = 'H',
     DIAMONDS = 'D',
     CLUBS = 'C',
-    SPADES = 'S'
+    SPADES = 'S',
+    NONE_SUIT = 'X',
 };
 
 #endif // ENUM_TYPES_H`
