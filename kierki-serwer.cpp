@@ -72,7 +72,7 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     print_communication_addresses(*(struct sockaddr *)&server_address, *(struct sockaddr *)&client_address, true);
     if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position) != SUCCESS)
     {
-        std::cerr << "IAM read unsucessful\n";
+        std::cerr << "IAM read unsuccessful\n";
         return CONTINUE;
     }
 
@@ -90,7 +90,6 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     }
 
     player_threads::MyThread my_thread;
-    std::cout << "Starting thread\n";
     fflush(stdout);
     std::thread t(
         [client_fd_sp, game_master_sp, new_p_position, pipe_write_fd, my_thread]() mutable {
@@ -168,8 +167,6 @@ int main(int ac, char *av[])
                 }
                 if (poll_descriptors[TCP_SOCKET_POLLS_ID].revents & POLLIN)
                 {
-                    std::cout << "New connection\n";
-                    fflush(stdout);
                     try
                     {
                         if (handle_game_joining_request(socket_fd, timeout, game_master_sp, pipe_fd[PIPE_WRITE_DSCR], server_address) != SUCCESS)
@@ -195,7 +192,6 @@ int main(int ac, char *av[])
         }
     }
 
-    std::cout << "Closing server\n";
     close(socket_fd);
     close(pipe_fd[PIPE_READ_DSCR]);
     close(pipe_fd[PIPE_WRITE_DSCR]);

@@ -138,6 +138,7 @@ void init_comm_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type ,
     std::vector<char> msg_vec(name);
     std::vector<char> game_type_and_first_player_pos;
 
+    std::cout << "DEAL write, gametype: " << (unsigned)game_type << "\n";
     game_type_and_first_player_pos.push_back(gameType_to_char(game_type));
     game_type_and_first_player_pos.push_back(playerPos_to_char(first_player_pos));
 

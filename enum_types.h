@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <iostream>
 
-enum GameType : uint8_t
+enum GameType 
 {
     NO_LEWA = 1,
     NO_HEART,

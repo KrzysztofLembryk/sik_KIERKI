@@ -63,15 +63,29 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
     while (true)
     {
         std::string packet_name;
+        int ret_val_read_name;
 
-        int ret_val_read_name = handle_read_packet_name(
-                                            socket_fd, 
-                                            packet_name, 
-                                            player_sp->get_server_address(), 
-                                            player_sp->get_client_address(), 
-                                            INGAME_PACKET_NAME_SIZE, 
-                                            MAX_TOTAL_BUFF_SIZE);
+        if (got_score && got_total)
+        {
+            ret_val_read_name = handle_read_packet_name(
+                                                socket_fd, 
+                                                packet_name, 
+                                                player_sp->get_server_address(), 
+                                                player_sp->get_client_address(), 
+                                                INIT_PACKET_NAME_SIZE, 
+                                                MAX_DEAL_BUFF_SIZE);
+        }
+        else 
+        {
+            ret_val_read_name = handle_read_packet_name(
+                                                socket_fd, 
+                                                packet_name, 
+                                                player_sp->get_server_address(), 
+                                                player_sp->get_client_address(), 
+                                                INGAME_PACKET_NAME_SIZE, 
+                                                MAX_TOTAL_BUFF_SIZE);
 
+        }
         if (ret_val_read_name == CONTINUE)
             continue;
         else if (ret_val_read_name != SUCCESS)
@@ -83,8 +97,42 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
             }
             return ret_val_read_name;
         }
-        
-        if (packet_name == "TRICK")
+
+        if (packet_name == "DEAL") 
+        {
+            init_comm_wrappers::DEAL_Wrapper deal;
+            GameType game_type;
+            PlayerPosition first_player_pos;
+            cardCls::DeckOfCards my_hand;
+
+            try 
+            {
+                print_log_address_and_packet_name(server_address, client_address, packet_name, false);
+
+                int ret_val_deal = deal.read(socket_fd, game_type, first_player_pos, my_hand); 
+                if (ret_val_deal == FAILURE)
+                {
+                    continue;
+                }
+                else if (ret_val_deal != SUCCESS)
+                {
+                    return FAILURE;
+                }
+
+                curr_lewa_id = 1;
+                got_score = false;
+                got_total = false;
+                player_sp->set_game_type(game_type);
+                player_sp->set_hand(my_hand);
+                player_sp->clea_lewas_taken();
+            }
+            catch (std::exception &e)
+            {
+                std::cerr << e.what() << "\n";
+                continue;
+            }
+        }
+        else if (packet_name == "TRICK")
         {
             ingame_comm_wrappers::TRICK_Wrapper trick;
             cardCls::Lewa lewa;
@@ -192,6 +240,12 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                 else if (ret_val_total != SUCCESS)
                 {
                     return FAILURE;
+                }
+                player_sp->add_points_from_round_to_allpoints();
+
+                if (total_scores[player_sp->get_position()] != player_sp->get_all_points())
+                {
+                    throw std::runtime_error("Total points are not equal to the points from the round");
                 }
 
                 got_total = true;

@@ -20,7 +20,6 @@ void player_threads::MyThread::thread_main(
     std::shared_ptr<Player> player_sp,
     int parent_pipe_write_fd)
 {
-    std::cout << "Thread started\n";
     int child_pipe_fd[2];
     char pipe_buff[INGAME_PACKET_NAME_SIZE];
 
@@ -52,10 +51,12 @@ void player_threads::MyThread::thread_main(
         // We need to check if game has started. If not we need to wait for all
         // other players, if it has and we are here it means that we are a new
         // player and we connected after sbs has disconnected
-        if (!game_master_sp->check_if_game_started())
-            game_master_sp->wait_for_game_start();
+        std::cout << "Waiting on BARRIER\n";
+        fflush(stdout);
+        game_master_sp->wait_for_game_start();
 
         // Here we send DEAL to All players
+        std::cout << "PLAYER THREAD sending DEAL\n";
         btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "DEAL");
         semaphore_TCP->acquire();
 

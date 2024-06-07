@@ -10,6 +10,7 @@
 #include "parameters_handling.h"
 #include "socket_fd_handler.h"
 #include "player_class.h"
+#include "klient_auto_lib.h"
 
 int init_client(int argc,
                 char *argv[],
@@ -102,11 +103,11 @@ int main(int argc, char *argv[])
         iam.write(socket_fd, chosen_position);
         if (a_option)
         {
-
+            klient_auto_func::klient_auto_main(server_address, client_address, socket_fd, chosen_position);
         }
         else 
         {
-
+            klient_auto_func::klient_auto_main(server_address, client_address, socket_fd, chosen_position);
         }
     }
     catch (std::exception &e)

@@ -76,8 +76,6 @@ void socket_func::handle_server_socket_init(uint16_t &port,
     server_address.sin6_port = htons(port);
 
     // Now we need to bind created address to our socket.
-    std::cout << "Binding to port " << port << "\n";
-
     if (bind(socket_fd, (struct sockaddr *)(&server_address),
              (socklen_t)sizeof(server_address)) < 0)
     {

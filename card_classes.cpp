@@ -15,7 +15,6 @@ std::vector<char> cardVec_to_charVec(std::vector<cardCls::CardClassWrapper> card
         if (value >= 2 && value < 10)
         {
             deck.push_back(std::to_string(value)[0]);
-            // std::cout << "value of card in cardVec_to_charVec: " << std::to_string(value)[0] << "\n";
         }
         else if (value == 10)
         {
@@ -220,6 +219,7 @@ cardCls::CardClassWrapper cardCls::DeckOfCards::play_card(Suit bottom_card_suit)
             return pair.first;
         }
     }
+    return CardClassWrapper(Suit::CLUBS, 0);
 }
 
 size_t cardCls::DeckOfCards::size() const

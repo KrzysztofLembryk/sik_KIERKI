@@ -105,6 +105,11 @@ void Player::add_lewa_to_lewas_taken(cardCls::Lewa &lewa)
     lewas_taken.push_back(lewa);
 }
 
+void Player::clea_lewas_taken()
+{
+    lewas_taken.clear();
+}
+
 cardCls::CardClassWrapper Player::play_card(Suit bottom_card_suit)
 {
     return hand.play_card(bottom_card_suit);

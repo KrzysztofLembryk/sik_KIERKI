@@ -72,6 +72,8 @@ int handle_DEAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::s
     fflush(stdout);
     auto p_hand = game_master_sp->get_player_deck(player_sp->get_position());
     player_sp->set_hand(p_hand);
+    std::cout << "Setting player game type: " << (unsigned)game_master_sp->get_game_type() << "\n";
+    fflush(stdout);
     player_sp->set_game_type(game_master_sp->get_game_type());
 
     init_comm_wrappers::DEAL_Wrapper deal;
@@ -85,6 +87,8 @@ int handle_DEAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::s
     {
         std::cerr << e.what() << '\n';
 
+        std::cout << "Realising Player thread, ending TCP thread\n";
+        fflush(stdout);
         (*thread_ended_sp) = true;
         semaphore_TCP->release();
 
