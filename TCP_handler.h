@@ -15,7 +15,7 @@ namespace tcp
         ssize_t &read_length);
     
     int TCP_read_till_newline(int socket_fd, char *buff, size_t data_size, 
-        ssize_t &total_bytes_read);
+        ssize_t &total_bytes_read, std::string &msg);
     
     int TCP_read_packet_name(int socket_fd, size_t name_len, std::string &name);
 }

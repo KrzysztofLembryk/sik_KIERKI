@@ -104,7 +104,7 @@ void add_rn_to_buff_if_needed(size_t &read_bytes, char *buff, size_t data_size)
 
 
 int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size, 
-    ssize_t &total_bytes_read)
+    ssize_t &total_bytes_read, std::string &msg)
 {
     total_bytes_read = 0;
     size_t read_bytes = 0;
@@ -161,7 +161,8 @@ int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size,
     }
 
     add_rn_to_buff_if_needed(read_bytes, buff, data_size);
-    std::cout.write(buff, read_bytes);
+    msg = std::string(buff, read_bytes);
+    // std::cout.write(buff, read_bytes);
 
     if (ret_code != SUCCESS)
     {
