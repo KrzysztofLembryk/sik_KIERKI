@@ -38,7 +38,7 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
         if (client_trick.read(client_fd, lewa, curr_round) != SUCCESS)
         {
             // end connection
-            err_func::error("ENDING CONNECTION - GOT ERROR WHILE READING TRICK - sent trick packet was invalid");
+            // err_func::error("ENDING CONNECTION - GOT ERROR WHILE READING TRICK - sent trick packet was invalid");
             return ERROR;
         }
         if (packet_name != "TRICK")

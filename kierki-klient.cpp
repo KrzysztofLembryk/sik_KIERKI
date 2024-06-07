@@ -95,4 +95,8 @@ int main(int argc, char *argv[])
         return FAILURE;
     }
 
+    init_comm_wrappers::IAM_Wrapper iam;
+    print_communication_addresses(server_address, client_address, true);
+    iam.write(socket_fd, chosen_position);
+
 }

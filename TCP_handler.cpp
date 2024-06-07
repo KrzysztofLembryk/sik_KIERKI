@@ -49,7 +49,8 @@ int tcp::TCP_read_packet(int socket_fd, char *buff, size_t data_size,
     else if (read_length == 0) 
     {
         // exception_wrappers::runtime_err_wrapper(" - connection closed read_len == 0");
-        return ERROR;
+        err_func::error(" - connection closed read_len == 0");
+        return DISCONNECTED;
     }
     return SUCCESS;
 }
@@ -134,8 +135,8 @@ int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size,
         else if (read_length == 0) 
         {
             // exception_wrappers::runtime_err_wrapper("read_len == 0 -- no newline found in packet name or sent packet is to short or connection was closed");
-            err_func::error("read_len == 0 -- no newline found in packet name or sent packet is to short or connection was closed");
-            ret_code = ERROR;
+            err_func::error("read_len == 0 -- client DISCONNECTED or packet was too short and didnt end with \\n");
+            ret_code = DISCONNECTED;
             break;
         }
 
@@ -161,6 +162,11 @@ int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size,
 
     add_rn_to_buff_if_needed(read_bytes, buff, data_size);
     std::cout.write(buff, read_bytes);
+
+    if (ret_code != SUCCESS)
+    {
+        return ret_code;
+    }
     // Sent packet must end with \n, thus this needs to be last character we 
     // read, otherwise packet is invalid
     if (curr_char != '\n')
@@ -189,7 +195,7 @@ int tcp::TCP_read_packet_name(int socket_fd, size_t name_len, std::string &name)
     {
         ret_code = ERROR;
     }
-    if ((size_t)read_length != name_len)
+    if (ret_code == SUCCESS && (size_t)read_length != name_len)
     {
         err_func::error("read_length != name_len");
         ret_code = ERROR;

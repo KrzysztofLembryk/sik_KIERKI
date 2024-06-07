@@ -21,6 +21,7 @@ namespace po = boost::program_options;
 #include "ingame_comm_wrappers.h"
 #include "player_threads.h"
 #include "polls_func.h"
+#include "common.h"
 
 int init_server(int ac, char *av[], po::variables_map &vm,
                 uint16_t &port, unsigned &timeout, std::string &file_name,
@@ -51,7 +52,7 @@ void print_client_address(struct sockaddr_in6 &client_address)
     printf("accepted connection from %s:%" PRIu16 "\n", client_ip, client_port);
 }
 
-int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr<gm::GameMaster> game_master_sp, int pipe_write_fd)
+int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr<gm::GameMaster> game_master_sp, int pipe_write_fd, struct sockaddr_in6 &server_address)
 {
     struct sockaddr_in6 client_address;
     socklen_t client_address_len = sizeof client_address;
@@ -68,6 +69,7 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     init_comm_wrappers::IAM_Wrapper iam_wrapper;
     PlayerPosition new_p_position;
 
+    print_communication_addresses(*(struct sockaddr *)&server_address, *(struct sockaddr *)&client_address, true);
     if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position) != SUCCESS)
     {
         std::cerr << "IAM read unsucessful\n";
@@ -78,6 +80,7 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     {
         init_comm_wrappers::BUSY_Wrapper busy_wrapper;
         std::cerr << "Sending BUSY packet\n";
+        print_communication_addresses(*(struct sockaddr *)&server_address, *(struct sockaddr *)&client_address, false);
         busy_wrapper.write(client_fd_sp->to_int(), game_master_sp->get_taken_positions());
         return CONTINUE;
     }
@@ -167,7 +170,7 @@ int main(int ac, char *av[])
                 {
                     std::cout << "New connection\n";
                     fflush(stdout);
-                    if (handle_game_joining_request(socket_fd, timeout, game_master_sp, pipe_fd[PIPE_WRITE_DSCR]) != SUCCESS)
+                    if (handle_game_joining_request(socket_fd, timeout, game_master_sp, pipe_fd[PIPE_WRITE_DSCR], server_address) != SUCCESS)
                     {
                         continue;
                     }
