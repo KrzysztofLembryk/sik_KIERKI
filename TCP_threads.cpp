@@ -38,7 +38,7 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
     {
         int ret_code = client_trick.read(client_fd, lewa, curr_round, msg_str);
 
-        print_log_from_read(addreses_str, packet_name, msg_str, game_master_sp);
+        print_log_from_read_thread_safe(addreses_str, packet_name, msg_str, game_master_sp);
 
         if (ret_code != SUCCESS)
         {
@@ -57,7 +57,7 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
     catch (const std::exception &e)
     {
         // end connection
-        print_log_from_read(addreses_str, packet_name, msg_str, game_master_sp);
+        print_log_from_read_thread_safe(addreses_str, packet_name, msg_str, game_master_sp);
         err_func::error("ENDING CONNECTION -- GOT EXCEPTION WHILE READING TRICK - sent trick packet was invalid - either value or suit was not allowed character");
         return ERROR;
     }
@@ -66,7 +66,7 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
     ingame_comm_wrappers::WRONG_Wrapper wrong;
     cardCls::Lewa wrong_lewa(curr_round);
     wrong.write(client_fd, wrong_lewa, msg_str);
-    print_log_from_write(addreses_str, msg_str, game_master_sp);
+    print_log_from_write_thread_safe(addreses_str, msg_str, game_master_sp);
 
     return SUCCESS;
 }
@@ -85,13 +85,13 @@ int handle_DEAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::s
     {
         deal.write(client_fd, game_master_sp->get_game_type(), game_master_sp->get_whose_turn(), 
         player_sp->get_hand(), msg);
-        print_log_from_write(address_str, msg, game_master_sp);
+        print_log_from_write_thread_safe(address_str, msg, game_master_sp);
     }
     catch (const std::exception &e)
     {
         std::cerr << e.what() << '\n';
 
-        print_log_from_write(address_str, msg, game_master_sp);
+        print_log_from_write_thread_safe(address_str, msg, game_master_sp);
 
         (*thread_ended_sp) = true;
         semaphore_TCP->release();
@@ -119,7 +119,7 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
             address_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
 
             trick.write(client_fd, *(game_master_sp->get_curr_lewa()), msg_str);
-            print_log_from_write(address_str, msg_str, game_master_sp);
+            print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
             // trick.read() sets lewa_id and adds cards to Lewa
 
             address_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), true);
@@ -129,7 +129,7 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
             cardCls::Lewa client_ret_lewa;
             int ret_code = trick.read(client_fd, client_ret_lewa, game_master_sp->get_curr_round_nbr(), msg_str);
 
-            print_log_from_read(address_str, packet_name, msg_str, game_master_sp);
+            print_log_from_read_thread_safe(address_str, packet_name, msg_str, game_master_sp);
 
             if(ret_code_read_name != SUCCESS || ret_code != SUCCESS)
             {
@@ -151,7 +151,7 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
                 address_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
                 wrong.write(client_fd, lewa_with_good_id, msg_str);
 
-                print_log_from_write(address_str, msg_str, game_master_sp);
+                print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
                 continue;
             }
 
@@ -167,7 +167,7 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
                 address_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
                 wrong.write(client_fd, lewa_with_good_id, msg_str);
 
-                print_log_from_write(address_str, msg_str, game_master_sp);
+                print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
                 continue;
             }
 
@@ -211,7 +211,7 @@ int handle_TAKEN(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
         }
         taken.write(client_fd, curr_lewa, game_master_sp->get_who_won_lewa(), msg_str);
 
-        print_log_from_write(address_str, msg_str, game_master_sp);
+        print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
     }
     catch (const std::exception &e)
     {
@@ -219,7 +219,7 @@ int handle_TAKEN(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
 
         (*thread_ended_sp) = true;
         semaphore_TCP->release();
-        print_log_from_write(address_str, msg_str, game_master_sp);
+        print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
 
         return ERROR;
     }
@@ -239,13 +239,13 @@ int handle_SCORE(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
     try 
     {
         score.write(client_fd, game_master_sp->get_player_scores(), msg_str);
-        print_log_from_write(address_str, msg_str, game_master_sp);
+        print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
         player_sp->add_points_from_round_to_allpoints();
     }
     catch (const std::exception &e)
     {
         std::cerr << e.what() << '\n';
-        print_log_from_write(address_str, msg_str, game_master_sp);
+        print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
 
         (*thread_ended_sp) = true;
         semaphore_TCP->release();
@@ -269,12 +269,12 @@ int handle_TOTAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
     try 
     {
         total.write(client_fd, game_master_sp->get_player_all_points(), msg_str);
-        print_log_from_write(address_str, msg_str, game_master_sp);
+        print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
     }
     catch (const std::exception &e)
     {
         std::cerr << e.what() << '\n';
-        print_log_from_write(address_str, msg_str, game_master_sp);
+        print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
 
         (*thread_ended_sp) = true;
         semaphore_TCP->release();
@@ -317,14 +317,12 @@ void TCP_threads::TCPThread::TCP_thread_main(
 
         if (poll_status > 0)
         {
-            std::cout << "TCP thread got sth on polls\n";
             // First we check if we got END signal from threads, and if not
             // then we can check if we got any new connections.
             if (poll_descriptors[PIPE_POLLS_ID].revents & POLLIN)
             {
                 std::string msg;
                 polls_func::handle_polls_read(parent_pipe_read_fd, msg, true);
-                std::cout << "Got msg: " << msg << "\n";
                 if (msg == "DEAL")
                 {
                     if (handle_DEAL(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)

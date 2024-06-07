@@ -21,7 +21,8 @@ player_class.o player_threads.o game_master.o klient_auto_lib.o
 
 
 TCP_handler.o: TCP_handler.cpp TCP_handler.h err.h exception_wrappers.h \
- common.h enum_types.h constants.h
+ common.h enum_types.h game_master.h player_class.h game_classes.h \
+ card_classes.h constants.h
 TCP_threads.o: TCP_threads.cpp TCP_threads.h game_master.h player_class.h \
  game_classes.h card_classes.h enum_types.h exception_wrappers.h \
  socket_fd_handler.h constants.h polls_func.h ingame_comm_wrappers.h \
@@ -30,7 +31,8 @@ btwn_thread_comm.o: btwn_thread_comm.cpp btwn_thread_comm.h constants.h \
  exception_wrappers.h
 card_classes.o: card_classes.cpp card_classes.h enum_types.h \
  exception_wrappers.h constants.h
-common.o: common.cpp err.h common.h enum_types.h exception_wrappers.h \
+common.o: common.cpp err.h common.h enum_types.h game_master.h \
+ player_class.h game_classes.h card_classes.h exception_wrappers.h \
  constants.h
 err.o: err.cpp err.h
 exception_wrappers.o: exception_wrappers.cpp exception_wrappers.h
@@ -40,15 +42,15 @@ game_master.o: game_master.cpp game_master.h player_class.h \
  game_classes.h card_classes.h enum_types.h exception_wrappers.h \
  constants.h
 ingame_comm_wrappers.o: ingame_comm_wrappers.cpp ingame_comm_wrappers.h \
- card_classes.h enum_types.h exception_wrappers.h common.h TCP_handler.h \
- constants.h err.h
+ card_classes.h enum_types.h exception_wrappers.h common.h game_master.h \
+ player_class.h game_classes.h TCP_handler.h constants.h err.h
 init_comm_wrappers.o: init_comm_wrappers.cpp init_comm_wrappers.h \
  card_classes.h enum_types.h exception_wrappers.h constants.h common.h \
- err.h TCP_handler.h
-kierki-klient.o: kierki-klient.cpp common.h enum_types.h \
- exception_wrappers.h init_comm_wrappers.h card_classes.h constants.h \
- ingame_comm_wrappers.h TCP_handler.h err.h parameters_handling.h \
- socket_fd_handler.h player_class.h game_classes.h klient_auto_lib.h
+ game_master.h player_class.h game_classes.h err.h TCP_handler.h
+kierki-klient.o: kierki-klient.cpp common.h enum_types.h game_master.h \
+ player_class.h game_classes.h card_classes.h exception_wrappers.h \
+ init_comm_wrappers.h constants.h ingame_comm_wrappers.h TCP_handler.h \
+ err.h parameters_handling.h socket_fd_handler.h klient_auto_lib.h
 kierki-serwer.o: kierki-serwer.cpp parameters_handling.h enum_types.h \
  constants.h exception_wrappers.h read_file.h game_classes.h \
  card_classes.h game_master.h player_class.h init_comm_wrappers.h \
@@ -56,11 +58,12 @@ kierki-serwer.o: kierki-serwer.cpp parameters_handling.h enum_types.h \
  common.h
 klient_auto_lib.o: klient_auto_lib.cpp klient_auto_lib.h enum_types.h \
  init_comm_wrappers.h card_classes.h exception_wrappers.h constants.h \
- ingame_comm_wrappers.h TCP_handler.h common.h player_class.h \
- game_classes.h
+ ingame_comm_wrappers.h TCP_handler.h common.h game_master.h \
+ player_class.h game_classes.h
 main.o: main.cpp
 parameters_handling.o: parameters_handling.cpp parameters_handling.h \
- enum_types.h exception_wrappers.h err.h constants.h common.h
+ enum_types.h exception_wrappers.h err.h constants.h common.h \
+ game_master.h player_class.h game_classes.h card_classes.h
 player_class.o: player_class.cpp player_class.h game_classes.h \
  card_classes.h enum_types.h exception_wrappers.h constants.h
 player_threads.o: player_threads.cpp player_threads.h socket_fd_handler.h \
@@ -70,7 +73,8 @@ player_threads.o: player_threads.cpp player_threads.h socket_fd_handler.h \
 polls_func.o: polls_func.cpp polls_func.h exception_wrappers.h \
  constants.h err.h
 read_file.o: read_file.cpp read_file.h game_classes.h card_classes.h \
- enum_types.h exception_wrappers.h constants.h common.h
+ enum_types.h exception_wrappers.h constants.h common.h game_master.h \
+ player_class.h
 socket_fd_handler.o: socket_fd_handler.cpp socket_fd_handler.h \
  exception_wrappers.h err.h constants.h
 tests.o: tests.cpp card_classes.h enum_types.h exception_wrappers.h

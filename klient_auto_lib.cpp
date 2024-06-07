@@ -6,24 +6,16 @@
 #include "common.h"
 #include <memory>
 #include "player_class.h"
+#include "game_master.h"
 
-void just_read_rest_of_wrong_packet(int socket_fd, size_t data_size)
+void just_read_rest_of_wrong_packet(int socket_fd, size_t data_size, std::string &msg_str)
 {
     char *buff = new char[data_size];
     ssize_t total_bytes_read = 0;
 
-    tcp::TCP_read_till_newline(socket_fd, buff, data_size, total_bytes_read);
+    tcp::TCP_read_till_newline(socket_fd, buff, data_size, total_bytes_read, msg_str);
 
     delete[] buff;
-}
-
-void print_log_address_and_packet_name(struct sockaddr &server_address, 
-                                        struct sockaddr &client_address, 
-                                        const std::string &packet_name, 
-                                        bool did_client_send_this_msg)
-{
-    communication_addresses_to_str(server_address, client_address, did_client_send_this_msg);
-    std::cout.write(packet_name.data(), packet_name.size());
 }
 
 int handle_read_packet_name(int socket_fd, std::string &packet_name, 
@@ -31,6 +23,8 @@ struct sockaddr server_address, struct sockaddr client_address,
 size_t packet_name_size, size_t data_size)
 {
     ssize_t read_length;
+    std::string msg_str;
+    std::string address_str = communication_addresses_to_str(server_address, client_address, false);
 
     int ret_val_read_name = tcp::TCP_read_packet_name(socket_fd, packet_name_size, packet_name);
 
@@ -40,9 +34,9 @@ size_t packet_name_size, size_t data_size)
     }
     if (ret_val_read_name == FAILURE)
     {
-        print_log_address_and_packet_name(server_address, client_address, packet_name, false);
         // Server sent wrong packet - we ignore it
-        just_read_rest_of_wrong_packet(socket_fd, data_size);
+        just_read_rest_of_wrong_packet(socket_fd, data_size, msg_str);
+        print_log_from_read(address_str, packet_name, msg_str);
         return CONTINUE;
     }
     if (ret_val_read_name != SUCCESS)
@@ -63,6 +57,8 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
     while (true)
     {
         std::string packet_name;
+        std::string addreses_str = communication_addresses_to_str(server_address, client_address, false);
+        std::string msg_str;
         int ret_val_read_name;
 
         if (got_score && got_total)
@@ -107,9 +103,9 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
 
             try 
             {
-                print_log_address_and_packet_name(server_address, client_address, packet_name, false);
+                int ret_val_deal = deal.read(socket_fd, game_type, first_player_pos, my_hand, msg_str); 
+                print_log_from_read(addreses_str, packet_name, msg_str);
 
-                int ret_val_deal = deal.read(socket_fd, game_type, first_player_pos, my_hand); 
                 if (ret_val_deal == FAILURE)
                 {
                     continue;
@@ -129,6 +125,7 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
             catch (std::exception &e)
             {
                 std::cerr << e.what() << "\n";
+                print_log_from_read(addreses_str, packet_name, msg_str);
                 continue;
             }
         }
@@ -138,9 +135,8 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
             cardCls::Lewa lewa;
             try 
             {
-                print_log_address_and_packet_name(server_address, client_address, packet_name, false);
-
-                int ret_val_trick = trick.read(socket_fd, lewa, curr_lewa_id);
+                int ret_val_trick = trick.read(socket_fd, lewa, curr_lewa_id, msg_str);
+                print_log_from_read(addreses_str, packet_name, msg_str);
                 if (ret_val_trick == FAILURE)
                 {
                     continue;
@@ -156,10 +152,10 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                 cardCls::Lewa ret_lewa(lewa.get_lewa_id());
 
                 ret_lewa.add_card(playerd_card);
+                addreses_str = communication_addresses_to_str(server_address, client_address, true);
+                trick.write(socket_fd, ret_lewa, msg_str);
 
-                print_log_address_and_packet_name(server_address, client_address, packet_name, true);
-
-                trick.write(socket_fd, ret_lewa);
+                print_log_from_write(addreses_str, msg_str);
             }
             catch (std::exception &e)
             {
@@ -174,9 +170,8 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
             PlayerPosition player_who_took_lewa;
             try
             {
-                print_log_address_and_packet_name(server_address, client_address, packet_name, false);
-
-                int ret_val_taken = taken.read(socket_fd, lewa, player_who_took_lewa, curr_lewa_id);
+                int ret_val_taken = taken.read(socket_fd, lewa, player_who_took_lewa, curr_lewa_id, msg_str);
+                print_log_from_read(addreses_str, packet_name, msg_str);
 
                 if (ret_val_taken == FAILURE)
                 {
@@ -206,8 +201,9 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
             std::map<PlayerPosition, uint8_t> scores;
             try 
             {
-                print_log_address_and_packet_name(server_address, client_address, packet_name, false);
-                int ret_val_score = score.read(socket_fd, scores);
+                int ret_val_score = score.read(socket_fd, scores, msg_str);
+                print_log_from_read(addreses_str, packet_name, msg_str);
+
                 if (ret_val_score == FAILURE)
                 {
                     continue;
@@ -230,9 +226,8 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
             std::map<PlayerPosition, uint32_t> total_scores;
             try
             {
-                print_log_address_and_packet_name(server_address, client_address, packet_name, false);
-
-                int ret_val_total = total.read(socket_fd, total_scores);
+                int ret_val_total = total.read(socket_fd, total_scores, msg_str);
+                print_log_from_read(addreses_str, packet_name, msg_str);
                 if (ret_val_total == FAILURE)
                 {
                     continue;
@@ -258,17 +253,16 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
         }
         else if (packet_name == "WRONG")
         {
-            print_log_address_and_packet_name(server_address, client_address, packet_name, false);
-
             ingame_comm_wrappers::WRONG_Wrapper wrong;
             cardCls::Lewa lewa(curr_lewa_id);
-            wrong.read(socket_fd, lewa, curr_lewa_id);
+            wrong.read(socket_fd, lewa, curr_lewa_id, msg_str);
+            print_log_from_read(addreses_str, packet_name, msg_str);
         }
         else 
         {
             // Wrong packet name given by server we ignore
-            print_log_address_and_packet_name(server_address, client_address, packet_name, false);
-            just_read_rest_of_wrong_packet(socket_fd, MAX_TOTAL_BUFF_SIZE);
+            just_read_rest_of_wrong_packet(socket_fd, MAX_TOTAL_BUFF_SIZE, msg_str);
+            print_log_from_read(addreses_str, packet_name, msg_str);
         }
 
     }
@@ -283,8 +277,10 @@ int klient_auto_func::klient_auto_main(
     while (true)
     {
         std::string packet_name;
-
+        std::string msg_str;
+        std::string addreses_str = communication_addresses_to_str(server_address, client_address, false);
         int ret_val_read_name = handle_read_packet_name(socket_fd, packet_name, server_address, client_address, INIT_PACKET_NAME_SIZE, MAX_DEAL_BUFF_SIZE);
+
         if (ret_val_read_name == CONTINUE)
             continue;
         else if (ret_val_read_name != SUCCESS)
@@ -296,21 +292,20 @@ int klient_auto_func::klient_auto_main(
             std::vector<PlayerPosition> busy_positions;
             try 
             {
-                print_log_address_and_packet_name(server_address, client_address, packet_name, false);
-
-                int ret_busy_val = busy.read(socket_fd, busy_positions);
+                int ret_busy_val = busy.read(socket_fd, busy_positions, msg_str);
+                print_log_from_read(addreses_str, packet_name, msg_str);
                 ret_busy_val = FAILURE;
                 return ret_busy_val;
             }
             catch (std::exception &e)
             {
+                print_log_from_read(addreses_str, packet_name, msg_str);
                 std::cerr << e.what() << "\n";
                 return FAILURE;
             }
         }
         else if (packet_name == "DEAL")
         {
-            print_log_address_and_packet_name(server_address, client_address, packet_name, false);
 
             init_comm_wrappers::DEAL_Wrapper deal;
             GameType game_type;
@@ -319,7 +314,8 @@ int klient_auto_func::klient_auto_main(
 
             try 
             {
-                int ret_val_deal = deal.read(socket_fd, game_type, first_player_pos, my_hand); 
+                int ret_val_deal = deal.read(socket_fd, game_type, first_player_pos, my_hand, msg_str); 
+                print_log_from_read(addreses_str, packet_name, msg_str);
                 if (ret_val_deal == FAILURE)
                 {
                     continue;
@@ -331,6 +327,7 @@ int klient_auto_func::klient_auto_main(
             }
             catch (std::exception &e)
             {
+                print_log_from_read(addreses_str, packet_name, msg_str);
                 std::cerr << e.what() << "\n";
                 continue;
             }
@@ -345,8 +342,8 @@ int klient_auto_func::klient_auto_main(
         else 
         {
             // Server sent wrong packet - we ignore it
-            print_log_address_and_packet_name(server_address, client_address, packet_name, false);
-            just_read_rest_of_wrong_packet(socket_fd, MAX_DEAL_BUFF_SIZE);
+            just_read_rest_of_wrong_packet(socket_fd, MAX_DEAL_BUFF_SIZE, msg_str);
+            print_log_from_read(addreses_str, packet_name, msg_str);
 
             continue;
         }

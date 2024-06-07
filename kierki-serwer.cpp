@@ -77,12 +77,12 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
         // beginning of this project I decided that IAM will read whole msg 
         // inside read, without splitting reading to read_packet name and then 
         // reading the rest of the packet.
-        print_log_from_write(address_str, msg_str, game_master_sp);
+        print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
         std::cerr << "IAM read unsuccessful\n";
         return CONTINUE;
     }
 
-    print_log_from_write(address_str, msg_str, game_master_sp);
+    print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
 
     if (game_master_sp->check_if_position_taken(new_p_position))
     {
@@ -94,7 +94,7 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
         busy_wrapper.write(client_fd_sp->to_int(), 
                             game_master_sp->get_taken_positions(), 
                             msg_str);
-        print_log_from_write(address_str, msg_str, game_master_sp);
+        print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
 
         return CONTINUE;
     }

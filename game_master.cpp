@@ -70,8 +70,6 @@ void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &p_a
 
     if (number_of_players_present == MAX_PLAYERS)
     {
-        std::cout << "ALL PLAYERS PRESENT -- game = start\n";
-        fflush(stdout);
         is_game_started = true;
     }
 }

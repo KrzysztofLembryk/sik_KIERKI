@@ -98,9 +98,13 @@ int main(int argc, char *argv[])
             return FAILURE;
         }
 
+        std::string msg_str;
         init_comm_wrappers::IAM_Wrapper iam;
-        communication_addresses_to_str(server_address, client_address, true);
-        iam.write(socket_fd, chosen_position);
+        std::string address_str = communication_addresses_to_str(server_address, client_address, true);
+
+        iam.write(socket_fd, chosen_position, msg_str);
+        print_log_from_write(address_str, msg_str);
+
         if (a_option)
         {
             klient_auto_func::klient_auto_main(server_address, client_address, socket_fd, chosen_position);

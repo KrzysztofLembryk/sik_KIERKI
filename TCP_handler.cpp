@@ -162,7 +162,6 @@ int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size,
 
     add_rn_to_buff_if_needed(read_bytes, buff, data_size);
     msg = std::string(buff, read_bytes);
-    // std::cout.write(buff, read_bytes);
 
     if (ret_code != SUCCESS)
     {
@@ -201,9 +200,6 @@ int tcp::TCP_read_packet_name(int socket_fd, size_t name_len, std::string &name)
         err_func::error("read_length != name_len");
         ret_code = FAILURE;
     }
-
-    // if (read_length > 0)
-    //     std::cout.write(name_buff, read_length);
 
     name = std::string(name_buff, name_len);
     return ret_code;

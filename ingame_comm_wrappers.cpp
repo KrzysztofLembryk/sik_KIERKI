@@ -152,7 +152,6 @@ void ingame_comm_wrappers::TRICK_Wrapper::write(int socket_fd,
     msg = std::string(msg_vec.begin(), msg_vec.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
-    // std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd, 
@@ -183,7 +182,6 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     size_t i;
 
     determine_lewa_id(i, read_buff, lewa, curr_round);
-    std::cout << "TRICK read lewa_id: " << (unsigned)lewa.get_lewa_id() << '\n';
     // We can substract - 3 from read_length since we know that read_length is 
     // >= MIN_TRICK_BUFF_SIZE == 3
     while (i < (size_t)read_length - 2)
@@ -212,7 +210,6 @@ void ingame_comm_wrappers::WRONG_Wrapper::write(int socket_fd, const cardCls::Le
     msg = std::string(msg_vec.begin(), msg_vec.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
-    // std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_round, std::string &msg)
@@ -257,7 +254,6 @@ void ingame_comm_wrappers::TAKEN_Wrapper::write(int socket_fd,
     msg = std::string(msg_vec.begin(), msg_vec.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
-    // std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 int ingame_comm_wrappers::TAKEN_Wrapper::read(int socket_fd, 
@@ -324,7 +320,6 @@ void ingame_comm_wrappers::SCORE_Wrapper::write(int socket_fd, const std::map<Pl
     msg = std::string(msg_vec.begin(), msg_vec.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
-    // std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 int ingame_comm_wrappers::SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores, std::string &msg)
@@ -360,7 +355,7 @@ void ingame_comm_wrappers::TOTAL_Wrapper::write(int socket_fd,
 
     for (const auto &score : total_scores)
     {
-        std::cout << "Player: " << playerPos_to_char(score.first) << " score: " << score.second << '\n';
+        // std::cout << "Player: " << playerPos_to_char(score.first) << " score: " << score.second << '\n';
         msg_vec.push_back(playerPos_to_char(score.first));
 
         // At the end there is no '\0' character so we dont need to remove it
@@ -374,7 +369,6 @@ void ingame_comm_wrappers::TOTAL_Wrapper::write(int socket_fd,
     msg = std::string(msg_vec.begin(), msg_vec.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
-    // std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 int ingame_comm_wrappers::TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint32_t> &total_scores, std::string &msg)

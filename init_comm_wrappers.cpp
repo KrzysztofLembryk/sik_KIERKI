@@ -23,9 +23,6 @@ void init_comm_wrappers::IAM_Wrapper::write(int socket_fd, PlayerPosition positi
     msg = std::string(msg_vec.begin(), msg_vec.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());    
-
-    // std::cout.write(msg_vec.data(), msg_vec.size());
-
 }
 
 /**
@@ -90,8 +87,6 @@ void init_comm_wrappers::BUSY_Wrapper::write(int socket_fd, std::vector<PlayerPo
     msg = std::string(msg_vec.begin(), msg_vec.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
-
-    // std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 /**
@@ -145,7 +140,6 @@ void init_comm_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type ,
     std::vector<char> msg_vec(name);
     std::vector<char> game_type_and_first_player_pos;
 
-    std::cout << "DEAL write, gametype: " << (unsigned)game_type << "\n";
     game_type_and_first_player_pos.push_back(gameType_to_char(game_type));
     game_type_and_first_player_pos.push_back(playerPos_to_char(first_player_pos));
 
@@ -159,7 +153,6 @@ void init_comm_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type ,
     msg = std::string(msg_vec.begin(), msg_vec.end());
 
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
-    // std::cout.write(msg_vec.data(), msg_vec.size());
 }
 
 int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards, std::string &msg)
