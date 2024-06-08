@@ -11,6 +11,7 @@
 #include "socket_fd_handler.h"
 #include "player_class.h"
 #include "klient_auto_lib.h"
+#include "address_wrapper_cls.h"
 
 int init_client(int argc,
                 char *argv[],
@@ -20,7 +21,7 @@ int init_client(int argc,
                 bool &a_opt,
                 bool &ip6_opt,
                 bool &ip4_opt,
-                struct sockaddr &server_address,
+                AddressWrapper &server_address,
                 int &final_type_of_ip)
 {
     try
@@ -35,17 +36,17 @@ int init_client(int argc,
         if (ip6_opt)
         {
             final_type_of_ip = IP6_OPT;
-            server_address = get_server_address(host.data(), port, final_type_of_ip);
+            get_server_address(host.data(), port, final_type_of_ip, server_address);
         }
         else if (ip4_opt)
         {
             final_type_of_ip = IP4_OPT;
-            server_address = get_server_address(host.data(), port, final_type_of_ip);
+            get_server_address(host.data(), port, final_type_of_ip, server_address);
         }
         else
         {
             final_type_of_ip = NO_IP_OPT;
-            server_address = get_server_address(host.data(), port, final_type_of_ip);
+            get_server_address(host.data(), port, final_type_of_ip, server_address);
         }
     }
     catch (std::exception &e)
@@ -55,6 +56,37 @@ int init_client(int argc,
     }
     return SUCCESS;
 }
+
+void init_client_address(int socket_fd, AddressWrapper &client_address, int final_type_of_ip)
+{
+    socklen_t len;
+
+    if (final_type_of_ip == IP4_OPT)
+    {
+        struct sockaddr_in temp_client_addr;
+        len = sizeof(struct sockaddr_in);
+
+        if (getsockname(socket_fd, (struct sockaddr *)&temp_client_addr, 
+        &len) == -1)
+        {
+            exception_wrappers::runtime_err_wrapper("Cannot get my address ipv4");
+        }
+        client_address.set_address(temp_client_addr);
+    }
+    else
+    {
+        struct sockaddr_in6 temp_client_addr;
+        len = sizeof(struct sockaddr_in6);
+
+        if (getsockname(socket_fd, (struct sockaddr *)&temp_client_addr,
+                        &len) == -1)
+        {
+            exception_wrappers::runtime_err_wrapper("Cannot get my address ipv6");
+        }
+        client_address.set_address(temp_client_addr);
+    }
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -66,7 +98,7 @@ int main(int argc, char *argv[])
         bool ip6_opt = false;
         bool ip4_opt = false;
         PlayerPosition chosen_position;
-        struct sockaddr server_address;
+        AddressWrapper server_address;
         int socket_fd;
         int final_type_of_ip;
 
@@ -78,21 +110,13 @@ int main(int argc, char *argv[])
 
         socket_func::handle_client_socket_init(socket_fd, final_type_of_ip);
 
-        struct sockaddr client_address;
-        socklen_t len;
+        AddressWrapper client_address;
 
-        if (final_type_of_ip == IP4_OPT)
-            len = sizeof(struct sockaddr_in);
-        else
-            len = sizeof(struct sockaddr_in6);
+        init_client_address(socket_fd, client_address, final_type_of_ip);
 
-        if (getsockname(socket_fd, (struct sockaddr *)&client_address, &len) == -1)
-        {
-            err_func::error("Cannot get my address");
-            return FAILURE;
-        }
 
-        if (connect(socket_fd, &server_address, (socklen_t)sizeof(server_address)) < 0)
+        if (connect(socket_fd, server_address.get_address(), 
+                    (socklen_t)sizeof(*(server_address.get_address()))) < 0)
         {
             err_func::error("Cannot connect to the server");
             return FAILURE;
@@ -100,7 +124,7 @@ int main(int argc, char *argv[])
 
         std::string msg_str;
         init_comm_wrappers::IAM_Wrapper iam;
-        std::string address_str = communication_addresses_to_str(server_address, client_address, true);
+        std::string address_str = communication_addresses_to_str(server_address.get_address(), client_address.get_address(), true);
 
         iam.write(socket_fd, chosen_position, msg_str);
         print_log_from_write(address_str, msg_str);

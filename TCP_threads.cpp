@@ -13,9 +13,9 @@ using Player_sp = std::shared_ptr<Player>;
 using BinSem_sp = std::shared_ptr<std::binary_semaphore>;
 
 int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
-    struct sockaddr server_addr, struct sockaddr client_addr, std::shared_ptr<gm::GameMaster> game_master_sp)
+    Player_sp player_sp, GM_sp game_master_sp)
 {
-    std::string addreses_str = communication_addresses_to_str(server_addr, client_addr, true);
+    std::string addreses_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), true);
     std::string packet_name;
     int ret_code_read_name = tcp::TCP_read_packet_name(client_fd, INGAME_PACKET_NAME_SIZE, packet_name); 
     // {
@@ -62,7 +62,7 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
         return ERROR;
     }
     // After we read trick packet, we can send WRONG msg
-    addreses_str = communication_addresses_to_str(server_addr, client_addr, false);
+    addreses_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
     ingame_comm_wrappers::WRONG_Wrapper wrong;
     cardCls::Lewa wrong_lewa(curr_round);
     wrong.write(client_fd, wrong_lewa, msg_str);
@@ -373,8 +373,7 @@ void TCP_threads::TCPThread::TCP_thread_main(
                 if (handle_player_msg_at_wrong_time(
                                     client_fd_sp->to_int(), 
                                     game_master_sp->get_curr_round_nbr(), 
-                                    player_sp->get_server_address(), 
-                                    player_sp->get_client_address(),
+                                    player_sp,
                                     game_master_sp) != SUCCESS)
                 {
                     (*thread_ended_sp) = true;

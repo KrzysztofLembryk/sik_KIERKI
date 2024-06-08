@@ -57,8 +57,8 @@ uint16_t port_from_str_to_ul(char const *string)
 //     return send_address;
 // }
 
-struct sockaddr get_server_address(char const *host, uint16_t port, 
-int &type_of_ip)
+void get_server_address(char const *host, uint16_t port, 
+int &type_of_ip, AddressWrapper &server_address)
 {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -88,28 +88,25 @@ int &type_of_ip)
     // send_address.sin6_addr =     // IP address
     //     ((struct sockaddr_in6 *)(address_result->ai_addr))->sin6_addr;
     // send_address.sin6_port = htons(port); // port from the command line
-    struct sockaddr final_addr;
     if (address_result->ai_family == AF_INET)
     {
         // IPv4
-        struct sockaddr_in send_address_ip4;
-        send_address_ip4.sin_family = AF_INET;
-        send_address_ip4.sin_addr = ((struct sockaddr_in *)(address_result->ai_addr))->sin_addr;
-        send_address_ip4.sin_port = htons(port);
-        final_addr = *((struct sockaddr *)&send_address_ip4);
+        struct sockaddr_in s_address_ip4;
+        s_address_ip4.sin_family = AF_INET;
+        s_address_ip4.sin_addr = ((struct sockaddr_in *)(address_result->ai_addr))->sin_addr;
+        s_address_ip4.sin_port = htons(port);
+        server_address.set_address(s_address_ip4);
         type_of_ip = IP4_OPT;
-        // Use send_address
     }
     else if (address_result->ai_family == AF_INET6)
     {
         // IPv6
-        struct sockaddr_in6 send_address_ip6;
-        send_address_ip6.sin6_family = AF_INET6;
-        send_address_ip6.sin6_addr = ((struct sockaddr_in6 *)(address_result->ai_addr))->sin6_addr;
-        send_address_ip6.sin6_port = htons(port);
-        final_addr = *((struct sockaddr *)&send_address_ip6);
+        struct sockaddr_in6 s_address_ip6;
+        s_address_ip6.sin6_family = AF_INET6;
+        s_address_ip6.sin6_addr = ((struct sockaddr_in6 *)(address_result->ai_addr))->sin6_addr;
+        s_address_ip6.sin6_port = htons(port);
+        server_address.set_address(s_address_ip6);
         type_of_ip = IP6_OPT;
-        // Use send_address
     }
     else
     {
@@ -118,9 +115,8 @@ int &type_of_ip)
     }
 
     freeaddrinfo(address_result);
-
-    return final_addr;
 }
+
 // Following two functions come from Stevens' "UNIX Network Programming" book.
 // Read n bytes from a descriptor. Use in place of read() when fd is a stream socket.
 ssize_t readn(int fd, void *vptr, size_t n)

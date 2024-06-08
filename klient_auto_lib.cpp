@@ -19,7 +19,7 @@ void just_read_rest_of_wrong_packet(int socket_fd, size_t data_size, std::string
 }
 
 int handle_read_packet_name(int socket_fd, std::string &packet_name, 
-struct sockaddr server_address, struct sockaddr client_address, 
+struct sockaddr *server_address, struct sockaddr *client_address, 
 size_t packet_name_size, size_t data_size)
 {
     ssize_t read_length;
@@ -48,8 +48,8 @@ size_t packet_name_size, size_t data_size)
 
 int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
 {
-    struct sockaddr server_address = player_sp->get_server_address();
-    struct sockaddr client_address = player_sp->get_client_address();
+    struct sockaddr *server_address = player_sp->get_server_address();
+    struct sockaddr *client_address = player_sp->get_client_address();
     uint8_t curr_lewa_id = 1;
     bool got_score = false;
     bool got_total = false;
@@ -276,8 +276,8 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
 }
 
 int klient_auto_func::klient_auto_main(
-    struct sockaddr &server_address,
-    struct sockaddr &client_address,
+    AddressWrapper &server_address,
+    AddressWrapper &client_address,
     int socket_fd,
     PlayerPosition chosen_position)
 {
@@ -285,8 +285,16 @@ int klient_auto_func::klient_auto_main(
     {
         std::string packet_name;
         std::string msg_str;
-        std::string addreses_str = communication_addresses_to_str(server_address, client_address, false);
-        int ret_val_read_name = handle_read_packet_name(socket_fd, packet_name, server_address, client_address, INIT_PACKET_NAME_SIZE, MAX_DEAL_BUFF_SIZE);
+        std::string addreses_str = 
+        communication_addresses_to_str(server_address.get_address(),
+                                        client_address.get_address(), 
+                                        false);
+        int ret_val_read_name = handle_read_packet_name(socket_fd, 
+                                                packet_name, 
+                                                server_address.get_address(), 
+                                                client_address.get_address(), 
+                                                INIT_PACKET_NAME_SIZE, 
+                                                MAX_DEAL_BUFF_SIZE);
 
         if (ret_val_read_name == CONTINUE)
             continue;
@@ -322,7 +330,9 @@ int klient_auto_func::klient_auto_main(
             try 
             {
                 int ret_val_deal = deal.read(socket_fd, game_type, first_player_pos, my_hand, msg_str); 
+
                 print_log_from_read(addreses_str, packet_name, msg_str);
+
                 if (ret_val_deal == FAILURE)
                 {
                     continue;
@@ -339,8 +349,9 @@ int klient_auto_func::klient_auto_main(
                 continue;
             }
 
-            std::shared_ptr<Player> player_sp = std::make_shared<Player>(my_hand, chosen_position, game_type, server_address);
+            std::shared_ptr<Player> player_sp = std::make_shared<Player>(my_hand, chosen_position, game_type);
             player_sp->set_player_address(client_address);
+            player_sp->set_server_address(server_address);
 
             if (play_game(socket_fd, player_sp) != SUCCESS)
                 return FAILURE;

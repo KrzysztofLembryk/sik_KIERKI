@@ -26,7 +26,11 @@ sync_barrier(MAX_PLAYERS, [](){})
     std::vector<PlayerPosition> player_pos({N, E, S, W});
     for (auto pos : player_pos)
     {
-        this->players[pos] = std::make_shared<Player>(rounds[0].get_player_cards(pos), pos, rounds[0].get_game_type(), (struct sockaddr*)&server_addr);
+        this->players[pos] = std::make_shared<Player>(
+                            rounds[0].get_player_cards(pos), 
+                            pos, 
+                            rounds[0].get_game_type());
+                            this->players[pos]->set_server_address(server_addr);
     }
     // struct sockaddr *base_addr = (struct sockaddr*)&server_addr;
 
@@ -72,8 +76,7 @@ void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &p_a
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
     pos_taken_map[pos] = true;
-    struct sockaddr_in6 *p_address_alloc = new struct sockaddr_in6(p_address);
-    players[pos]->set_player_address((struct sockaddr*)&p_address_alloc);
+    players[pos]->set_player_address(p_address);
 
     // Only at the beginning when we add new players we count them and set 
     // is_game_started to true, after that when player leaves we dont change 

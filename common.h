@@ -8,11 +8,13 @@
 #include <vector>
 #include <string>
 #include "game_master.h"
+#include "address_wrapper_cls.h"
 
 uint16_t port_from_str_to_ul(char const *string);
 
 // struct sockaddr_in get_server_address_ip4(char const *host, uint16_t port);
-struct sockaddr get_server_address(char const *host, uint16_t port, int &type_of_ip);
+void get_server_address(char const *host, uint16_t port, int &type_of_ip, 
+AddressWrapper &server_address);
 
 ssize_t	readn(int fd, void *vptr, size_t n);
 ssize_t	writen(int fd, const void *vptr, size_t n);
