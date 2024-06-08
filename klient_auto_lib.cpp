@@ -60,27 +60,42 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
         std::string addreses_str = communication_addresses_to_str(server_address, client_address, false, NOT_INVOKED_BY_SERVER);
         std::string msg_str;
         int ret_val_read_name;
-
-        if (got_score && got_total)
+        try
         {
-            ret_val_read_name = handle_read_packet_name(
-                                                socket_fd, 
-                                                packet_name, 
-                                                player_sp->get_server_address(), 
-                                                player_sp->get_client_address(), 
-                                                INIT_PACKET_NAME_SIZE, 
-                                                MAX_DEAL_BUFF_SIZE);
+
+            if (got_score && got_total)
+            {
+                ret_val_read_name = handle_read_packet_name(
+                                                    socket_fd, 
+                                                    packet_name, 
+                                                    player_sp->get_server_address(), 
+                                                    player_sp->get_client_address(), 
+                                                    INIT_PACKET_NAME_SIZE, 
+                                                    MAX_DEAL_BUFF_SIZE);
+            }
+            else 
+            {
+                ret_val_read_name = handle_read_packet_name(
+                                                    socket_fd, 
+                                                    packet_name, 
+                                                    player_sp->get_server_address(), 
+                                                    player_sp->get_client_address(), 
+                                                    INGAME_PACKET_NAME_SIZE, 
+                                                    MAX_TOTAL_BUFF_SIZE);
+
+            }
         }
-        else 
+        catch (std::exception &e)
         {
-            ret_val_read_name = handle_read_packet_name(
-                                                socket_fd, 
-                                                packet_name, 
-                                                player_sp->get_server_address(), 
-                                                player_sp->get_client_address(), 
-                                                INGAME_PACKET_NAME_SIZE, 
-                                                MAX_TOTAL_BUFF_SIZE);
-
+            // handle_read_packet_name throws only when we are disconnected,
+            // thus if we got score and total and got disconnected we know that 
+            // game has ended and we can return SUCCESS
+            if (got_score && got_total)
+            {
+                return SUCCESS;
+            }
+            std::cerr << e.what() << "\n";
+            return FAILURE;
         }
         if (ret_val_read_name == CONTINUE)
             continue;

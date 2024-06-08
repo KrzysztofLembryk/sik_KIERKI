@@ -22,6 +22,7 @@ namespace gm
 
         bool check_if_position_taken(PlayerPosition pos);
         std::vector<PlayerPosition> get_taken_positions();
+        void set_player_left(PlayerPosition pos);
 
         void add_new_player(PlayerPosition pos, 
                             struct sockaddr_in6 &my_address);

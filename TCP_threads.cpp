@@ -12,6 +12,13 @@ using GM_sp = std::shared_ptr<gm::GameMaster>;
 using Player_sp = std::shared_ptr<Player>;
 using BinSem_sp = std::shared_ptr<std::binary_semaphore>;
 
+void handle_player_disconnect(Player_sp player_sp, GM_sp game_master_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP)
+{
+    (*thread_ended_sp) = true;
+    game_master_sp->set_player_left(player_sp->get_position());
+    semaphore_TCP->release();
+}
+
 int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
     Player_sp player_sp, GM_sp game_master_sp)
 {
@@ -92,9 +99,7 @@ int handle_DEAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::s
         std::cerr << e.what() << '\n';
 
         print_log_from_write_thread_safe(address_str, msg, game_master_sp);
-
-        (*thread_ended_sp) = true;
-        semaphore_TCP->release();
+        handle_player_disconnect(player_sp, game_master_sp, thread_ended_sp, semaphore_TCP);
 
         return ERROR;
     }
@@ -132,14 +137,12 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
 
             if(ret_code_read_name != SUCCESS || ret_code != SUCCESS)
             {
-                (*thread_ended_sp) = true;
-                semaphore_TCP->release();
+                handle_player_disconnect(player_sp, game_master_sp, thread_ended_sp, semaphore_TCP);
                 return ERROR;
             }
             if (packet_name != "TRICK")
             {
-                (*thread_ended_sp) = true;
-                semaphore_TCP->release();
+                handle_player_disconnect(player_sp, game_master_sp, thread_ended_sp, semaphore_TCP);
                 return ERROR;
             }
             if (ret_code == TIMEOUT)
@@ -180,9 +183,7 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
         catch (const std::exception &e)
         {
             std::cerr << e.what() << '\n';
-
-            (*thread_ended_sp) = true;
-            semaphore_TCP->release();
+            handle_player_disconnect(player_sp, game_master_sp, thread_ended_sp, semaphore_TCP);
 
             return ERROR;
         }
@@ -216,9 +217,8 @@ int handle_TAKEN(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
     {
         std::cerr << e.what() << '\n';
 
-        (*thread_ended_sp) = true;
-        semaphore_TCP->release();
         print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
+        handle_player_disconnect(player_sp, game_master_sp, thread_ended_sp, semaphore_TCP);
 
         return ERROR;
     }
@@ -245,9 +245,7 @@ int handle_SCORE(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
     {
         std::cerr << e.what() << '\n';
         print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
-
-        (*thread_ended_sp) = true;
-        semaphore_TCP->release();
+        handle_player_disconnect(player_sp, game_master_sp, thread_ended_sp, semaphore_TCP);
 
         return ERROR;
     }
@@ -274,9 +272,7 @@ int handle_TOTAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
     {
         std::cerr << e.what() << '\n';
         print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
-
-        (*thread_ended_sp) = true;
-        semaphore_TCP->release();
+        handle_player_disconnect(player_sp, game_master_sp, thread_ended_sp, semaphore_TCP);
 
         return ERROR;
     }
@@ -309,8 +305,7 @@ void TCP_threads::TCPThread::TCP_thread_main(
         // disconnected when he shouldnt and end this thread
         if (polls_func::handle_polls_waiting(poll_status, poll_descriptors) == DISCONNECTED)
         {
-            (*thread_ended_sp) = true;
-            semaphore_TCP->release();
+            handle_player_disconnect(player_sp, game_master_sp, thread_ended_sp, semaphore_TCP);
             return;
         }
 
@@ -376,8 +371,7 @@ void TCP_threads::TCPThread::TCP_thread_main(
                                     player_sp,
                                     game_master_sp) != SUCCESS)
                 {
-                    (*thread_ended_sp) = true;
-                    semaphore_TCP->release();
+                    handle_player_disconnect(player_sp, game_master_sp, thread_ended_sp, semaphore_TCP);
                     return;
                 }
             }
