@@ -16,7 +16,7 @@ namespace ingame_comm_wrappers
 
         void write(int socket_fd, cardCls::Lewa &lewa, std::string &msg);
 
-        int read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_round, std::string &msg);
+        int read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_lewa_id, std::string &msg);
 
         private:
         std::vector<char> name{'T', 'R', 'I', 'C', 'K'};
@@ -30,7 +30,7 @@ namespace ingame_comm_wrappers
 
         void write(int socket_fd, const cardCls::Lewa &lewa, std::string &msg);
 
-        int read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_round, std::string &msg);
+        int read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_lewa_id, std::string &msg);
 
     private:
         std::vector<char> name{'W', 'R', 'O', 'N', 'G'};
@@ -46,7 +46,7 @@ namespace ingame_comm_wrappers
             const PlayerPosition &player_who_took_lewa, std::string &msg);
 
         int read(int socket_fd, cardCls::Lewa &lewa, 
-            PlayerPosition &player_who_took_lewa, uint8_t curr_round, std::string &msg);
+            PlayerPosition &player_who_took_lewa, uint8_t curr_lewa_id, std::string &msg);
     private:
         std::vector<char> name{'T', 'A', 'K', 'E', 'N'};
     };

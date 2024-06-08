@@ -153,10 +153,6 @@ int main(int ac, char *av[])
 
     std::shared_ptr<gm::GameMaster> game_master_sp = std::make_shared<gm::GameMaster>(vec_of_rounds, server_address);
 
-    char s_ip_str[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, &(server_address.sin6_addr), s_ip_str, INET6_ADDRSTRLEN);
-    std::cout << "kierki-serwer - main - server_address in game_master: " << s_ip_str << ":" << ntohs(server_address.sin6_port) << "\n"; 
-
     struct pollfd poll_descriptors[POLLS_NBR_OF_DSCR];
     int poll_status;
 

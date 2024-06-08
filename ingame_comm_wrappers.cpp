@@ -10,9 +10,9 @@
 // We check id of lewa, it can be from '1' to '13' thus thanks to curr_round
 // variable we know how many bytes we need to read, set_lewa_id method 
 // checks if read lewa id is in correct range
-void determine_lewa_id(size_t &read_buff_start_pos, const char *read_buff, cardCls::Lewa &lewa, uint8_t curr_round)
+void determine_lewa_id(size_t &read_buff_start_pos, const char *read_buff, cardCls::Lewa &lewa, uint8_t curr_lewa_id)
 {
-    if (curr_round >= 10)
+    if (curr_lewa_id >= 10)
     {
         lewa.set_lewa_id({read_buff[0], read_buff[1]});
         read_buff_start_pos = 2;
@@ -155,12 +155,15 @@ void ingame_comm_wrappers::TRICK_Wrapper::write(int socket_fd,
 }
 
 int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd, 
-    cardCls::Lewa &lewa, uint8_t curr_round, std::string &msg)
+    cardCls::Lewa &lewa, uint8_t curr_lewa_id, std::string &msg)
 {
     ssize_t read_length;
     char read_buff[MAX_TRICK_BUFF_SIZE];
+
     std::memset(read_buff, 0, MAX_TRICK_BUFF_SIZE); 
+
     int ret_code = tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TRICK_BUFF_SIZE, read_length, msg);
+
     if (ret_code == TIMEOUT)
     {
         return TIMEOUT;
@@ -180,8 +183,7 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     Suit suit;
     std::vector<char> char_val_vec;
     size_t i;
-
-    determine_lewa_id(i, read_buff, lewa, curr_round);
+    determine_lewa_id(i, read_buff, lewa, curr_lewa_id);
     // We can substract - 3 from read_length since we know that read_length is 
     // >= MIN_TRICK_BUFF_SIZE == 3
     while (i < (size_t)read_length - 2)
@@ -212,7 +214,7 @@ void ingame_comm_wrappers::WRONG_Wrapper::write(int socket_fd, const cardCls::Le
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
-int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_round, std::string &msg)
+int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_lewa_id, std::string &msg)
 {
     ssize_t read_length;
     char read_buff[MAX_WRONG_BUFF_SIZE];
@@ -230,7 +232,7 @@ int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, cardCls::Lewa &lewa
     }
 
     size_t i;
-    determine_lewa_id(i, read_buff, lewa, curr_round);
+    determine_lewa_id(i, read_buff, lewa, curr_lewa_id);
 
     return SUCCESS;
 }
@@ -259,7 +261,7 @@ void ingame_comm_wrappers::TAKEN_Wrapper::write(int socket_fd,
 int ingame_comm_wrappers::TAKEN_Wrapper::read(int socket_fd, 
                                     cardCls::Lewa &lewa, 
                                     PlayerPosition &player_who_took_lewa,
-                                    uint8_t curr_round,
+                                    uint8_t curr_lewa_id,
                                     std::string &msg)
 {
     ssize_t read_length;
@@ -281,7 +283,7 @@ int ingame_comm_wrappers::TAKEN_Wrapper::read(int socket_fd,
     std::vector<char> char_val_vec;
     size_t i;
 
-    determine_lewa_id(i, read_buff, lewa, curr_round);
+    determine_lewa_id(i, read_buff, lewa, curr_lewa_id);
 
     while (lewa.size() < 4 && i < (size_t)read_length - 3)
     {
