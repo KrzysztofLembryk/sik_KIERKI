@@ -1,5 +1,6 @@
 #include "game_master.h"
 #include "constants.h"
+#include <arpa/inet.h>
 
 gm::GameMaster::GameMaster(std::vector<gameCls::Round> &rounds, struct sockaddr_in6 server_addr) : 
 pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}}), 
@@ -27,6 +28,17 @@ sync_barrier(MAX_PLAYERS, [](){})
     {
         this->players[pos] = std::make_shared<Player>(rounds[0].get_player_cards(pos), pos, rounds[0].get_game_type(), *(struct sockaddr*)&server_addr);
     }
+    struct sockaddr *base_addr = (struct sockaddr*)&server_addr;
+
+    struct sockaddr_in6 *base_addr_6in = (struct sockaddr_in6*)base_addr;
+
+    char ip_str[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &(base_addr_6in->sin6_addr), ip_str, INET6_ADDRSTRLEN);
+    std::cout << "GameMaster constructor- main - server_address in game_master: " << ip_str << ":" << ntohs(base_addr_6in->sin6_port) << "\n"; 
+
+    char s_ip_str[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &(server_addr.sin6_addr), s_ip_str, INET6_ADDRSTRLEN);
+    std::cout << "GameMaster constructor- main - server_address in game_master: " << s_ip_str << ":" << ntohs(server_addr.sin6_port) << "\n"; 
 }
 
 bool gm::GameMaster::check_if_position_taken(PlayerPosition pos)
