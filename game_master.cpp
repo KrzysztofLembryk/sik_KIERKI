@@ -68,7 +68,7 @@ std::vector<PlayerPosition> gm::GameMaster::get_taken_positions()
  * increments number_of_players_present and if its equal to 4 it releases 4 
  * permits on barrier_first, meaning game can start.
 */
-void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &p_address)
+int gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &p_address, std::shared_ptr<ClientFdWrapper> client_fd_sp)
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
     pos_taken_map[pos] = true;
@@ -78,13 +78,32 @@ void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &p_a
     // is_game_started to true, after that when player leaves we dont change 
     // nbr_of_players_present since game is already started
     if (number_of_players_present < MAX_PLAYERS)
+    {
         number_of_players_present++;
-    else if (number_of_players_present == MAX_PLAYERS)
+        if (number_of_players_present == MAX_PLAYERS)
+            is_game_started = true;
+        
+        return SUCCESS;
+    }
+    else 
     {
         // if we got here it means that player was disconnected and new player
         // wants to connect to our game, thus we need to set a flag so that 
         // tcp thread knows what to send him
-        is_game_started = true;
+        PlayerPosition free_pos;
+        for (auto &pos : pos_taken_map)
+        {
+            if (!pos.second)
+            {
+                free_pos = pos.first;
+                break;
+            }
+        }
+        pos_taken_map[free_pos] = true;
+
+
+
+        return CONTINUE;
     }
 }
 

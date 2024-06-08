@@ -60,9 +60,6 @@ private:
     // use it
     AddressWrapper server_address;
     AddressWrapper my_address;
-    // struct sockaddr *server_address;
-    // struct sockaddr *my_address;
-    // bool was_my_addr_allocated;
 };
 
 #endif // PLAYER_CLASS_H

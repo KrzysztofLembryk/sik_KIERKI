@@ -100,7 +100,14 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     }
     else
     {
-        game_master_sp->add_new_player(new_p_position, client_address);
+        if (game_master_sp->add_new_player(new_p_position, client_address) != SUCCESS)
+        {
+            // add_new_player is not success only when we add new player after 
+            // other player left if so we already have thread for this player
+            // thus we dont want to create a new one
+            return CONTINUE;
+        }
+
     }
 
     player_threads::MyThread my_thread;

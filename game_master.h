@@ -6,6 +6,7 @@
 #include <mutex>
 #include <semaphore>
 #include <barrier>
+#include "socket_fd_handler.h"
 
 namespace gm
 {
@@ -24,8 +25,10 @@ namespace gm
         std::vector<PlayerPosition> get_taken_positions();
         void set_player_left(PlayerPosition pos);
 
-        void add_new_player(PlayerPosition pos, 
-                            struct sockaddr_in6 &my_address);
+        int add_new_player(PlayerPosition pos, 
+                            struct sockaddr_in6 &my_address,
+                            std::shared_ptr<ClientFdWrapper> client_fd_sp);
+
         void add_card_to_lewa(cardCls::CardClassWrapper &card);
         
         void wait_for_turn(PlayerPosition pos);
