@@ -74,6 +74,8 @@ void player_threads::MyThread::thread_main(
             // After sending deal we wait for our turn to play card
             game_master_sp->wait_for_turn(player_sp->get_position());
 
+            std::cout << "Tcp thread main - now is turn: " << player_sp->get_position() << "\n";
+            fflush(stdout);
             // Player whose turn is needs to get TRICK from server
             btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "TRICK");
 

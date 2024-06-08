@@ -2,7 +2,8 @@
 #include "constants.h"
 #include <arpa/inet.h>
 
-gm::GameMaster::GameMaster(std::vector<gameCls::Round> &rounds, struct sockaddr_in6 server_addr) : 
+gm::GameMaster::GameMaster(std::vector<gameCls::Round> &rounds, 
+    struct sockaddr_in6 &server_addr) : 
 pos_taken_map({{N, false}, {E, false}, {S, false}, {W, false}}), 
 sync_barrier(MAX_PLAYERS, [](){})
 {
@@ -23,22 +24,21 @@ sync_barrier(MAX_PLAYERS, [](){})
     this->sem_print_msg = std::make_shared<std::binary_semaphore>(1);
 
     std::vector<PlayerPosition> player_pos({N, E, S, W});
-
     for (auto pos : player_pos)
     {
-        this->players[pos] = std::make_shared<Player>(rounds[0].get_player_cards(pos), pos, rounds[0].get_game_type(), *(struct sockaddr*)&server_addr);
+        this->players[pos] = std::make_shared<Player>(rounds[0].get_player_cards(pos), pos, rounds[0].get_game_type(), (struct sockaddr*)&server_addr);
     }
-    struct sockaddr *base_addr = (struct sockaddr*)&server_addr;
+    // struct sockaddr *base_addr = (struct sockaddr*)&server_addr;
 
-    struct sockaddr_in6 *base_addr_6in = (struct sockaddr_in6*)base_addr;
+    // struct sockaddr_in6 *base_addr_6in = (struct sockaddr_in6*)base_addr;
 
-    char ip_str[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, &(base_addr_6in->sin6_addr), ip_str, INET6_ADDRSTRLEN);
-    std::cout << "GameMaster constructor- main - server_address in game_master: " << ip_str << ":" << ntohs(base_addr_6in->sin6_port) << "\n"; 
+    // char ip_str[INET6_ADDRSTRLEN];
+    // inet_ntop(AF_INET6, &(base_addr_6in->sin6_addr), ip_str, INET6_ADDRSTRLEN);
+    // std::cout << "GameMaster constructor- main - server_address in game_master: " << ip_str << ":" << ntohs(base_addr_6in->sin6_port) << "\n"; 
 
-    char s_ip_str[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, &(server_addr.sin6_addr), s_ip_str, INET6_ADDRSTRLEN);
-    std::cout << "GameMaster constructor- main - server_address in game_master: " << s_ip_str << ":" << ntohs(server_addr.sin6_port) << "\n"; 
+    // char s_ip_str[INET6_ADDRSTRLEN];
+    // inet_ntop(AF_INET6, &(server_addr.sin6_addr), s_ip_str, INET6_ADDRSTRLEN);
+    // std::cout << "GameMaster constructor- main - server_address in game_master: " << s_ip_str << ":" << ntohs(server_addr.sin6_port) << "\n"; 
 }
 
 bool gm::GameMaster::check_if_position_taken(PlayerPosition pos)
@@ -72,7 +72,8 @@ void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &p_a
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
     pos_taken_map[pos] = true;
-    players[pos]->set_player_address(*(struct sockaddr*)&p_address);
+    struct sockaddr_in6 *p_address_alloc = new struct sockaddr_in6(p_address);
+    players[pos]->set_player_address((struct sockaddr*)&p_address_alloc);
 
     // Only at the beginning when we add new players we count them and set 
     // is_game_started to true, after that when player leaves we dont change 

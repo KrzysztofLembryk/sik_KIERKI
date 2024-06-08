@@ -308,7 +308,53 @@ Suit determine_suit(char suit)
     }
 }
 
-std::string communication_addresses_to_str(const struct sockaddr &server_address, const struct sockaddr &client_address, bool client_sent_msg)
+void ipv6_msg(std::string &res_msg, bool client_sent_msg, std::string &value_str, std::string &time_str, 
+struct sockaddr *server_address, struct sockaddr *client_address)
+{
+    // IPv6
+    struct sockaddr_in6 *server_addr_in6 = (struct sockaddr_in6 *)server_address;
+    char s_ip_str[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &(server_addr_in6->sin6_addr), s_ip_str, INET6_ADDRSTRLEN);
+
+    struct sockaddr_in6 *client_addr_in6 = (struct sockaddr_in6 *)client_address;
+    char c_ip_str[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &(client_addr_in6->sin6_addr), c_ip_str, INET6_ADDRSTRLEN);
+
+    if (client_sent_msg)
+    {
+        res_msg = "[" + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in6->sin6_port)) + "," + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in6->sin6_port)) + "," +  
+        time_str + '.' + value_str + "] ";
+    }
+    else
+    {
+        res_msg = "[" + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in6->sin6_port)) + "," + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in6->sin6_port)) + "," + time_str + '.' + value_str + "] ";
+    }
+}
+
+void ipv4_msg(std::string &res_msg, bool client_sent_msg, std::string &value_str, std::string &time_str, 
+struct sockaddr *server_address, struct sockaddr *client_address)
+{
+
+    // IPv4
+    struct sockaddr_in *server_addr_in = (struct sockaddr_in *)server_address;
+    char s_ip_str[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(server_addr_in->sin_addr), s_ip_str, INET_ADDRSTRLEN);
+
+    struct sockaddr_in *client_addr_in = (struct sockaddr_in *)client_address;
+    char c_ip_str[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(client_addr_in->sin_addr), c_ip_str, INET_ADDRSTRLEN);
+
+    if (client_sent_msg)
+    {
+        res_msg = "[" + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in->sin_port)) + "," + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in->sin_port)) + "," + time_str + '.' + value_str + "] ";
+    }
+    else
+    {
+        res_msg = "[" + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in->sin_port)) + "," + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in->sin_port)) + "," + time_str + '.' + value_str + "] ";
+    }
+}
+
+std::string communication_addresses_to_str(struct sockaddr *server_address, struct sockaddr *client_address, bool client_sent_msg, bool invoked_in_server)
 {
     auto now = std::chrono::high_resolution_clock::now();
     auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
@@ -316,56 +362,33 @@ std::string communication_addresses_to_str(const struct sockaddr &server_address
     auto value = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
     std::time_t now_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::tm *now_tm = std::localtime(&now_time);
+
+    std::string value_str = std::to_string(value.count() % 1000);
     std::string res_msg;
     std::stringstream ss;
     ss << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S");
     std::string time_str = ss.str();
 
-    if (server_address.sa_family == AF_INET)
+    if (invoked_in_server)
     {
-        // IPv4
-        struct sockaddr_in *server_addr_in = (struct sockaddr_in *)&server_address;
-        char s_ip_str[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &(server_addr_in->sin_addr), s_ip_str, INET_ADDRSTRLEN);
-
-        struct sockaddr_in *client_addr_in = (struct sockaddr_in *)&client_address;
-        char c_ip_str[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &(client_addr_in->sin_addr), c_ip_str, INET_ADDRSTRLEN);
-
-        if (client_sent_msg)
+        ipv6_msg(res_msg, client_sent_msg, value_str, time_str, server_address,
+        client_address);
+    }
+    else 
+    {
+        if (server_address->sa_family == AF_INET)
         {
-            res_msg = "[" + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in->sin_port)) + "," + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in->sin_port)) + "," + time_str + '.' + std::to_string(value.count() % 1000) + "] ";
+            ipv4_msg(res_msg, client_sent_msg, value_str, time_str, server_address, client_address);
+        }
+        else if (server_address->sa_family == AF_INET6)
+        {
+            ipv6_msg(res_msg, client_sent_msg, value_str, time_str, server_address, client_address);
         }
         else
         {
-            res_msg = "[" + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in->sin_port)) + "," + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in->sin_port)) + "," + time_str + '.' + std::to_string(value.count() % 1000) + "] ";
+            // Unexpected family
+            exception_wrappers::runtime_err_wrapper("Unexpected family");
         }
-    }
-    else if (server_address.sa_family == AF_INET6)
-    {
-        // IPv6
-        struct sockaddr_in6 *server_addr_in6 = (struct sockaddr_in6 *)&server_address;
-        char s_ip_str[INET6_ADDRSTRLEN];
-        inet_ntop(AF_INET6, &(server_addr_in6->sin6_addr), s_ip_str, INET6_ADDRSTRLEN);
-
-        struct sockaddr_in6 *client_addr_in6 = (struct sockaddr_in6 *)&client_address;
-        char c_ip_str[INET6_ADDRSTRLEN];
-        inet_ntop(AF_INET6, &(client_addr_in6->sin6_addr), c_ip_str, INET6_ADDRSTRLEN);
-
-        if (client_sent_msg)
-        {
-            res_msg = "[" + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in6->sin6_port)) + "," + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in6->sin6_port)) + "," +  
-            time_str + '.' + std::to_string(value.count() % 1000) + "] ";
-        }
-        else
-        {
-            res_msg = "[" + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in6->sin6_port)) + "," + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in6->sin6_port)) + "," + time_str + '.' + std::to_string(value.count() % 1000) + "] ";
-        }
-    }
-    else
-    {
-        // Unexpected family
-        exception_wrappers::runtime_err_wrapper("Unexpected family");
     }
 
     return res_msg;

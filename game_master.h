@@ -17,7 +17,7 @@ namespace gm
     {
     public:
         GameMaster(std::vector<gameCls::Round> &rounds, 
-                                        struct sockaddr_in6 server_addr);
+                                        struct sockaddr_in6 &server_addr);
         ~GameMaster() = default;
 
         bool check_if_position_taken(PlayerPosition pos);
