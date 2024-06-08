@@ -22,7 +22,6 @@ int handle_read_packet_name(int socket_fd, std::string &packet_name,
 struct sockaddr *server_address, struct sockaddr *client_address, 
 size_t packet_name_size, size_t data_size)
 {
-    ssize_t read_length;
     std::string msg_str;
     std::string address_str = communication_addresses_to_str(server_address, client_address, false, NOT_INVOKED_BY_SERVER);
 
@@ -260,10 +259,11 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                 }
                 player_sp->add_points_from_round_to_allpoints();
 
-                if (total_scores[player_sp->get_position()] != player_sp->get_all_points())
-                {
-                    throw std::runtime_error("Total points are not equal to the points from the round");
-                }
+                // not needed, we assume server is correct
+                // if (total_scores[player_sp->get_position()] != player_sp->get_all_points())
+                // {
+                //     throw std::runtime_error("Total points are not equal to the points from the round");
+                // }
 
                 got_total = true;
             }

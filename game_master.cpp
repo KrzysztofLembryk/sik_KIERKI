@@ -131,7 +131,7 @@ std::shared_ptr<cardCls::Lewa> gm::GameMaster::get_curr_lewa()
     return curr_lewa;
 }
 
-uint8_t gm::GameMaster::get_curr_round_nbr()
+size_t gm::GameMaster::get_curr_round_nbr()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
     return round_number;
@@ -143,10 +143,10 @@ uint8_t gm::GameMaster::get_curr_lewa_nbr()
     return curr_lewa_nbr;
 }
 
-uint8_t gm::GameMaster::get_nbr_of_rounds()
+size_t gm::GameMaster::get_nbr_of_rounds()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
-    return (uint8_t)rounds.size();
+    return rounds.size();
 }
 
 cardCls::DeckOfCards gm::GameMaster::get_player_deck(PlayerPosition pos)
@@ -304,11 +304,6 @@ void gm::GameMaster::prepare_new_round()
         card_counter.new_game(rounds[round_number - 1].get_game_type());
     }
 }
-// cardCls::DeckOfCards gm::GameMaster::get_player_cards(PlayerPosition pos)
-// {
-//     std::lock_guard<std::mutex> lock(mutex_gm);
-//     return players[pos]->get_hand();
-// }
 
 std::shared_ptr<Player> gm::GameMaster::get_player(PlayerPosition pos)
 {

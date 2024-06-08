@@ -11,7 +11,10 @@
 void signal_end_to_main_thread(int parent_pipe_write_fd)
 {
     char pipe_buffer[]{'E', 'N', 'D'};
-    write(parent_pipe_write_fd, pipe_buffer, sizeof(pipe_buffer));
+    if (write(parent_pipe_write_fd, pipe_buffer, sizeof(pipe_buffer)) < 0)
+    {
+        exception_wrappers::runtime_err_wrapper("Player thread Failed to write to pipe to signal end to main thread");
+    }
 }
 
 void create_TCP_thread(
@@ -45,7 +48,6 @@ void player_threads::MyThread::thread_main(
     int parent_pipe_write_fd)
 {
     int child_pipe_fd[2];
-    char pipe_buff[INGAME_PACKET_NAME_SIZE];
 
     if (pipe(child_pipe_fd) == -1)
     {
@@ -57,8 +59,8 @@ void player_threads::MyThread::thread_main(
 
     create_TCP_thread(client_fd_sp, game_master_sp, player_sp, child_pipe_fd, semaphore_TCP, thread_ended_sp);
 
-    uint8_t nbr_of_rounds = game_master_sp->get_nbr_of_rounds();
-    for (uint8_t i = 0; i < nbr_of_rounds; i++)
+    size_t nbr_of_rounds = game_master_sp->get_nbr_of_rounds();
+    for (size_t i = 0; i < nbr_of_rounds; i++)
     {
         // We need to check if game has started. If not we need to wait for all
         // other players, if it has and we are here it means that we are a new

@@ -144,7 +144,6 @@ int main(int ac, char *av[])
     }
 
     int pipe_fd[2];
-    char pipe_buff[PIPE_BUFF_SIZE];
     if (pipe(pipe_fd) == -1)
     {
         err_func::syserr("Failed to create pipe");
