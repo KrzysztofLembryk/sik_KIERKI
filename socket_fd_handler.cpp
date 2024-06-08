@@ -97,10 +97,8 @@ void socket_func::handle_server_socket_init(uint16_t &port,
 
 void socket_func::handle_client_socket_init(int &socket_fd, int type_of_ip)
 {
-
     if (type_of_ip == IP6_OPT)
     {
-        std::cout << "handle client socket init ipv6\n";
         socket_fd = socket(AF_INET6, SOCK_STREAM, 0);
     }
     else 

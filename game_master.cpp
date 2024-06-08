@@ -14,6 +14,7 @@ sync_barrier(MAX_PLAYERS, [](){})
     this->curr_lewa = std::make_shared<cardCls::Lewa>(1);
     this->rounds = rounds;
     this->round_number = 1;
+    this->curr_lewa_nbr = 1;
     this->first_player = rounds[0].get_first_player();
     this->whose_turn = first_player;
     this->who_won_lewa = NONE_POS;
@@ -32,17 +33,6 @@ sync_barrier(MAX_PLAYERS, [](){})
                             rounds[0].get_game_type());
                             this->players[pos]->set_server_address(server_addr);
     }
-    // struct sockaddr *base_addr = (struct sockaddr*)&server_addr;
-
-    // struct sockaddr_in6 *base_addr_6in = (struct sockaddr_in6*)base_addr;
-
-    // char ip_str[INET6_ADDRSTRLEN];
-    // inet_ntop(AF_INET6, &(base_addr_6in->sin6_addr), ip_str, INET6_ADDRSTRLEN);
-    // std::cout << "GameMaster constructor- main - server_address in game_master: " << ip_str << ":" << ntohs(base_addr_6in->sin6_port) << "\n"; 
-
-    // char s_ip_str[INET6_ADDRSTRLEN];
-    // inet_ntop(AF_INET6, &(server_addr.sin6_addr), s_ip_str, INET6_ADDRSTRLEN);
-    // std::cout << "GameMaster constructor- main - server_address in game_master: " << s_ip_str << ":" << ntohs(server_addr.sin6_port) << "\n"; 
 }
 
 bool gm::GameMaster::check_if_position_taken(PlayerPosition pos)
@@ -137,6 +127,12 @@ uint8_t gm::GameMaster::get_curr_round_nbr()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
     return round_number;
+}
+
+uint8_t gm::GameMaster::get_curr_lewa_nbr()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return curr_lewa_nbr;
 }
 
 uint8_t gm::GameMaster::get_nbr_of_rounds()
@@ -271,6 +267,7 @@ void gm::GameMaster::prepare_new_lewa()
         lewas_played.push_back(*curr_lewa);
         curr_lewa->clear_lewa();
         curr_lewa->set_lewa_id(curr_lewa->get_lewa_id() + 1);
+        curr_lewa_nbr++;
     }
 }
 
@@ -286,6 +283,7 @@ void gm::GameMaster::prepare_new_round()
         curr_lewa->clear_lewa();
         curr_lewa->set_lewa_id(1);
         lewas_played.clear();
+        curr_lewa_nbr = 1;
         round_number++;
         // Since in function that checks who took lewa we release semaphore for
         // player who took it, if round has ended we need to acquire it

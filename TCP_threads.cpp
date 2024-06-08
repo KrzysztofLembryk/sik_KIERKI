@@ -106,7 +106,7 @@ int handle_DEAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::s
 int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP)
 {
     ingame_comm_wrappers::TRICK_Wrapper trick;
-    cardCls::Lewa lewa_with_good_id(game_master_sp->get_curr_round_nbr());
+    cardCls::Lewa lewa_with_good_id(game_master_sp->get_curr_lewa_nbr());
     ingame_comm_wrappers::WRONG_Wrapper wrong;
     std::string address_str;
     std::string msg_str;
@@ -126,7 +126,7 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
 
             int ret_code_read_name = tcp::TCP_read_packet_name(client_fd, INGAME_PACKET_NAME_SIZE, packet_name); 
             cardCls::Lewa client_ret_lewa;
-            int ret_code = trick.read(client_fd, client_ret_lewa, game_master_sp->get_curr_round_nbr(), msg_str);
+            int ret_code = trick.read(client_fd, client_ret_lewa, game_master_sp->get_curr_lewa_nbr(), msg_str);
 
             print_log_from_read_thread_safe(address_str, packet_name, msg_str, game_master_sp);
 
@@ -372,7 +372,7 @@ void TCP_threads::TCPThread::TCP_thread_main(
             {
                 if (handle_player_msg_at_wrong_time(
                                     client_fd_sp->to_int(), 
-                                    game_master_sp->get_curr_round_nbr(), 
+                                    game_master_sp->get_curr_lewa_nbr(), 
                                     player_sp,
                                     game_master_sp) != SUCCESS)
                 {
