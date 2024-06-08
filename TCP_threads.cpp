@@ -72,6 +72,7 @@ int handle_DEAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::s
     auto p_hand = game_master_sp->get_player_deck(player_sp->get_position());
     player_sp->set_hand(p_hand);
     player_sp->set_game_type(game_master_sp->get_game_type());
+    player_sp->zero_curr_SCORE();
 
     std::string msg;
     std::string address_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
@@ -231,6 +232,7 @@ int handle_SCORE(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
     try 
     {
         auto player_scores = game_master_sp->get_player_scores();
+        player_sp->add_points_from_round_to_allpoints();
 
         score.write(client_fd, player_scores, msg_str);
 
@@ -264,8 +266,6 @@ int handle_TOTAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
 
     try 
     {
-        player_sp->add_points_from_round_to_allpoints();
-
         total.write(client_fd, game_master_sp->get_player_all_points(), msg_str);
         print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
     }

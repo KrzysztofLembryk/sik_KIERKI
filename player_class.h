@@ -50,6 +50,7 @@ public:
     void add_points_from_round_to_allpoints();
     void add_lewa_to_lewas_taken(cardCls::Lewa &lewa);
     void clear_lewas_taken();
+    void zero_curr_SCORE();
 
     cardCls::CardClassWrapper play_card(Suit bottom_card_suit);
 

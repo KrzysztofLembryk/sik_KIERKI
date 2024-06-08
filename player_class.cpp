@@ -133,7 +133,6 @@ void Player::add_points_in_curr_round(cardCls::Lewa &lewa)
 void Player::add_points_from_round_to_allpoints()
 {
     this->all_points += (uint32_t)(this->curr_game_points);
-    this->curr_game_points = 0;
 }
 
 void Player::add_lewa_to_lewas_taken(cardCls::Lewa &lewa)
@@ -144,6 +143,11 @@ void Player::add_lewa_to_lewas_taken(cardCls::Lewa &lewa)
 void Player::clear_lewas_taken()
 {
     lewas_taken.clear();
+}
+
+void Player::zero_curr_SCORE()
+{
+    curr_game_points = 0;
 }
 
 cardCls::CardClassWrapper Player::play_card(Suit bottom_card_suit)
