@@ -24,7 +24,7 @@ size_t packet_name_size, size_t data_size)
 {
     ssize_t read_length;
     std::string msg_str;
-    std::string address_str = communication_addresses_to_str(server_address, client_address, false);
+    std::string address_str = communication_addresses_to_str(server_address, client_address, false, NOT_INVOKED_BY_SERVER);
 
     int ret_val_read_name = tcp::TCP_read_packet_name(socket_fd, packet_name_size, packet_name);
 
@@ -57,7 +57,7 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
     while (true)
     {
         std::string packet_name;
-        std::string addreses_str = communication_addresses_to_str(server_address, client_address, false);
+        std::string addreses_str = communication_addresses_to_str(server_address, client_address, false, NOT_INVOKED_BY_SERVER);
         std::string msg_str;
         int ret_val_read_name;
 
@@ -159,7 +159,7 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                 cardCls::Lewa ret_lewa(lewa.get_lewa_id());
 
                 ret_lewa.add_card(playerd_card);
-                addreses_str = communication_addresses_to_str(server_address, client_address, true);
+                addreses_str = communication_addresses_to_str(server_address, client_address, true, NOT_INVOKED_BY_SERVER);
                 trick.write(socket_fd, ret_lewa, msg_str);
 
                 print_log_from_write(addreses_str, msg_str);
@@ -288,7 +288,7 @@ int klient_auto_func::klient_auto_main(
         std::string addreses_str = 
         communication_addresses_to_str(server_address.get_address(),
                                         client_address.get_address(), 
-                                        false);
+                                        false, NOT_INVOKED_BY_SERVER);
         int ret_val_read_name = handle_read_packet_name(socket_fd, 
                                                 packet_name, 
                                                 server_address.get_address(), 

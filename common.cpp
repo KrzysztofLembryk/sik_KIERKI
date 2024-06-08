@@ -68,6 +68,7 @@ int &type_of_ip, AddressWrapper &server_address)
     }
     else if (type_of_ip == IP4_OPT)
     {
+        std::cout << "get_server_address: IP4_OPT\n";
         hints.ai_family = AF_INET; // IPv4
     }
     else
@@ -372,11 +373,11 @@ std::string communication_addresses_to_str(struct sockaddr *server_address, stru
     }
     else 
     {
-        if (server_address->sa_family == AF_INET)
+        if (client_address->sa_family == AF_INET)
         {
             ipv4_msg(res_msg, client_sent_msg, value_str, time_str, server_address, client_address);
         }
-        else if (server_address->sa_family == AF_INET6)
+        else if (client_address->sa_family == AF_INET6)
         {
             ipv6_msg(res_msg, client_sent_msg, value_str, time_str, server_address, client_address);
         }

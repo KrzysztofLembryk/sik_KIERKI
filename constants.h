@@ -26,6 +26,7 @@ constexpr int PIPE_POLLS_ID = 1;
 constexpr int IP6_OPT = 6;
 constexpr int IP4_OPT = 4;
 constexpr int NO_IP_OPT = 0;
+constexpr bool NOT_INVOKED_BY_SERVER = false;
 
 
 // COMMUNICATION WRAPPERS CONSTANTS

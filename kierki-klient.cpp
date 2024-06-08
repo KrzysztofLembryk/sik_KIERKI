@@ -124,7 +124,8 @@ int main(int argc, char *argv[])
 
         std::string msg_str;
         init_comm_wrappers::IAM_Wrapper iam;
-        std::string address_str = communication_addresses_to_str(server_address.get_address(), client_address.get_address(), true);
+        std::string address_str = communication_addresses_to_str(server_address.get_address(), client_address.get_address(), 
+        true, NOT_INVOKED_BY_SERVER);
 
         iam.write(socket_fd, chosen_position, msg_str);
         print_log_from_write(address_str, msg_str);
