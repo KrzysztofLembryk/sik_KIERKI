@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 
 
         if (connect(socket_fd, server_address.get_address(), 
-                    (socklen_t)sizeof(*(server_address.get_address()))) < 0)
+                    server_address.get_address_len()) < 0)
         {
             err_func::error("Cannot connect to the server");
             return FAILURE;

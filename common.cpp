@@ -68,7 +68,6 @@ int &type_of_ip, AddressWrapper &server_address)
     }
     else if (type_of_ip == IP4_OPT)
     {
-        std::cout << "get_server_address: IP4_OPT\n";
         hints.ai_family = AF_INET; // IPv4
     }
     else

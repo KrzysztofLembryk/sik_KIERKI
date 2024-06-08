@@ -12,6 +12,7 @@ class AddressWrapper
     void set_address(struct sockaddr_in &address);
     void set_address(struct sockaddr_in6 &address);
     struct sockaddr* get_address();
+    socklen_t get_address_len();
     
 private:
     struct sockaddr_in6 ip6_address;

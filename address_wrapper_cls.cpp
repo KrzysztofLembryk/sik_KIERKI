@@ -29,3 +29,19 @@ struct sockaddr* AddressWrapper::get_address()
         exception_wrappers::invalid_arg_wrapper("type of ip is not set");
     }
 }
+
+socklen_t AddressWrapper::get_address_len()
+{
+    if (this->type_of_ip == IP4_OPT)
+    {
+        return (socklen_t)sizeof(ip4_address);
+    }
+    else if (this->type_of_ip == IP6_OPT)
+    {
+        return (socklen_t)sizeof(ip6_address);
+    }
+    else
+    {
+        exception_wrappers::invalid_arg_wrapper("type of ip is not set");
+    }
+}
