@@ -2,6 +2,7 @@
 #define INGAME_COMM_WRAPPERS_H
 
 #include "card_classes.h"
+#include <string>
 
 namespace ingame_comm_wrappers
 {
@@ -13,9 +14,9 @@ namespace ingame_comm_wrappers
         TRICK_Wrapper() = default;
         ~TRICK_Wrapper() = default;
 
-        void write(int socket_fd, cardCls::Lewa &lewa);
+        void write(int socket_fd, cardCls::Lewa &lewa, std::string &msg);
 
-        int read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_round);
+        int read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_round, std::string &msg);
 
         private:
         std::vector<char> name{'T', 'R', 'I', 'C', 'K'};
@@ -27,9 +28,9 @@ namespace ingame_comm_wrappers
         WRONG_Wrapper() = default;
         ~WRONG_Wrapper() = default;
 
-        void write(int socket_fd, const cardCls::Lewa &lewa);
+        void write(int socket_fd, const cardCls::Lewa &lewa, std::string &msg);
 
-        int read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_round);
+        int read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_round, std::string &msg);
 
     private:
         std::vector<char> name{'W', 'R', 'O', 'N', 'G'};
@@ -42,10 +43,10 @@ namespace ingame_comm_wrappers
         ~TAKEN_Wrapper() = default;
 
         void write(int socket_fd, const cardCls::Lewa &lewa, 
-            const PlayerPosition &player_who_took_lewa);
+            const PlayerPosition &player_who_took_lewa, std::string &msg);
 
         int read(int socket_fd, cardCls::Lewa &lewa, 
-            PlayerPosition &player_who_took_lewa, uint8_t curr_round);
+            PlayerPosition &player_who_took_lewa, uint8_t curr_round, std::string &msg);
     private:
         std::vector<char> name{'T', 'A', 'K', 'E', 'N'};
     };
@@ -57,9 +58,9 @@ public:
     SCORE_Wrapper() = default;
     ~SCORE_Wrapper() = default;
 
-    void write(int socket_fd, const std::map<PlayerPosition, uint8_t> &scores);
+    void write(int socket_fd, const std::map<PlayerPosition, uint8_t> &scores, std::string &msg);
 
-    int read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores);
+    int read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores, std::string &msg);
 
 private:
     std::vector<char> name{'S', 'C', 'O', 'R', 'E'};
@@ -72,9 +73,11 @@ public:
     ~TOTAL_Wrapper() = default;
 
     void write(int socket_fd, 
-        const std::map<PlayerPosition, uint32_t> &total_scores);
+        const std::map<PlayerPosition, uint32_t> &total_scores, 
+        std::string &msg);
 
-    int read(int socket_fd, std::map<PlayerPosition, uint32_t> &total_scores);
+    int read(int socket_fd, std::map<PlayerPosition, uint32_t> &total_scores,
+    std::string &msg);
 
 private:
     std::vector<char> name{'T', 'O', 'T', 'A', 'L'};

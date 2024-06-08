@@ -17,7 +17,7 @@ namespace gm
     {
     public:
         GameMaster(std::vector<gameCls::Round> &rounds, 
-                                        const struct sockaddr_in6 &server_addr);
+                                        struct sockaddr_in6 &server_addr);
         ~GameMaster() = default;
 
         bool check_if_position_taken(PlayerPosition pos);
@@ -57,6 +57,8 @@ namespace gm
         // cardCls::DeckOfCards get_player_cards(PlayerPosition pos);
         std::shared_ptr<Player> get_player(PlayerPosition pos);
 
+        void acquire_print_msg_sem();
+        void release_print_msg_sem();
 
     private:
         std::map<PlayerPosition, std::shared_ptr<std::binary_semaphore>> semaphore_map;
@@ -74,6 +76,7 @@ namespace gm
         bool is_game_started;
         std::mutex mutex_gm;
         std::barrier<void(*)()> sync_barrier;
+        std::shared_ptr<std::binary_semaphore> sem_print_msg;
     };
 }
 

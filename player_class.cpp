@@ -6,9 +6,34 @@ void Player::set_hand(cardCls::DeckOfCards &hand)
     this->hand = hand;
 }
 
-void Player::set_player_address(const struct sockaddr_in6 &addr)
+void Player::set_player_address(struct sockaddr_in &addr)
 {
-    this->my_address = addr;
+    my_address.set_address(addr);
+}
+
+void Player::set_player_address(struct sockaddr_in6 &addr)
+{
+    my_address.set_address(addr);
+}
+
+void Player::set_player_address(AddressWrapper &addr)
+{
+    my_address = addr;
+}
+
+void Player::set_server_address(struct sockaddr_in &addr)
+{
+    server_address.set_address(addr);
+}
+
+void Player::set_server_address(struct sockaddr_in6 &addr)
+{
+    server_address.set_address(addr);
+}
+
+void Player::set_server_address(AddressWrapper &addr)
+{
+    server_address = addr;
 }
 
 void Player::set_card_played(cardCls::CardClassWrapper &card)
@@ -39,6 +64,16 @@ uint8_t Player::get_curr_score()
 uint32_t Player::get_all_points()
 {
     return all_points;
+}
+
+struct sockaddr* Player::get_server_address()
+{
+    return server_address.get_address();
+}
+
+struct sockaddr* Player::get_client_address()
+{
+    return my_address.get_address();
 }
 
 int Player::check_card_correctness(cardCls::CardClassWrapper &card, 
@@ -88,4 +123,19 @@ void Player::add_points_from_round_to_allpoints()
 {
     this->all_points += (uint32_t)(this->curr_game_points);
     this->curr_game_points = 0;
+}
+
+void Player::add_lewa_to_lewas_taken(cardCls::Lewa &lewa)
+{
+    lewas_taken.push_back(lewa);
+}
+
+void Player::clea_lewas_taken()
+{
+    lewas_taken.clear();
+}
+
+cardCls::CardClassWrapper Player::play_card(Suit bottom_card_suit)
+{
+    return hand.play_card(bottom_card_suit);
 }

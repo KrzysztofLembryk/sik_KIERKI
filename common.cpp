@@ -13,6 +13,11 @@
 #include "err.h"
 #include "common.h"
 #include "exception_wrappers.h"
+#include "constants.h"
+#include <chrono>
+#include <arpa/inet.h>
+#include <iomanip>
+#include <sstream>
 
 uint16_t port_from_str_to_ul(char const *string)
 {
@@ -26,11 +31,49 @@ uint16_t port_from_str_to_ul(char const *string)
     return (uint16_t)port;
 }
 
-struct sockaddr_in get_server_address(char const *host, uint16_t port)
+// struct sockaddr_in get_server_address_ip4(char const *host, uint16_t port)
+// {
+//     struct addrinfo hints;
+//     memset(&hints, 0, sizeof(struct addrinfo));
+//     hints.ai_family = AF_INET; // IPv4
+//     hints.ai_socktype = SOCK_STREAM;
+//     hints.ai_protocol = IPPROTO_TCP;
+
+//     struct addrinfo *address_result;
+//     int errcode = getaddrinfo(host, NULL, &hints, &address_result);
+//     if (errcode != 0)
+//     {
+//         err_func::fatal("getaddrinfo: %s", gai_strerror(errcode));
+//     }
+
+//     struct sockaddr_in send_address;
+//     send_address.sin_family = AF_INET; // IPv4
+//     send_address.sin_addr.s_addr =     // IP address
+//         ((struct sockaddr_in *)(address_result->ai_addr))->sin_addr.s_addr;
+//     send_address.sin_port = htons(port); // port from the command line
+
+//     freeaddrinfo(address_result);
+
+//     return send_address;
+// }
+
+void get_server_address(char const *host, uint16_t port, 
+int &type_of_ip, AddressWrapper &server_address)
 {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET; // IPv4
+    if (type_of_ip == IP6_OPT)
+    {
+        hints.ai_family = AF_INET6; // IPv6
+    }
+    else if (type_of_ip == IP4_OPT)
+    {
+        hints.ai_family = AF_INET; // IPv4
+    }
+    else
+    {
+        hints.ai_family = AF_UNSPEC; // IPv6
+    }
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
@@ -40,16 +83,38 @@ struct sockaddr_in get_server_address(char const *host, uint16_t port)
     {
         err_func::fatal("getaddrinfo: %s", gai_strerror(errcode));
     }
-
-    struct sockaddr_in send_address;
-    send_address.sin_family = AF_INET; // IPv4
-    send_address.sin_addr.s_addr =     // IP address
-        ((struct sockaddr_in *)(address_result->ai_addr))->sin_addr.s_addr;
-    send_address.sin_port = htons(port); // port from the command line
+    // struct sockaddr_in6 send_address;
+    // send_address.sin6_family = AF_INET6; // IPv6
+    // send_address.sin6_addr =     // IP address
+    //     ((struct sockaddr_in6 *)(address_result->ai_addr))->sin6_addr;
+    // send_address.sin6_port = htons(port); // port from the command line
+    if (address_result->ai_family == AF_INET)
+    {
+        // IPv4
+        struct sockaddr_in s_address_ip4;
+        s_address_ip4.sin_family = AF_INET;
+        s_address_ip4.sin_addr = ((struct sockaddr_in *)(address_result->ai_addr))->sin_addr;
+        s_address_ip4.sin_port = htons(port);
+        server_address.set_address(s_address_ip4);
+        type_of_ip = IP4_OPT;
+    }
+    else if (address_result->ai_family == AF_INET6)
+    {
+        // IPv6
+        struct sockaddr_in6 s_address_ip6;
+        s_address_ip6.sin6_family = AF_INET6;
+        s_address_ip6.sin6_addr = ((struct sockaddr_in6 *)(address_result->ai_addr))->sin6_addr;
+        s_address_ip6.sin6_port = htons(port);
+        server_address.set_address(s_address_ip6);
+        type_of_ip = IP6_OPT;
+    }
+    else
+    {
+        // Unexpected family
+        exception_wrappers::invalid_arg_wrapper("Unexpected address family");
+    }
 
     freeaddrinfo(address_result);
-
-    return send_address;
 }
 
 // Following two functions come from Stevens' "UNIX Network Programming" book.
@@ -239,16 +304,124 @@ Suit determine_suit(char suit)
     }
 }
 
-// GameType determine_game_type(char game_type)
-// {
-//     if (game_type == NO_LEWA || game_type == NO_HEART || game_type == NO_QUEEN || game_type == NO_MISTER || game_type == NO_KING_HEART || game_type == NO_SEVEN_AND_LAST || game_type == BANDIT)
-//     {
-//         return static_cast<GameType>(game_type);
-//     }
-//     else
-//     {
-//         printf("wrong game type: %c\n", game_type);
-//         fflush(stdout);
-//         exception_wrappers::invalid_arg_wrapper("Invalid game type read from socket");
-//     }
-// }
+void ipv6_msg(std::string &res_msg, bool client_sent_msg, std::string &value_str, std::string &time_str, 
+struct sockaddr *server_address, struct sockaddr *client_address)
+{
+    // IPv6
+    struct sockaddr_in6 *server_addr_in6 = (struct sockaddr_in6 *)server_address;
+    char s_ip_str[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &(server_addr_in6->sin6_addr), s_ip_str, INET6_ADDRSTRLEN);
+
+    struct sockaddr_in6 *client_addr_in6 = (struct sockaddr_in6 *)client_address;
+    char c_ip_str[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &(client_addr_in6->sin6_addr), c_ip_str, INET6_ADDRSTRLEN);
+
+    if (client_sent_msg)
+    {
+        res_msg = "[" + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in6->sin6_port)) + "," + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in6->sin6_port)) + "," +  
+        time_str + '.' + value_str + "] ";
+    }
+    else
+    {
+        res_msg = "[" + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in6->sin6_port)) + "," + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in6->sin6_port)) + "," + time_str + '.' + value_str + "] ";
+    }
+}
+
+void ipv4_msg(std::string &res_msg, bool client_sent_msg, std::string &value_str, std::string &time_str, 
+struct sockaddr *server_address, struct sockaddr *client_address)
+{
+
+    // IPv4
+    struct sockaddr_in *server_addr_in = (struct sockaddr_in *)server_address;
+    char s_ip_str[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(server_addr_in->sin_addr), s_ip_str, INET_ADDRSTRLEN);
+
+    struct sockaddr_in *client_addr_in = (struct sockaddr_in *)client_address;
+    char c_ip_str[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(client_addr_in->sin_addr), c_ip_str, INET_ADDRSTRLEN);
+
+    if (client_sent_msg)
+    {
+        res_msg = "[" + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in->sin_port)) + "," + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in->sin_port)) + "," + time_str + '.' + value_str + "] ";
+    }
+    else
+    {
+        res_msg = "[" + std::string(s_ip_str) + ":" + std::to_string(ntohs(server_addr_in->sin_port)) + "," + std::string(c_ip_str) + ":" + std::to_string(ntohs(client_addr_in->sin_port)) + "," + time_str + '.' + value_str + "] ";
+    }
+}
+
+std::string communication_addresses_to_str(struct sockaddr *server_address, struct sockaddr *client_address, bool client_sent_msg, bool invoked_in_server)
+{
+    auto now = std::chrono::high_resolution_clock::now();
+    auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+    auto epoch = now_ms.time_since_epoch();
+    auto value = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
+    std::time_t now_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::tm *now_tm = std::localtime(&now_time);
+
+    std::string value_str = std::to_string(value.count() % 1000);
+    std::string res_msg;
+    std::stringstream ss;
+    ss << std::put_time(now_tm, "%Y-%m-%dT%H:%M:%S");
+    std::string time_str = ss.str();
+
+    if (invoked_in_server)
+    {
+        ipv6_msg(res_msg, client_sent_msg, value_str, time_str, server_address,
+        client_address);
+    }
+    else 
+    {
+        if (client_address->sa_family == AF_INET)
+        {
+            ipv4_msg(res_msg, client_sent_msg, value_str, time_str, server_address, client_address);
+        }
+        else if (client_address->sa_family == AF_INET6)
+        {
+            ipv6_msg(res_msg, client_sent_msg, value_str, time_str, server_address, client_address);
+        }
+        else
+        {
+            // Unexpected family
+            exception_wrappers::runtime_err_wrapper("Unexpected family");
+        }
+    }
+
+    return res_msg;
+}
+
+void print_log_from_read_thread_safe(std::string &adresses, std::string &packet_name, std::string &msg, std::shared_ptr<gm::GameMaster> gm_sp)
+{
+    gm_sp->acquire_print_msg_sem();
+
+    std::string final_msg = adresses + packet_name + msg;
+    std::cout << final_msg;
+    fflush(stdout);
+
+    gm_sp->release_print_msg_sem();
+}
+
+void print_log_from_write_thread_safe(std::string &adresses, std::string &msg, std::shared_ptr<gm::GameMaster> gm_sp)
+{
+    gm_sp->acquire_print_msg_sem();
+
+    std::string final_msg = adresses + msg;
+    std::cout << final_msg;
+    fflush(stdout);
+
+    gm_sp->release_print_msg_sem();
+}
+
+void print_log_from_read(std::string &adresses, std::string &packet_name, std::string &msg)
+{
+    std::string final_msg = adresses + packet_name + msg;
+    std::cout << final_msg;
+    fflush(stdout);
+}
+
+void print_log_from_write(std::string &adresses, std::string &msg)
+{
+    std::string final_msg = adresses + msg;
+    std::cout << final_msg;
+    fflush(stdout);
+}

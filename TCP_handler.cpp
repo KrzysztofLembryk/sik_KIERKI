@@ -49,41 +49,95 @@ int tcp::TCP_read_packet(int socket_fd, char *buff, size_t data_size,
     else if (read_length == 0) 
     {
         // exception_wrappers::runtime_err_wrapper(" - connection closed read_len == 0");
-        return ERROR;
+        err_func::error(" - connection closed read_len == 0");
+        return DISCONNECTED;
     }
     return SUCCESS;
 }
 
-int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size, 
-    ssize_t &read_length)
+void add_rn_to_buff_if_needed(size_t &read_bytes, char *buff, size_t data_size)
 {
+    if (read_bytes == 0)
+    {
+        buff[0] = '\r';
+        buff[1] = '\n';
+        read_bytes = 2;
+    }
+    else if (read_bytes == 1)
+    {
+        if (buff[0] == '\r')
+        {
+            buff[1] = '\n';
+            read_bytes = 2;
+        }
+        else
+        {
+            buff[1] = '\r';
+            buff[2] = '\n';
+            read_bytes = 3;
+        }
+    }
+    else 
+    {
+        if (read_bytes < data_size - 2)
+        {
+            if (buff[read_bytes - 2] != '\r' || 
+                (buff[read_bytes - 2] == '\r' && buff[read_bytes - 1] != '\n'))
+            {
+                buff[read_bytes] = '\r';
+                read_bytes++;
+                buff[read_bytes] = '\n';
+                read_bytes++;
+            }
+        }
+        else 
+        {
+            if (buff[read_bytes - 2] != '\r' || 
+                (buff[read_bytes - 2] == '\r' && buff[read_bytes - 1] != '\n'))
+            {
+                buff[read_bytes - 2] = '\r';
+                buff[read_bytes - 1] = '\n';
+            }
+        }
+    }
+}
+
+
+int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size, 
+    ssize_t &total_bytes_read, std::string &msg)
+{
+    total_bytes_read = 0;
     size_t read_bytes = 0;
     char curr_char = '\r';
     bool r_occured = false;
+    int ret_code = SUCCESS;
 
     while(read_bytes < data_size)
     {
-        read_length = readn(socket_fd, &curr_char, 1);
+        ssize_t read_length = readn(socket_fd, &curr_char, 1);
 
         if (read_length < 0)
         {
             if (errno == EAGAIN) 
             {
                 err_func::error("readn < 0 --> readn timeout");
-                return TIMEOUT;
+                ret_code = TIMEOUT;
+                break;
             } 
             else 
             {
                 // exception_wrappers::runtime_err_wrapper("readn < 0");
                 err_func::error("readn < 0");
-                return ERROR;
+                ret_code = ERROR;
+                break;
             }
         }
         else if (read_length == 0) 
         {
             // exception_wrappers::runtime_err_wrapper("read_len == 0 -- no newline found in packet name or sent packet is to short or connection was closed");
-            err_func::error("read_len == 0 -- no newline found in packet name or sent packet is to short or connection was closed");
-            return ERROR;
+            err_func::error("read_len == 0 -- client DISCONNECTED or packet was too short and didnt end with \\n");
+            ret_code = DISCONNECTED;
+            break;
         }
 
         // If curr_char is \r and then if next char is \n we end reading data
@@ -91,14 +145,27 @@ int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size,
         if (curr_char == '\r')
             r_occured = true;
         else 
+        {
             if (r_occured && curr_char != '\n')
+            {
                 r_occured = false;
+            }
+        }
 
         buff[read_bytes] = curr_char;
         read_bytes++;
+        total_bytes_read++;
 
         if (curr_char == '\n' && r_occured)
             break;
+    }
+
+    add_rn_to_buff_if_needed(read_bytes, buff, data_size);
+    msg = std::string(buff, read_bytes);
+
+    if (ret_code != SUCCESS)
+    {
+        return ret_code;
     }
     // Sent packet must end with \n, thus this needs to be last character we 
     // read, otherwise packet is invalid
@@ -108,9 +175,7 @@ int tcp::TCP_read_till_newline(int socket_fd, char *buff, size_t data_size,
         return ERROR;
     }
 
-    read_length = read_bytes;
-
-    return SUCCESS;
+    return ret_code;
 }
 
 int tcp::TCP_read_packet_name(int socket_fd, size_t name_len, std::string &name)
@@ -125,16 +190,17 @@ int tcp::TCP_read_packet_name(int socket_fd, size_t name_len, std::string &name)
 
     std::memset(name_buff, 0, MAX_PACKET_NAME_SIZE);
     
-    if (tcp::TCP_read_packet(socket_fd, name_buff, name_len, read_length) != SUCCESS)
+    int ret_code = tcp::TCP_read_packet(socket_fd, name_buff, name_len, read_length);
+    if (ret_code != SUCCESS)
     {
-        return ERROR;
+        return ret_code;
     }
-    if ((size_t)read_length != name_len)
+    if (ret_code == SUCCESS && (size_t)read_length != name_len)
     {
         err_func::error("read_length != name_len");
-        return ERROR;
+        ret_code = FAILURE;
     }
 
     name = std::string(name_buff, name_len);
-    return SUCCESS;
+    return ret_code;
 }

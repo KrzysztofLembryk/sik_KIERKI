@@ -21,6 +21,8 @@ namespace po = boost::program_options;
 #include "ingame_comm_wrappers.h"
 #include "player_threads.h"
 #include "polls_func.h"
+#include "common.h"
+#include "err.h"
 
 int init_server(int ac, char *av[], po::variables_map &vm,
                 uint16_t &port, unsigned &timeout, std::string &file_name,
@@ -32,9 +34,8 @@ int init_server(int ac, char *av[], po::variables_map &vm,
         // Default value for port is 0, since if port is not specified by user
         // 0 means we will bind to any available port.
         assign_programme_parameters_server(vm, port, timeout, file_name);
-        print_parameters(port, timeout, file_name);
         // Read from file_name
-        socket_func::handle_socket_init(port, socket_fd, server_address);
+        socket_func::handle_server_socket_init(port, socket_fd, server_address);
         return SUCCESS;
     }
     catch (const std::exception &e)
@@ -52,7 +53,7 @@ void print_client_address(struct sockaddr_in6 &client_address)
     printf("accepted connection from %s:%" PRIu16 "\n", client_ip, client_port);
 }
 
-int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr<gm::GameMaster> game_master_sp, int pipe_write_fd)
+int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr<gm::GameMaster> game_master_sp, int pipe_write_fd, struct sockaddr_in6 &server_address)
 {
     struct sockaddr_in6 client_address;
     socklen_t client_address_len = sizeof client_address;
@@ -69,17 +70,32 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     init_comm_wrappers::IAM_Wrapper iam_wrapper;
     PlayerPosition new_p_position;
 
-    if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position) != SUCCESS)
+    std::string address_str = communication_addresses_to_str((struct sockaddr *)&server_address, (struct sockaddr *)&client_address, true);
+    std::string msg_str;
+    if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position, msg_str) != SUCCESS)
     {
-        std::cout << "IAM read unsucessful\n";
+        // We print log from write even though we did reading, since at the 
+        // beginning of this project I decided that IAM will read whole msg 
+        // inside read, without splitting reading to read_packet name and then 
+        // reading the rest of the packet.
+        print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
+        err_func::error("IAM read unsuccessful");
         return CONTINUE;
     }
+
+    print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
 
     if (game_master_sp->check_if_position_taken(new_p_position))
     {
         init_comm_wrappers::BUSY_Wrapper busy_wrapper;
-        std::cout << "Sending BUSY packet\n";
-        busy_wrapper.write(client_fd_sp->to_int(), game_master_sp->get_taken_positions());
+
+        address_str = communication_addresses_to_str((struct sockaddr *)&server_address, (struct sockaddr *)&client_address, false);
+
+        busy_wrapper.write(client_fd_sp->to_int(), 
+                            game_master_sp->get_taken_positions(), 
+                            msg_str);
+        print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
+
         return CONTINUE;
     }
     else
@@ -88,8 +104,6 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     }
 
     player_threads::MyThread my_thread;
-    std::cout << "Starting thread\n";
-    fflush(stdout);
     std::thread t(
         [client_fd_sp, game_master_sp, new_p_position, pipe_write_fd, my_thread]() mutable {
             my_thread.thread_main(client_fd_sp,
@@ -133,11 +147,15 @@ int main(int ac, char *av[])
     char pipe_buff[PIPE_BUFF_SIZE];
     if (pipe(pipe_fd) == -1)
     {
-        std::cerr << "Failed to create pipe" << "\n";
+        err_func::syserr("Failed to create pipe");
         return FAILURE;
     }
 
     std::shared_ptr<gm::GameMaster> game_master_sp = std::make_shared<gm::GameMaster>(vec_of_rounds, server_address);
+
+    char s_ip_str[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &(server_address.sin6_addr), s_ip_str, INET6_ADDRSTRLEN);
+    std::cout << "kierki-serwer - main - server_address in game_master: " << s_ip_str << ":" << ntohs(server_address.sin6_port) << "\n"; 
 
     struct pollfd poll_descriptors[POLLS_NBR_OF_DSCR];
     int poll_status;
@@ -166,10 +184,16 @@ int main(int ac, char *av[])
                 }
                 if (poll_descriptors[TCP_SOCKET_POLLS_ID].revents & POLLIN)
                 {
-                    std::cout << "New connection\n";
-                    fflush(stdout);
-                    if (handle_game_joining_request(socket_fd, timeout, game_master_sp, pipe_fd[PIPE_WRITE_DSCR]) != SUCCESS)
+                    try
                     {
+                        if (handle_game_joining_request(socket_fd, timeout, game_master_sp, pipe_fd[PIPE_WRITE_DSCR], server_address) != SUCCESS)
+                        {
+                            continue;
+                        }
+                    }
+                    catch(const std::exception& e)
+                    {
+                        std::cerr << e.what() << '\n';
                         continue;
                     }
                 }
@@ -178,10 +202,13 @@ int main(int ac, char *av[])
         catch (std::exception &e)
         {
             std::cerr << e.what() << "\n";
+            close(socket_fd);
+            close(pipe_fd[PIPE_READ_DSCR]);
+            close(pipe_fd[PIPE_WRITE_DSCR]);
+            return FAILURE;
         }
     }
 
-    std::cout << "Closing server\n";
     close(socket_fd);
     close(pipe_fd[PIPE_READ_DSCR]);
     close(pipe_fd[PIPE_WRITE_DSCR]);

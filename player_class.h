@@ -3,6 +3,7 @@
 
 #include "game_classes.h"
 #include <netinet/in.h>
+#include "address_wrapper_cls.h"
 
 
 class Player
@@ -11,18 +12,23 @@ public:
     Player() = delete;
     Player( cardCls::DeckOfCards &hand, 
             PlayerPosition position, 
-            GameType game_type, 
-            const struct sockaddr_in6 &server_addr) : 
+            GameType game_type) : 
                                                 hand(hand), 
                                                 position(position), 
                                                 all_points(0),
                                                 curr_game_points(0),
-                                                point_counter(game_type), 
-                                                server_address(server_addr) {}
+                                                point_counter(game_type) {}
     ~Player() = default;
 
     void set_hand(cardCls::DeckOfCards &hand);
-    void set_player_address(const struct sockaddr_in6 &addr);
+
+    void set_player_address(struct sockaddr_in &addr);
+    void set_player_address(struct sockaddr_in6 &addr);
+    void set_player_address(AddressWrapper &addr);
+    void set_server_address(struct sockaddr_in &addr);
+    void set_server_address(struct sockaddr_in6 &addr);
+    void set_server_address(AddressWrapper &addr);
+
     void set_card_played(cardCls::CardClassWrapper &card);
     void set_game_type(GameType game_type);
 
@@ -30,11 +36,17 @@ public:
     PlayerPosition get_position();
     uint8_t get_curr_score();
     uint32_t get_all_points();
+    struct sockaddr* get_server_address();
+    struct sockaddr* get_client_address();
 
     int check_card_correctness(cardCls::CardClassWrapper &card, 
     Suit bottom_card_suit);
     void add_points_in_curr_round(cardCls::Lewa &lewa);
     void add_points_from_round_to_allpoints();
+    void add_lewa_to_lewas_taken(cardCls::Lewa &lewa);
+    void clea_lewas_taken();
+
+    cardCls::CardClassWrapper play_card(Suit bottom_card_suit);
 
 private:
     cardCls::DeckOfCards hand;
@@ -43,8 +55,14 @@ private:
     uint8_t curr_game_points;
     gameCls::PointCounter point_counter;
     std::vector<cardCls::Lewa> lewas_taken;
-    const struct sockaddr_in6 server_address;
-    struct sockaddr_in6 my_address;
+    // we dont need to allocate memory for server address since it lives in main
+    // thread and main thread ends after all threads end, thus it is safe to 
+    // use it
+    AddressWrapper server_address;
+    AddressWrapper my_address;
+    // struct sockaddr *server_address;
+    // struct sockaddr *my_address;
+    // bool was_my_addr_allocated;
 };
 
 #endif // PLAYER_CLASS_H

@@ -4,6 +4,7 @@
 #include <regex>
 #include "exception_wrappers.h"
 #include "constants.h"
+#include "common.h"
 
 using std::cout;
 
@@ -104,7 +105,7 @@ std::vector<gameCls::Round> fHandler::read_rounds_from_file(const std::string &f
     {
         if (curr_line == 0)
         {
-            game_type = (GameType)(line[0] - '0');
+            game_type = char_to_gameType(line[0]);
 
             if (line[1] == 'N')
                 first_player = N;

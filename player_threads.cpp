@@ -14,24 +14,14 @@ void signal_end_to_main_thread(int parent_pipe_write_fd)
     write(parent_pipe_write_fd, pipe_buffer, sizeof(pipe_buffer));
 }
 
-void player_threads::MyThread::thread_main(
+void create_TCP_thread(
     std::shared_ptr<ClientFdWrapper> client_fd_sp,
     std::shared_ptr<gm::GameMaster> game_master_sp,
     std::shared_ptr<Player> player_sp,
-    int parent_pipe_write_fd)
+    int child_pipe_fd[2],
+    std::shared_ptr<std::binary_semaphore> semaphore_TCP,
+    std::shared_ptr<bool> thread_ended_sp)
 {
-    std::cout << "Thread started\n";
-    int child_pipe_fd[2];
-    char pipe_buff[INGAME_PACKET_NAME_SIZE];
-
-    if (pipe(child_pipe_fd) == -1)
-    {
-        exception_wrappers::runtime_err_wrapper("Failed to create pipe");
-    }
-
-    std::shared_ptr<std::binary_semaphore> semaphore_TCP = std::make_shared<std::binary_semaphore>(0);
-    std::shared_ptr<bool> thread_ended_sp = std::make_shared<bool>(false);
-
     TCP_threads::TCPThread tcp_thread;
 
     std::thread t(
@@ -46,14 +36,34 @@ void player_threads::MyThread::thread_main(
         });
     t.detach();
 
+}
+
+void player_threads::MyThread::thread_main(
+    std::shared_ptr<ClientFdWrapper> client_fd_sp,
+    std::shared_ptr<gm::GameMaster> game_master_sp,
+    std::shared_ptr<Player> player_sp,
+    int parent_pipe_write_fd)
+{
+    int child_pipe_fd[2];
+    char pipe_buff[INGAME_PACKET_NAME_SIZE];
+
+    if (pipe(child_pipe_fd) == -1)
+    {
+        exception_wrappers::runtime_err_wrapper("Failed to create pipe");
+    }
+
+    std::shared_ptr<std::binary_semaphore> semaphore_TCP = std::make_shared<std::binary_semaphore>(0);
+    std::shared_ptr<bool> thread_ended_sp = std::make_shared<bool>(false);
+
+    create_TCP_thread(client_fd_sp, game_master_sp, player_sp, child_pipe_fd, semaphore_TCP, thread_ended_sp);
+
     uint8_t nbr_of_rounds = game_master_sp->get_nbr_of_rounds();
     for (uint8_t i = 0; i < nbr_of_rounds; i++)
     {
         // We need to check if game has started. If not we need to wait for all
         // other players, if it has and we are here it means that we are a new
         // player and we connected after sbs has disconnected
-        if (!game_master_sp->check_if_game_started())
-            game_master_sp->wait_for_game_start();
+        game_master_sp->wait_for_game_start();
 
         // Here we send DEAL to All players
         btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "DEAL");
@@ -64,6 +74,8 @@ void player_threads::MyThread::thread_main(
             // After sending deal we wait for our turn to play card
             game_master_sp->wait_for_turn(player_sp->get_position());
 
+            std::cout << "Tcp thread main - now is turn: " << player_sp->get_position() << "\n";
+            fflush(stdout);
             // Player whose turn is needs to get TRICK from server
             btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "TRICK");
 
@@ -99,9 +111,15 @@ void player_threads::MyThread::thread_main(
 
             if (game_master_sp->check_if_round_finished())
             {
+                // Thanks to previous waiting now all players have scores up to 
+                // date, and we can safely send scores to all players, while 
+                // doing so we also add points from this round
                 btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "SCORE");
                 semaphore_TCP->acquire();
 
+                // Because we add points from round in SCORE we need to wait for
+                // all players to finish adding points before we can send TOTAL
+                // with updated scores
                 game_master_sp->wait_for_all_players();
 
                 btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], "TOTAL");

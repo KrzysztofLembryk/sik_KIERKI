@@ -1,6 +1,9 @@
 #include "parameters_handling.h"
 #include <iostream>
 #include "exception_wrappers.h"
+#include "err.h"
+#include "constants.h"
+#include "common.h"
 
 namespace po = boost::program_options;
 
@@ -26,29 +29,45 @@ void parse_programme_parameters_server(int ac,
     }
 }
 
-
-void parse_programme_parameters_client(int ac,
-                                       char *av[],
-                                       po::variables_map &vm)
+void parse_programme_parameters_client(int argc, char *argv[], 
+    std::vector<std::string> &ports, std::vector<std::string> &hosts, 
+    std::map<PlayerPosition, bool> &positions, bool &a_option, bool &ip6_opt, bool &ip4_opt)
 {
-    po::options_description desc("Allowed options");
+    int opt;
 
-    desc.add_options()
-    ("p,p", po::value<std::vector<uint16_t>>(), "<port nbr> on which server listens")
-    ("h,h", po::value<std::vector<std::string>>(), "<host addr>")
-    ("t,t", po::value<std::vector<unsigned>>(), "<timeout> in seconds");
-
-    po::store(po::parse_command_line(ac, av, desc), vm);
-    po::notify(vm);
-
-    if (vm.count("help"))
-    {
-        std::cout << desc << "\n";
-        throw std::invalid_argument("help option");
-    }
-    if (vm.count("p") == 0 || vm.count("h") == 0)
-    {
-        exception_wrappers::invalid_arg_wrapper("The 'p' and 'h' options are required but missing.");
+    while ((opt = getopt(argc, argv, "p:h:aNSWE64")) != -1) {
+        switch (opt) 
+        {
+            case 'p':
+                ports.push_back(optarg);
+                break;
+            case 'h':
+                hosts.push_back(optarg);
+                break;
+            case 'a':
+                a_option = true;
+                break;
+            case 'N':
+                positions[N] = true;
+                break;
+            case 'S':
+                positions[S] = true;
+                break;
+            case 'W':
+                positions[W] = true;
+                break;
+            case 'E':
+                positions[E] = true;
+                break;
+            case '6':
+                ip6_opt = true;
+                break;
+            case '4':
+                ip4_opt = true;
+                break;
+            default: /* '?' */
+                exception_wrappers::invalid_arg_wrapper("Usage: [-p port] [-h host] [-aNSWE64]");
+        }
     }
 }
 
@@ -73,9 +92,71 @@ void assign_programme_parameters_server(po::variables_map &vm, uint16_t &port, u
     file_name = file_names[0];
 }
 
-void print_parameters(uint16_t port, unsigned timeout, std::string file_name)
+
+void assign_programme_parameters_client( 
+                                uint16_t &port, 
+                                std::string &host,
+                                std::vector<std::string> &ports, 
+                                std::vector<std::string> &hosts, 
+                                std::map<PlayerPosition, bool> &positions, 
+                                bool &a_option, bool &ip6_opt, bool &ip4_opt,
+                                PlayerPosition &chosen_pos)
 {
-    std::cout << "port: " << port << "\n";
-    std::cout << "timeout: " << timeout << "\n";
-    std::cout << "file name: " << file_name << "\n";
+    std::cout << "Assigning parameters\n";
+
+    if (ports.size()) 
+    {
+        port = port_from_str_to_ul(ports[0].data());
+        std::cout << "got port: " << (unsigned)port << "\n";
+    }
+    else 
+    {
+        exception_wrappers::invalid_arg_wrapper("Port not specified");
+    }
+
+    if (hosts.size()) 
+    {
+        host = hosts[0];
+        std::cout << "got host: " << host << "\n";
+    }
+    else
+    {
+        exception_wrappers::invalid_arg_wrapper("Host not specified");
+    }
+
+    if (ip6_opt) 
+    {
+        // Option -6 was specified
+        std::cout << "IPv6\n";
+    }
+    else if (ip4_opt) 
+    {
+        std::cout << "IPv4\n";
+        // Option -4 was specified
+    }
+    else 
+    {
+        std::cout << "Neither -6 nor -4 was specified\n";
+        // Neither -6 nor -4 was specified
+    }
+
+    // Check for options without values
+    if (a_option) 
+    {
+        std::cout << "Option -a was specified\n";
+        // Option -a was specified
+    }
+
+    if (positions.size() == 0)
+    {
+        exception_wrappers::invalid_arg_wrapper("No position specified");
+    }
+    else
+    {
+        for (auto &pos : positions)
+        {
+            chosen_pos = pos.first;
+            break;
+        }
+    }
 }

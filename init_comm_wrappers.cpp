@@ -13,10 +13,16 @@
  * Function transforms PlayerPosition to correct char value and sends 
  * struct IAM by tcp socket
 */
-void init_comm_wrappers::IAM_Wrapper::write(int socket_fd, PlayerPosition position)
+void init_comm_wrappers::IAM_Wrapper::write(int socket_fd, PlayerPosition position, std::string &msg)
 {
-    iam.position = playerPos_to_char(position);
-    tcp::TCP_send_packet(socket_fd, &iam, sizeof(iam));    
+    std::vector<char> msg_vec(name);
+
+    msg_vec.push_back(playerPos_to_char(position));
+    msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
+
+    msg = std::string(msg_vec.begin(), msg_vec.end());
+
+    tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());    
 }
 
 /**
@@ -24,13 +30,13 @@ void init_comm_wrappers::IAM_Wrapper::write(int socket_fd, PlayerPosition positi
  * correct, checks if packet name is correct and then transforms char position 
  * value to PlayerPosition enum, and checks if it is correct
 */
-int init_comm_wrappers::IAM_Wrapper::read(int socket_fd, PlayerPosition &position)
+int init_comm_wrappers::IAM_Wrapper::read(int socket_fd, PlayerPosition &position, std::string &msg)
 {
     ssize_t read_length = 0;
-
-    std::memset(read_buff, 0, MAX_IAM_BUFF_SIZE);
+    char read_buff[MAX_IAM_BUFF_SIZE]; 
+    std::memset(read_buff, 0, MAX_IAM_BUFF_SIZE); 
     
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_IAM_BUFF_SIZE, read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_IAM_BUFF_SIZE, read_length, msg) != SUCCESS)
     {
         return ERROR;
     }
@@ -58,7 +64,7 @@ int init_comm_wrappers::IAM_Wrapper::read(int socket_fd, PlayerPosition &positio
 
 // BUSY_Wrapper
 
-void init_comm_wrappers::BUSY_Wrapper::write(int socket_fd, std::vector<PlayerPosition> taken_positions)
+void init_comm_wrappers::BUSY_Wrapper::write(int socket_fd, std::vector<PlayerPosition> taken_positions, std::string &msg)
 {
     std::vector<char> msg_vec(name);
 
@@ -78,6 +84,8 @@ void init_comm_wrappers::BUSY_Wrapper::write(int socket_fd, std::vector<PlayerPo
 
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
+    msg = std::string(msg_vec.begin(), msg_vec.end());
+
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
@@ -86,7 +94,7 @@ void init_comm_wrappers::BUSY_Wrapper::write(int socket_fd, std::vector<PlayerPo
  * calling us means that these bytes were equal to BUSY
 */
 int init_comm_wrappers::BUSY_Wrapper::read(
-    int socket_fd, std::vector<PlayerPosition> &taken_positions)
+    int socket_fd, std::vector<PlayerPosition> &taken_positions, std::string &msg)
 {
     ssize_t read_length;
     char read_buff[MAX_BUSY_BUFF_SIZE]; 
@@ -95,7 +103,7 @@ int init_comm_wrappers::BUSY_Wrapper::read(
     // BUSY_BUFF_SIZE is maximally equal to 10 - 4 bytes for packet name = BUSY
     // 2 bytes for end chars and maximally 4 bytes for player positions thus
     // we can read maximally BUSY_BUFF_SIZE - this->name.size() bytes
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_BUSY_BUFF_SIZE, read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_BUSY_BUFF_SIZE, read_length, msg) != SUCCESS)
     {
         return ERROR;
     }
@@ -127,7 +135,7 @@ int init_comm_wrappers::BUSY_Wrapper::read(
 
 // DEAL_Wrapper
 
-void init_comm_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type , PlayerPosition first_player_pos, cardCls::DeckOfCards &&deck_of_cards)
+void init_comm_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type , PlayerPosition first_player_pos, cardCls::DeckOfCards &&deck_of_cards, std::string &msg)
 {
     std::vector<char> msg_vec(name);
     std::vector<char> game_type_and_first_player_pos;
@@ -142,10 +150,12 @@ void init_comm_wrappers::DEAL_Wrapper::write(int socket_fd, GameType game_type ,
     msg_vec.insert(msg_vec.end(), deck.begin(), deck.end());
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
+    msg = std::string(msg_vec.begin(), msg_vec.end());
+
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
-int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards)
+int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards, std::string &msg)
 {
     ssize_t read_length;
     char read_buff[MAX_DEAL_BUFF_SIZE]; 
@@ -154,20 +164,20 @@ int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, P
     // DEAL_BUFF_SIZE is maximally equal to 50 - 4 bytes for packet name = DEAL
     // 2 bytes for end chars and maximally 44 bytes for deck of cards thus
     // we can read maximally DEAL_BUFF_SIZE - this->name.size() bytes
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_DEAL_BUFF_SIZE, read_length) != SUCCESS)
+    int ret_code = tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_DEAL_BUFF_SIZE, read_length, msg);
+    if (ret_code != SUCCESS)
     {
-        return ERROR;
+        return ret_code;
     }
 
     if ((size_t)read_length < MIN_DEAL_BUFF_SIZE)
     {
         err_func::error(" read_length < MIN_DEAL_BUFF_SIZE");
-        return ERROR;
+        return FAILURE;
     }
 
     game_type = char_to_gameType(read_buff[0]);
     first_player_pos = char_to_playerPos(read_buff[1]);
-    std::cout << "game type: " << read_buff[0] << '\n';
 
     uint8_t value;
     Suit suit;
@@ -198,7 +208,7 @@ int init_comm_wrappers::DEAL_Wrapper::read(int socket_fd, GameType &game_type, P
     if (deck_of_cards.size() != 13)
     {
         err_func::error("Deck of cards size is not equal to 13");
-        return ERROR;
+        return FAILURE;
     }
 
     return SUCCESS;

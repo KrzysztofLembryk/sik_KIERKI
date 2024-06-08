@@ -139,7 +139,7 @@ void get_scores_from_buffer(ssize_t read_length, char *read_buff, std::map<Playe
 
 // TRICK_Wrapper impl
 void ingame_comm_wrappers::TRICK_Wrapper::write(int socket_fd, 
-    cardCls::Lewa  &lewa)
+    cardCls::Lewa  &lewa, std::string &msg)
 {
     std::vector<char> msg_vec(name);
     std::vector<char> lewa_id = lewa.get_lewa_id_as_char(); 
@@ -149,17 +149,18 @@ void ingame_comm_wrappers::TRICK_Wrapper::write(int socket_fd,
     msg_vec.insert(msg_vec.end(), lewa_vec.begin(), lewa_vec.end());
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
+    msg = std::string(msg_vec.begin(), msg_vec.end());
+
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
-
 int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd, 
-    cardCls::Lewa &lewa, uint8_t curr_round)
+    cardCls::Lewa &lewa, uint8_t curr_round, std::string &msg)
 {
     ssize_t read_length;
     char read_buff[MAX_TRICK_BUFF_SIZE];
     std::memset(read_buff, 0, MAX_TRICK_BUFF_SIZE); 
-    int ret_code = tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TRICK_BUFF_SIZE, read_length);
+    int ret_code = tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TRICK_BUFF_SIZE, read_length, msg);
     if (ret_code == TIMEOUT)
     {
         return TIMEOUT;
@@ -172,7 +173,7 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     if ((size_t)read_length < MIN_TRICK_BUFF_SIZE)
     {
         err_func::error(" read_length < MIN_TRICK_BUFF_SIZE");
-        return ERROR;
+        return FAILURE;
     }
 
     uint8_t value;
@@ -181,7 +182,6 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     size_t i;
 
     determine_lewa_id(i, read_buff, lewa, curr_round);
-    std::cout << "TRICK read lewa_id: " << (unsigned)lewa.get_lewa_id() << '\n';
     // We can substract - 3 from read_length since we know that read_length is 
     // >= MIN_TRICK_BUFF_SIZE == 3
     while (i < (size_t)read_length - 2)
@@ -192,14 +192,14 @@ int ingame_comm_wrappers::TRICK_Wrapper::read(int socket_fd,
     if (lewa.size() > MAX_LEWA_SIZE)
     {
         err_func::error("Lewa size > MAX_LEWA_SIZE");
-        return ERROR;
+        return FAILURE;
     }
     return SUCCESS;
 }
 
 // WRONG_Wrapper impl
 
-void ingame_comm_wrappers::WRONG_Wrapper::write(int socket_fd, const cardCls::Lewa &lewa)
+void ingame_comm_wrappers::WRONG_Wrapper::write(int socket_fd, const cardCls::Lewa &lewa, std::string &msg)
 {
     std::vector<char> msg_vec(name);
     std::vector<char> lewa_id = lewa.get_lewa_id_as_char(); 
@@ -207,16 +207,18 @@ void ingame_comm_wrappers::WRONG_Wrapper::write(int socket_fd, const cardCls::Le
     msg_vec.insert(msg_vec.end(), lewa_id.begin(), lewa_id.end());
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
+    msg = std::string(msg_vec.begin(), msg_vec.end());
+
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
-int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_round)
+int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, cardCls::Lewa &lewa, uint8_t curr_round, std::string &msg)
 {
     ssize_t read_length;
     char read_buff[MAX_WRONG_BUFF_SIZE];
     std::memset(read_buff, 0, MAX_WRONG_BUFF_SIZE);
 
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_WRONG_BUFF_SIZE, read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_WRONG_BUFF_SIZE, read_length, msg) != SUCCESS)
     {
         return ERROR;
     }
@@ -237,7 +239,8 @@ int ingame_comm_wrappers::WRONG_Wrapper::read(int socket_fd, cardCls::Lewa &lewa
 
 void ingame_comm_wrappers::TAKEN_Wrapper::write(int socket_fd, 
                                     const cardCls::Lewa &lewa, 
-                                    const PlayerPosition &player_who_took_lewa)
+                                    const PlayerPosition &player_who_took_lewa,
+                                    std::string &msg)
 {
     std::vector<char> msg_vec(name);
     std::vector<char> lewa_vec = lewa.to_char_vector();
@@ -248,19 +251,22 @@ void ingame_comm_wrappers::TAKEN_Wrapper::write(int socket_fd,
     msg_vec.push_back(playerPos_to_char(player_who_took_lewa));
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
+    msg = std::string(msg_vec.begin(), msg_vec.end());
+
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
 int ingame_comm_wrappers::TAKEN_Wrapper::read(int socket_fd, 
                                     cardCls::Lewa &lewa, 
                                     PlayerPosition &player_who_took_lewa,
-                                    uint8_t curr_round)
+                                    uint8_t curr_round,
+                                    std::string &msg)
 {
     ssize_t read_length;
     char read_buff[MAX_TAKEN_BUFF_SIZE];
     std::memset(read_buff, 0, MAX_TAKEN_BUFF_SIZE);
 
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TAKEN_BUFF_SIZE, read_length) != SUCCESS)
+    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TAKEN_BUFF_SIZE, read_length, msg) != SUCCESS)
     {
         return ERROR;
     }
@@ -294,7 +300,7 @@ int ingame_comm_wrappers::TAKEN_Wrapper::read(int socket_fd,
 
 // SCORE_Wrapper impl
 
-void ingame_comm_wrappers::SCORE_Wrapper::write(int socket_fd, const std::map<PlayerPosition, uint8_t> &scores)
+void ingame_comm_wrappers::SCORE_Wrapper::write(int socket_fd, const std::map<PlayerPosition, uint8_t> &scores, std::string &msg)
 {
     std::vector<char> msg_vec(name);
 
@@ -311,16 +317,22 @@ void ingame_comm_wrappers::SCORE_Wrapper::write(int socket_fd, const std::map<Pl
 
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
+    msg = std::string(msg_vec.begin(), msg_vec.end());
+
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
-int ingame_comm_wrappers::SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores)
+int ingame_comm_wrappers::SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint8_t> &scores, std::string &msg)
 {
     ssize_t read_length;
     char read_buff[MAX_SCORE_BUFF_SIZE];
     std::memset(read_buff, 0, MAX_SCORE_BUFF_SIZE );
-
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_SCORE_BUFF_SIZE, read_length) != SUCCESS)
+    int ret_code = tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_SCORE_BUFF_SIZE, read_length, msg);
+    if (ret_code == TIMEOUT)
+    {
+        return TIMEOUT;
+    }
+    else if (ret_code != SUCCESS)
     {
         return ERROR;
     }
@@ -328,7 +340,7 @@ int ingame_comm_wrappers::SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosi
     if ((size_t)read_length < MIN_SCORE_BUFF_SIZE)
     {
         err_func::error(" read_length < MIN_SCORE_BUFF_SIZE");
-        return ERROR;
+        return FAILURE;
     }
 
     get_scores_from_buffer(read_length, read_buff, scores);
@@ -337,13 +349,12 @@ int ingame_comm_wrappers::SCORE_Wrapper::read(int socket_fd, std::map<PlayerPosi
 }
 
 void ingame_comm_wrappers::TOTAL_Wrapper::write(int socket_fd, 
-    const std::map<PlayerPosition, uint32_t> &total_scores)
+    const std::map<PlayerPosition, uint32_t> &total_scores, std::string &msg)
 {
     std::vector<char> msg_vec(name);
 
     for (const auto &score : total_scores)
     {
-        std::cout << "Player: " << playerPos_to_char(score.first) << " score: " << score.second << '\n';
         msg_vec.push_back(playerPos_to_char(score.first));
 
         // At the end there is no '\0' character so we dont need to remove it
@@ -354,16 +365,22 @@ void ingame_comm_wrappers::TOTAL_Wrapper::write(int socket_fd,
     }
     msg_vec.insert(msg_vec.end(), end_chars.begin(), end_chars.end());
 
+    msg = std::string(msg_vec.begin(), msg_vec.end());
+
     tcp::TCP_send_packet(socket_fd, msg_vec.data(), msg_vec.size());
 }
 
-int ingame_comm_wrappers::TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint32_t> &total_scores)
+int ingame_comm_wrappers::TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosition, uint32_t> &total_scores, std::string &msg)
 {
     ssize_t read_length;
     char read_buff[MAX_TOTAL_BUFF_SIZE];
     std::memset(read_buff, 0, MAX_TOTAL_BUFF_SIZE);
-
-    if (tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TOTAL_BUFF_SIZE, read_length) != SUCCESS)
+    int ret_val = tcp::TCP_read_till_newline(socket_fd, read_buff, MAX_TOTAL_BUFF_SIZE, read_length, msg);
+    if (ret_val == TIMEOUT)
+    {
+        return TIMEOUT;
+    }
+    else if (ret_val != SUCCESS)
     {
         return ERROR;
     }
@@ -371,7 +388,7 @@ int ingame_comm_wrappers::TOTAL_Wrapper::read(int socket_fd, std::map<PlayerPosi
     if ((size_t)read_length < MIN_TOTAL_BUFF_SIZE)
     {
         err_func::error(" read_length < MIN_TOTAL_BUFF_SIZE");
-        return ERROR;
+        return FAILURE;
     }
 
     get_scores_from_buffer(read_length, read_buff, total_scores); 

@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <iostream>
 
-enum GameType : uint8_t
+enum GameType 
 {
     NO_LEWA = 1,
     NO_HEART,
@@ -47,7 +47,8 @@ enum Suit : char
     HEARTS = 'H',
     DIAMONDS = 'D',
     CLUBS = 'C',
-    SPADES = 'S'
+    SPADES = 'S',
+    NONE_SUIT = 'X',
 };
 
 #endif // ENUM_TYPES_H`

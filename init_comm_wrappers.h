@@ -4,6 +4,7 @@
 #include <vector>
 #include "card_classes.h"
 #include "constants.h"
+#include <string>
 
 /**
  * IDEA OF READING FROM SOCKETS! --> Client after sending IAM will read only 
@@ -22,19 +23,11 @@ namespace init_comm_wrappers
         IAM_Wrapper() = default;
         ~IAM_Wrapper() = default;
 
-        void write(int socket_fd, PlayerPosition position);
-        int read(int socket_fd, PlayerPosition &position);
+        void write(int socket_fd, PlayerPosition position, std::string &msg);
+        int read(int socket_fd, PlayerPosition &position, std::string &msg);
 
     private:
-        typedef struct __attribute__((__packed__)) IAM
-        {
-            char name[3]{'I', 'A', 'M'};
-            char position;
-            char end[2]{'\r', '\n'};
-        } IAM;
-
-        IAM iam;
-        char read_buff[MAX_IAM_BUFF_SIZE];
+        const std::vector<char> name{'I', 'A', 'M'};
     };
 
     class BUSY_Wrapper
@@ -43,9 +36,9 @@ namespace init_comm_wrappers
         BUSY_Wrapper() = default;
         ~BUSY_Wrapper() = default;
 
-        void write(int socket_fd, std::vector<PlayerPosition> taken_positions);
+        void write(int socket_fd, std::vector<PlayerPosition> taken_positions,std::string &msg );
         
-        int read(int socket_fd, std::vector<PlayerPosition> &taken_positions);
+        int read(int socket_fd, std::vector<PlayerPosition> &taken_positions, std::string &msg);
 
     private:
         const std::vector<char> name{'B', 'U', 'S', 'Y'};
@@ -58,9 +51,9 @@ namespace init_comm_wrappers
         DEAL_Wrapper() = default;
         ~DEAL_Wrapper() = default;
 
-        void write(int socket_fd, GameType game_type , PlayerPosition first_player_pos, cardCls::DeckOfCards &&deck_of_cards);
+        void write(int socket_fd, GameType game_type , PlayerPosition first_player_pos, cardCls::DeckOfCards &&deck_of_cards, std::string &msg);
 
-        int read(int socket_fd, GameType &game_type, PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards);
+        int read(int socket_fd, GameType &game_type, PlayerPosition &first_player_pos, cardCls::DeckOfCards &deck_of_cards, std::string &msg);
 
     private:
         std::vector<char> name{'D', 'E', 'A', 'L'};

@@ -15,7 +15,6 @@ std::vector<char> cardVec_to_charVec(std::vector<cardCls::CardClassWrapper> card
         if (value >= 2 && value < 10)
         {
             deck.push_back(std::to_string(value)[0]);
-            // std::cout << "value of card in cardVec_to_charVec: " << std::to_string(value)[0] << "\n";
         }
         else if (value == 10)
         {
@@ -200,6 +199,29 @@ bool cardCls::DeckOfCards::check_if_suit_available(Suit suit) const
     return false;
 }
 
+cardCls::CardClassWrapper cardCls::DeckOfCards::play_card(Suit bottom_card_suit)
+{
+    for (auto &pair : was_card_played_map)
+    {
+        if (!pair.second && pair.first.get_suit() == bottom_card_suit)
+        {
+            pair.second = true;
+            return pair.first;
+        }
+    }
+    // if we are here it means that we cant play card with correct suit, thus 
+    // we play any card
+    for (auto &pair : was_card_played_map)
+    {
+        if (!pair.second)
+        {
+            pair.second = true;
+            return pair.first;
+        }
+    }
+    return CardClassWrapper(Suit::CLUBS, 0);
+}
+
 size_t cardCls::DeckOfCards::size() const
 {
     return was_card_played_map.size();
@@ -330,3 +352,4 @@ void cardCls::Lewa::print()
     }
     std::cout << "\n";
 }
+
