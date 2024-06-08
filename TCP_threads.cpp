@@ -231,7 +231,6 @@ int handle_SCORE(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
     try 
     {
         auto player_scores = game_master_sp->get_player_scores();
-        player_sp->add_points_from_round_to_allpoints();
 
         score.write(client_fd, player_scores, msg_str);
 
@@ -265,6 +264,8 @@ int handle_TOTAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
 
     try 
     {
+        player_sp->add_points_from_round_to_allpoints();
+
         total.write(client_fd, game_master_sp->get_player_all_points(), msg_str);
         print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
     }
