@@ -326,6 +326,11 @@ std::vector<char> cardCls::Lewa::get_lewa_id_as_char() const
     }
 }
 
+PlayerPosition cardCls::Lewa::get_player_who_took_lewa() const
+{
+    return player_who_took_lewa;
+}
+
 cardCls::CardClassWrapper cardCls::Lewa::get_top_card() const
 {
     if (lewa.size() == 0)

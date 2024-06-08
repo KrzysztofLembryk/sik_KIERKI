@@ -36,6 +36,7 @@ namespace gm
         void wait_for_all_players();
 
         PlayerPosition get_whose_turn();
+        PlayerPosition get_first_player();
         GameType get_game_type();
         std::shared_ptr<cardCls::Lewa> get_curr_lewa();
         size_t get_curr_round_nbr();
@@ -45,6 +46,7 @@ namespace gm
         PlayerPosition get_who_won_lewa();
         std::map<PlayerPosition, uint8_t> get_player_scores();
         std::map<PlayerPosition, uint32_t> get_player_all_points();
+        std::vector<cardCls::Lewa> get_lewas_played();
 
         bool check_if_game_started();
         bool check_if_curr_lewa_full();

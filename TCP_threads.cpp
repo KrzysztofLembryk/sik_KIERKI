@@ -24,17 +24,7 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
     std::string addreses_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), true);
     std::string packet_name;
     int ret_code_read_name = tcp::TCP_read_packet_name(client_fd, INGAME_PACKET_NAME_SIZE, packet_name); 
-    // {
-    //     // end connection
-    //     err_func::error("ENDING CONNECTION - GOT ERROR WHILE READING PACKET NAME");
-    //     return ERROR;
-    // }
-    // if (packet_name != "TRICK")
-    // {
-    //     // end connection
-    //     err_func::error("ENDING CONNECTION - GOT WRONG PACKET NAME");
-    //     return ERROR;
-    // }
+
     std::string msg_str;
     std::string final_str;
     ingame_comm_wrappers::TRICK_Wrapper client_trick;
@@ -107,7 +97,8 @@ int handle_DEAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::s
     return SUCCESS;
 }
 
-int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP)
+int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP, 
+std::shared_ptr<bool> resend_TRICK_msg)
 {
     ingame_comm_wrappers::TRICK_Wrapper trick;
     cardCls::Lewa lewa_with_good_id(game_master_sp->get_curr_lewa_nbr());
@@ -120,6 +111,7 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
     {
         try 
         {
+            *resend_TRICK_msg = true;
             address_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
 
             trick.write(client_fd, *(game_master_sp->get_curr_lewa()), msg_str);
@@ -172,6 +164,7 @@ int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
                 continue;
             }
 
+            *resend_TRICK_msg = false;
             // If card is correct we add it to lewa and set that this card is 
             // played in player hand
             game_master_sp->add_card_to_lewa(client_card);
@@ -207,6 +200,7 @@ int handle_TAKEN(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
         if (player_sp->get_position() == game_master_sp->get_who_won_lewa())
         {
             player_sp->add_points_in_curr_round(curr_lewa);
+            player_sp->add_lewa_to_lewas_taken(curr_lewa);
         }
         taken.write(client_fd, curr_lewa, game_master_sp->get_who_won_lewa(), msg_str);
 
@@ -236,9 +230,16 @@ int handle_SCORE(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
     std::string msg_str;
     try 
     {
-        score.write(client_fd, game_master_sp->get_player_scores(), msg_str);
-        print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
+        auto player_scores = game_master_sp->get_player_scores();
         player_sp->add_points_from_round_to_allpoints();
+
+        score.write(client_fd, player_scores, msg_str);
+
+        // We clear taken lewas here so we know for sure that curr round is 
+        // finished, otherwise we need to send all taken lewas to client
+        player_sp->clear_lewas_taken();
+
+        print_log_from_write_thread_safe(address_str, msg_str, game_master_sp);
     }
     catch (const std::exception &e)
     {
@@ -280,12 +281,19 @@ int handle_TOTAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
     return SUCCESS;
 }
 
+int handle_resending_packets_to_player()
+{
+
+}
+
 void TCP_threads::TCPThread::TCP_thread_main(
     GM_sp game_master_sp,
     Player_sp player_sp,
     BinSem_sp semaphore_TCP,
     int parent_pipe_read_fd,
-    std::shared_ptr<bool> thread_ended_sp)
+    std::shared_ptr<bool> thread_ended_sp,
+    std::shared_ptr<bool> player_was_disconnected_sp,
+    std::shared_ptr<bool> resend_TRICK_msg)
 {
 
     struct pollfd poll_descriptors[POLLS_NBR_OF_DSCR];
@@ -296,6 +304,18 @@ void TCP_threads::TCPThread::TCP_thread_main(
     poll_descriptors[TCP_SOCKET_POLLS_ID].events = POLLIN;
     poll_descriptors[PIPE_POLLS_ID].fd = parent_pipe_read_fd;
     poll_descriptors[PIPE_POLLS_ID].events = POLLIN;
+
+    if (*player_was_disconnected_sp)
+    {
+        *player_was_disconnected_sp = false;
+
+        if (handle_resending_packets_to_player() != SUCCESS)
+        {
+            *thread_ended_sp = true;
+            semaphore_TCP->release();
+            return;
+        }
+    }
 
     while (true)
     {
@@ -317,35 +337,36 @@ void TCP_threads::TCPThread::TCP_thread_main(
                 polls_func::handle_polls_read(parent_pipe_read_fd, msg, true);
                 if (msg == "DEAL")
                 {
-                    if (handle_DEAL(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
+                    if (handle_DEAL(player_sp->get_client_fd(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
                     {
                         return;
                     }
                 }
                 else if (msg == "TRICK")
                 {
-                    if (handle_TRICK(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
+                    if (handle_TRICK(player_sp->get_client_fd(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP,
+                    resend_TRICK_msg) != SUCCESS)
                     {
                         return;
                     }
                 }
                 else if (msg == "TAKEN")
                 {
-                    if (handle_TAKEN(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
+                    if (handle_TAKEN(player_sp->get_client_fd(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
                     {
                         return;
                     }
                 }
                 else if (msg == "SCORE")
                 {
-                    if (handle_SCORE(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
+                    if (handle_SCORE(player_sp->get_client_fd(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
                     {
                         return;
                     }
                 }
                 else if (msg == "TOTAL")
                 {
-                    if (handle_TOTAL(client_fd_sp->to_int(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
+                    if (handle_TOTAL(player_sp->get_client_fd(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
                     {
                         return;
                     }
@@ -364,7 +385,7 @@ void TCP_threads::TCPThread::TCP_thread_main(
             if (poll_descriptors[TCP_SOCKET_POLLS_ID].revents & POLLIN)
             {
                 if (handle_player_msg_at_wrong_time(
-                                    client_fd_sp->to_int(), 
+                                    player_sp->get_client_fd(), 
                                     game_master_sp->get_curr_lewa_nbr(), 
                                     player_sp,
                                     game_master_sp) != SUCCESS)

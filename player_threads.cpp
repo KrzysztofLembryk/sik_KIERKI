@@ -42,44 +42,55 @@ void create_TCP_thread(
                                        player_sp,
                                        semaphore_TCP,
                                        child_pipe_fd[PIPE_READ_DSCR],
-                                       thread_ended_sp);
+                                       thread_ended_sp,
+                                       player_was_disconnected_sp);
         });
     t.detach();
 
 }
 
-void handle_disconnection(ClientFd_sp client_fd_sp, 
-                            GM_sp game_master_sp, 
+void handle_disconnection(GM_sp game_master_sp, 
                             Player_sp player_sp, 
+                            BinSem_sp semaphore_TCP,
                             Bool_sp thread_ended_sp,
-                            Bool_sp player_was_disconnected_sp)
+                            Bool_sp player_was_disconnected_sp,
+                            int child_pipe_fd[2])
 {
-    if (*thread_ended_sp)
+    while (*thread_ended_sp)
     {
         *thread_ended_sp = false;
+
         game_master_sp->set_player_left(player_sp->get_position());
         game_master_sp->acquire_disconnected_sem(player_sp->get_position());
+
         *player_was_disconnected_sp = true;
-        // We handle disconnection
+
+        create_TCP_thread(game_master_sp, player_sp, child_pipe_fd, semaphore_TCP, thread_ended_sp, player_was_disconnected_sp);
+        
+        // We wait for newly created thread to send all DEAL msgs to client
+        // so we can continue
+        semaphore_TCP->acquire();
     }
 }
 
 void handle_btwn_thread_comm(std::string comm_type, 
-                            ClientFd_sp client_fd_sp, 
                             GM_sp game_master_sp, 
                             Player_sp player_sp, 
                             BinSem_sp semaphore_TCP, 
                             int child_pipe_fd[2], 
-                            Bool_sp thread_ended_sp, 
-                            int parent_pipe_write_fd)
+                            Bool_sp thread_ended_sp,
+                            Bool_sp was_player_disconnected_sp)
 {
     btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], comm_type);
+
     semaphore_TCP->acquire();
-    handle_disconnection(client_fd_sp, 
-                        game_master_sp, 
+
+    handle_disconnection(game_master_sp, 
                         player_sp, 
+                        semaphore_TCP,
                         thread_ended_sp, 
-                        parent_pipe_write_fd);
+                        was_player_disconnected_sp,
+                        child_pipe_fd);
 }
 
 void player_threads::MyThread::thread_main(

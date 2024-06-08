@@ -132,6 +132,12 @@ PlayerPosition gm::GameMaster::get_whose_turn()
     return whose_turn;
 }
 
+PlayerPosition gm::GameMaster::get_first_player()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return first_player;
+}
+
 GameType gm::GameMaster::get_game_type()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
@@ -194,6 +200,12 @@ std::map<PlayerPosition, uint32_t> gm::GameMaster::get_player_all_points()
         all_points[player.first] = player.second->get_all_points();
     }
     return all_points;
+}
+
+std::vector<cardCls::Lewa> gm::GameMaster::get_lewas_played()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return lewas_played;
 }
 
 bool gm::GameMaster::check_if_game_started()
