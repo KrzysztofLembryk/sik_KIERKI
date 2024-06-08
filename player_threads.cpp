@@ -31,19 +31,21 @@ void create_TCP_thread(
     int child_pipe_fd[2],
     BinSem_sp semaphore_TCP,
     Bool_sp thread_ended_sp,
-    Bool_sp player_was_disconnected_sp)
+    Bool_sp player_was_disconnected_sp,
+    Bool_sp resend_TRICK_msg)
 {
     TCP_threads::TCPThread tcp_thread;
 
     std::thread t(
-        [game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, player_was_disconnected_sp, tcp_thread]() mutable
+        [game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, player_was_disconnected_sp, resend_TRICK_msg, tcp_thread]() mutable
         {
             tcp_thread.TCP_thread_main(game_master_sp,
                                        player_sp,
                                        semaphore_TCP,
                                        child_pipe_fd[PIPE_READ_DSCR],
                                        thread_ended_sp,
-                                       player_was_disconnected_sp);
+                                       player_was_disconnected_sp,
+                                       resend_TRICK_msg);
         });
     t.detach();
 
@@ -54,6 +56,7 @@ void handle_disconnection(GM_sp game_master_sp,
                             BinSem_sp semaphore_TCP,
                             Bool_sp thread_ended_sp,
                             Bool_sp player_was_disconnected_sp,
+                            Bool_sp resend_TRICK_msg,
                             int child_pipe_fd[2])
 {
     while (*thread_ended_sp)
@@ -65,7 +68,7 @@ void handle_disconnection(GM_sp game_master_sp,
 
         *player_was_disconnected_sp = true;
 
-        create_TCP_thread(game_master_sp, player_sp, child_pipe_fd, semaphore_TCP, thread_ended_sp, player_was_disconnected_sp);
+        create_TCP_thread(game_master_sp, player_sp, child_pipe_fd, semaphore_TCP, thread_ended_sp, player_was_disconnected_sp, resend_TRICK_msg);
         
         // We wait for newly created thread to send all DEAL msgs to client
         // so we can continue
@@ -79,7 +82,8 @@ void handle_btwn_thread_comm(std::string comm_type,
                             BinSem_sp semaphore_TCP, 
                             int child_pipe_fd[2], 
                             Bool_sp thread_ended_sp,
-                            Bool_sp was_player_disconnected_sp)
+                            Bool_sp was_player_disconnected_sp,
+                            Bool_sp resend_TRICK_msg)
 {
     btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], comm_type);
 
@@ -90,14 +94,14 @@ void handle_btwn_thread_comm(std::string comm_type,
                         semaphore_TCP,
                         thread_ended_sp, 
                         was_player_disconnected_sp,
+                        resend_TRICK_msg,
                         child_pipe_fd);
 }
 
 void player_threads::MyThread::thread_main(
-    ClientFd_sp client_fd_sp,
-    GM_sp game_master_sp,
-    Player_sp player_sp,
-    int parent_pipe_write_fd)
+                                            GM_sp game_master_sp,
+                                            Player_sp player_sp,
+                                            int parent_pipe_write_fd)
 {
     int child_pipe_fd[2];
 
@@ -108,8 +112,10 @@ void player_threads::MyThread::thread_main(
 
     BinSem_sp semaphore_TCP = std::make_shared<std::binary_semaphore>(0);
     Bool_sp thread_ended_sp = std::make_shared<bool>(false);
+    Bool_sp player_was_disconnected_sp = std::make_shared<bool>(false);
+    Bool_sp resend_TRICK_msg = std::make_shared<bool>(false);
 
-    create_TCP_thread(client_fd_sp, game_master_sp, player_sp, child_pipe_fd, semaphore_TCP, thread_ended_sp);
+    create_TCP_thread(game_master_sp, player_sp, child_pipe_fd, semaphore_TCP, thread_ended_sp, player_was_disconnected_sp, resend_TRICK_msg);
 
     size_t nbr_of_rounds = game_master_sp->get_nbr_of_rounds();
     for (size_t i = 0; i < nbr_of_rounds; i++)
@@ -120,7 +126,7 @@ void player_threads::MyThread::thread_main(
         game_master_sp->wait_for_game_start();
 
         // Here we send DEAL to All players
-        handle_btwn_thread_comm("DEAL", client_fd_sp, game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, parent_pipe_write_fd);
+        handle_btwn_thread_comm("DEAL", game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, player_was_disconnected_sp, resend_TRICK_msg);
 
         game_master_sp->wait_for_all_players();
 
@@ -129,7 +135,7 @@ void player_threads::MyThread::thread_main(
             // After sending deal we wait for our turn to play card
             game_master_sp->wait_for_turn(player_sp->get_position());
 
-            handle_btwn_thread_comm("TRICK", client_fd_sp, game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, parent_pipe_write_fd);
+            handle_btwn_thread_comm("TRICK", game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, player_was_disconnected_sp, resend_TRICK_msg);
 
             // Here if we are last player who plays card, we need to check who 
             // won lewa, count cards that has been played and then release 
@@ -148,7 +154,8 @@ void player_threads::MyThread::thread_main(
             }
 
             // We know who won lewa thus we can send TAKEN to all players
-            handle_btwn_thread_comm("TAKEN", client_fd_sp, game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, parent_pipe_write_fd);
+            handle_btwn_thread_comm("TAKEN", game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, 
+            player_was_disconnected_sp, resend_TRICK_msg);
 
             // We need to wait for other players so that all points for taken 
             // lewa is added for player who took it 
@@ -159,17 +166,18 @@ void player_threads::MyThread::thread_main(
                 // Thanks to previous waiting now all players have scores up to 
                 // date, and we can safely send scores to all players, while 
                 // doing so we also add points from this round
-                handle_btwn_thread_comm("SCORE", client_fd_sp, game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, parent_pipe_write_fd);
+                handle_btwn_thread_comm("SCORE", game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, player_was_disconnected_sp, resend_TRICK_msg);
                 // Because we add points from round in SCORE we need to wait for
                 // all players to finish adding points before we can send TOTAL
                 // with updated scores
                 game_master_sp->wait_for_all_players();
 
-                handle_btwn_thread_comm("TOTAL", client_fd_sp, game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, parent_pipe_write_fd);
+                handle_btwn_thread_comm("TOTAL", game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, player_was_disconnected_sp, resend_TRICK_msg);
 
-                // IDK if we should wait for all players here
+                // IDK if we should wait for all players here, I think safer 
+                // is to wait
+                game_master_sp->wait_for_all_players();
 
-                
                 if (game_master_sp->check_if_last_round())
                 {
                     // Game has ended

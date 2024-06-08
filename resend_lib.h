@@ -16,7 +16,11 @@ namespace resend_lib
                     std::shared_ptr<gm::GameMaster> game_master_sp, 
                     std::shared_ptr<Player> player_sp);
 
-    int resend_TRICK();
+    int resend_TRICK(int client_fd, 
+                    std::shared_ptr<gm::GameMaster> game_master_sp, 
+                    std::shared_ptr<Player> player_sp,
+                    std::shared_ptr<bool> resend_TRICK_msg);
+                    
 } // namespace resend_lib
 
 #endif // RESEND_LIB_H

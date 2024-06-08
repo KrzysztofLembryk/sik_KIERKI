@@ -7,10 +7,12 @@
 #include "TCP_handler.h"
 #include "err.h"
 #include "common.h"
+#include "resend_lib.h"
 
 using GM_sp = std::shared_ptr<gm::GameMaster>;
 using Player_sp = std::shared_ptr<Player>;
 using BinSem_sp = std::shared_ptr<std::binary_semaphore>;
+using Bool_sp = std::shared_ptr<bool>;
 
 void handle_player_disconnect(std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP)
 {
@@ -201,6 +203,7 @@ int handle_TAKEN(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
         if (player_sp->get_position() == game_master_sp->get_who_won_lewa())
         {
             player_sp->add_points_in_curr_round(curr_lewa);
+            curr_lewa.set_player_who_took_lewa(player_sp->get_position());
             player_sp->add_lewa_to_lewas_taken(curr_lewa);
         }
         taken.write(client_fd, curr_lewa, game_master_sp->get_who_won_lewa(), msg_str);
@@ -282,19 +285,39 @@ int handle_TOTAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
     return SUCCESS;
 }
 
-int handle_resending_packets_to_player()
+int handle_resending_packets_to_player(int client_fd, 
+                                        GM_sp game_master_sp, 
+                                        Player_sp player_sp,
+                                        Bool_sp resend_TRICK_msg)
 {
+    if (resend_lib::resend_DEAL(client_fd, game_master_sp, player_sp) != SUCCESS)
+    {
+        return ERROR;
+    }
 
+    if (resend_lib::resend_TAKEN(client_fd, game_master_sp, player_sp) != SUCCESS)
+    {
+        return ERROR;
+    }
+
+    if (*resend_TRICK_msg)
+    {
+        if (resend_lib::resend_TRICK(client_fd, game_master_sp, player_sp, resend_TRICK_msg) != SUCCESS)
+        {
+            return ERROR;
+        }
+
+    }
+    return SUCCESS;
 }
 
-void TCP_threads::TCPThread::TCP_thread_main(
-    GM_sp game_master_sp,
-    Player_sp player_sp,
-    BinSem_sp semaphore_TCP,
-    int parent_pipe_read_fd,
-    std::shared_ptr<bool> thread_ended_sp,
-    std::shared_ptr<bool> player_was_disconnected_sp,
-    std::shared_ptr<bool> resend_TRICK_msg)
+void TCP_threads::TCPThread::TCP_thread_main(GM_sp game_master_sp,
+                                            Player_sp player_sp,
+                                            BinSem_sp semaphore_TCP,
+                                            int parent_pipe_read_fd,
+                                            Bool_sp thread_ended_sp,
+                                            Bool_sp player_was_disconnected_sp,
+                                            Bool_sp resend_TRICK_msg)
 {
 
     struct pollfd poll_descriptors[POLLS_NBR_OF_DSCR];
@@ -310,12 +333,14 @@ void TCP_threads::TCPThread::TCP_thread_main(
     {
         *player_was_disconnected_sp = false;
 
-        if (handle_resending_packets_to_player() != SUCCESS)
+        if (handle_resending_packets_to_player(player_sp->get_client_fd(), 
+        game_master_sp, player_sp, resend_TRICK_msg) != SUCCESS)
         {
             *thread_ended_sp = true;
             semaphore_TCP->release();
             return;
         }
+        semaphore_TCP->release();
     }
 
     while (true)
