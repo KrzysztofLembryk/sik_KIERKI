@@ -11,6 +11,11 @@ sync_barrier(MAX_PLAYERS, [](){})
     this->semaphore_map[E] = std::make_shared<std::binary_semaphore>(0);
     this->semaphore_map[S] = std::make_shared<std::binary_semaphore>(0);
     this->semaphore_map[W] = std::make_shared<std::binary_semaphore>(0);
+    this->disconnected_sem_map[N] = std::make_shared<std::binary_semaphore>(0);
+    this->disconnected_sem_map[E] = std::make_shared<std::binary_semaphore>(0);
+    this->disconnected_sem_map[S] = std::make_shared<std::binary_semaphore>(0);
+    this->disconnected_sem_map[W] = std::make_shared<std::binary_semaphore>(0);
+
     this->curr_lewa = std::make_shared<cardCls::Lewa>(1);
     this->rounds = rounds;
     this->round_number = 1;
@@ -31,7 +36,7 @@ sync_barrier(MAX_PLAYERS, [](){})
                             rounds[0].get_player_cards(pos), 
                             pos, 
                             rounds[0].get_game_type());
-                            this->players[pos]->set_server_address(server_addr);
+        this->players[pos]->set_server_address(server_addr);
     }
 }
 
@@ -71,9 +76,9 @@ std::vector<PlayerPosition> gm::GameMaster::get_taken_positions()
 int gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &p_address, std::shared_ptr<ClientFdWrapper> client_fd_sp)
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
-    pos_taken_map[pos] = true;
     players[pos]->set_player_address(p_address);
-
+    players[pos]->set_client_fd(client_fd_sp);
+    pos_taken_map[pos] = true;
     // Only at the beginning when we add new players we count them and set 
     // is_game_started to true, after that when player leaves we dont change 
     // nbr_of_players_present since game is already started
@@ -90,18 +95,7 @@ int gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &p_ad
         // if we got here it means that player was disconnected and new player
         // wants to connect to our game, thus we need to set a flag so that 
         // tcp thread knows what to send him
-        PlayerPosition free_pos;
-        for (auto &pos : pos_taken_map)
-        {
-            if (!pos.second)
-            {
-                free_pos = pos.first;
-                break;
-            }
-        }
-        pos_taken_map[free_pos] = true;
-
-
+        disconnected_sem_map[pos]->release();
 
         return CONTINUE;
     }
@@ -338,4 +332,9 @@ void gm::GameMaster::acquire_print_msg_sem()
 void gm::GameMaster::release_print_msg_sem()
 {
     sem_print_msg->release();
+}
+
+void gm::GameMaster::acquire_disconnected_sem(PlayerPosition pos)
+{
+    disconnected_sem_map[pos]->acquire();
 }

@@ -281,7 +281,6 @@ int handle_TOTAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
 }
 
 void TCP_threads::TCPThread::TCP_thread_main(
-    std::shared_ptr<ClientFdWrapper> client_fd_sp,
     GM_sp game_master_sp,
     Player_sp player_sp,
     BinSem_sp semaphore_TCP,
@@ -293,7 +292,7 @@ void TCP_threads::TCPThread::TCP_thread_main(
     int poll_status;
 
     // We wait for event on socket_fd and pipe_fd.
-    poll_descriptors[TCP_SOCKET_POLLS_ID].fd = client_fd_sp->to_int();
+    poll_descriptors[TCP_SOCKET_POLLS_ID].fd = player_sp->get_client_fd();
     poll_descriptors[TCP_SOCKET_POLLS_ID].events = POLLIN;
     poll_descriptors[PIPE_POLLS_ID].fd = parent_pipe_read_fd;
     poll_descriptors[PIPE_POLLS_ID].events = POLLIN;

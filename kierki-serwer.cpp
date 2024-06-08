@@ -65,13 +65,15 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
 
     client_fd_sp->set_timeout_for_socket(timeout);
 
-    print_client_address(client_address);
-
     init_comm_wrappers::IAM_Wrapper iam_wrapper;
     PlayerPosition new_p_position;
 
-    std::string address_str = communication_addresses_to_str((struct sockaddr *)&server_address, (struct sockaddr *)&client_address, true);
+    std::string address_str = communication_addresses_to_str(
+                                            (struct sockaddr *)&server_address, 
+                                            (struct sockaddr *)&client_address, 
+                                            true);
     std::string msg_str;
+
     if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position, msg_str) != SUCCESS)
     {
         // We print log from write even though we did reading, since at the 
@@ -100,7 +102,7 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     }
     else
     {
-        if (game_master_sp->add_new_player(new_p_position, client_address) != SUCCESS)
+        if (game_master_sp->add_new_player(new_p_position, client_address, client_fd_sp) != SUCCESS)
         {
             // add_new_player is not success only when we add new player after 
             // other player left if so we already have thread for this player

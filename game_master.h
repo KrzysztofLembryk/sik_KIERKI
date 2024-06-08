@@ -65,6 +65,8 @@ namespace gm
         void acquire_print_msg_sem();
         void release_print_msg_sem();
 
+        void acquire_disconnected_sem(PlayerPosition pos);
+
     private:
         std::map<PlayerPosition, std::shared_ptr<std::binary_semaphore>> semaphore_map;
         std::map<PlayerPosition, std::shared_ptr<Player>> players;
@@ -83,6 +85,7 @@ namespace gm
         std::mutex mutex_gm;
         std::barrier<void(*)()> sync_barrier;
         std::shared_ptr<std::binary_semaphore> sem_print_msg;
+        std::map<PlayerPosition, std::shared_ptr<std::binary_semaphore>> disconnected_sem_map;
     };
 }
 

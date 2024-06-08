@@ -26,20 +26,19 @@ void signal_end_to_main_thread(int parent_pipe_write_fd)
 }
 
 void create_TCP_thread(
-    ClientFd_sp client_fd_sp,
     GM_sp game_master_sp,
     Player_sp player_sp,
     int child_pipe_fd[2],
     BinSem_sp semaphore_TCP,
-    Bool_sp thread_ended_sp)
+    Bool_sp thread_ended_sp,
+    Bool_sp player_was_disconnected_sp)
 {
     TCP_threads::TCPThread tcp_thread;
 
     std::thread t(
-        [client_fd_sp, game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, tcp_thread]() mutable
+        [game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, player_was_disconnected_sp, tcp_thread]() mutable
         {
-            tcp_thread.TCP_thread_main(client_fd_sp,
-                                       game_master_sp,
+            tcp_thread.TCP_thread_main(game_master_sp,
                                        player_sp,
                                        semaphore_TCP,
                                        child_pipe_fd[PIPE_READ_DSCR],
@@ -53,12 +52,14 @@ void handle_disconnection(ClientFd_sp client_fd_sp,
                             GM_sp game_master_sp, 
                             Player_sp player_sp, 
                             Bool_sp thread_ended_sp,
-                            int parent_pipe_write_fd)
+                            Bool_sp player_was_disconnected_sp)
 {
     if (*thread_ended_sp)
     {
         *thread_ended_sp = false;
         game_master_sp->set_player_left(player_sp->get_position());
+        game_master_sp->acquire_disconnected_sem(player_sp->get_position());
+        *player_was_disconnected_sp = true;
         // We handle disconnection
     }
 }
