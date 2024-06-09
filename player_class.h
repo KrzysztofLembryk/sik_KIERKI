@@ -55,6 +55,7 @@ public:
     void reset_client_fd();
 
     cardCls::CardClassWrapper play_card(Suit bottom_card_suit);
+    void print_available_cards();
 
 private:
     cardCls::DeckOfCards hand;

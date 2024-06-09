@@ -190,3 +190,9 @@ cardCls::CardClassWrapper Player::play_card(Suit bottom_card_suit)
     std::lock_guard<std::mutex> lock(mutex_player);
     return hand.play_card(bottom_card_suit);
 }
+
+void Player::print_available_cards()
+{
+    std::lock_guard<std::mutex> lock(mutex_player);
+    hand.print_available_cards();
+}

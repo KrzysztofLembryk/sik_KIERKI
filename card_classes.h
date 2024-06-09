@@ -121,6 +121,7 @@ namespace cardCls
         void reset();
 
         void print_deck() const;
+        void print_available_cards();
 
         size_t size() const;
 

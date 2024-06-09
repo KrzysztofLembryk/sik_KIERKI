@@ -11,6 +11,7 @@
 #include "socket_fd_handler.h"
 #include "player_class.h"
 #include "klient_auto_lib.h"
+#include "klient_non_auto_lib.h"
 #include "address_wrapper_cls.h"
 
 int init_client(int argc,
@@ -134,13 +135,19 @@ int main(int argc, char *argv[])
 
         if (a_option)
         {
-            klient_auto_func::klient_auto_main(server_address, client_address, socket_fd, chosen_position);
-            close(socket_fd);
+            if (klient_auto_func::klient_auto_main(server_address, client_address, socket_fd, chosen_position) != SUCCESS)
+            {
+                close(socket_fd);
+                return FAILURE;
+            }
         }
         else 
         {
-            klient_auto_func::klient_auto_main(server_address, client_address, socket_fd, chosen_position);
-            close(socket_fd);
+            if(klient_non_auto_func::klient_non_auto_main(server_address, client_address, socket_fd, chosen_position) != SUCCESS)
+            {
+                close(socket_fd);
+                return FAILURE;
+            }
         }
     }
     catch (std::exception &e)
@@ -148,4 +155,8 @@ int main(int argc, char *argv[])
         std::cerr << e.what() << "\n";
         return FAILURE;
     }
+
+    close(socket_fd);
+
+    return SUCCESS;
 }

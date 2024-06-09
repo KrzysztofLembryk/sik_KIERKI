@@ -178,9 +178,19 @@ void cardCls::DeckOfCards::print_deck() const
     for (const auto &pair : was_card_played_map)
     {
         pair.first.print();
-        std::cout << " ";
     }
-    std::cout << "\n";
+}
+
+void cardCls::DeckOfCards::print_available_cards()
+{
+    for (const auto &pair : was_card_played_map)
+    {
+        if (!pair.second)
+        {
+            pair.first.print();
+        }
+    }
+
 }
 
 
@@ -354,18 +364,9 @@ cardCls::CardClassWrapper cardCls::Lewa::get_top_card() const
 
 void cardCls::Lewa::print()
 {
-    std::cout << "lewa id: " << (unsigned)lewa_id << "\n";
-    if (lewa.size() == 0)
-    {
-        std::cout << "Empty lewa\n";
-        return;
-    }
-
     for (const auto &card : lewa)
     {
         card.print();
-        std::cout << " ";
     }
-    std::cout << "\n";
 }
 
