@@ -61,6 +61,18 @@ void handle_disconnection(GM_sp game_master_sp,
 {
     while (*thread_ended_sp)
     {
+        // If thread ended it might or might not read our msg, thus to be sure 
+        // we need to discard it, by closing pipe and making new one, because 
+        // it might happen that we sent DEAL, thread didnt read it, player 
+        // reconnects we make a new thread, it sends DEAL and all TAKEN 
+        // and then it reads from pipe DEAL and sends it again and player 
+        // resets  his hand and thinks its new round
+        close(child_pipe_fd[PIPE_READ_DSCR]);
+        close(child_pipe_fd[PIPE_WRITE_DSCR]);
+        if (pipe(child_pipe_fd) == -1)
+        {
+            exception_wrappers::runtime_err_wrapper("Failed to create pipe");
+        }
         *thread_ended_sp = false;
 
         game_master_sp->set_player_left(player_sp->get_position());
