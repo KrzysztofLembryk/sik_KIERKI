@@ -135,6 +135,7 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                 player_sp->set_game_type(game_type);
                 player_sp->set_hand(my_hand);
                 player_sp->clear_lewas_taken();
+                player_sp->zero_curr_SCORE();
             }
             catch (std::exception &e)
             {
