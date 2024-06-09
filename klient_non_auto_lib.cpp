@@ -211,6 +211,8 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
 
             auto chosen_card_by_human = player_sp->get_chosen_card_by_human_player();
 
+            player_sp->set_card_played(chosen_card_by_human);
+
             cardCls::Lewa ret_lewa(lewa.get_lewa_id());
 
             ret_lewa.add_card(chosen_card_by_human);
@@ -226,19 +228,106 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
     }
     else if (packet_name == "TAKEN")
     {
+        ingame_comm_wrappers::TAKEN_Wrapper taken;
+        cardCls::Lewa lewa;
+        PlayerPosition player_who_took_lewa;
+        try
+        {
+            int ret_val_taken = taken.read(socket_fd, lewa, player_who_took_lewa, curr_lewa_id, msg_str);
 
+            if (ret_val_taken == FAILURE)
+            {
+                return CONTINUE;
+            }
+            else if (ret_val_taken != SUCCESS)
+            {
+                return ERROR;
+            }
+
+            if (player_sp->get_position() == player_who_took_lewa)
+            {
+                player_sp->add_points_in_curr_round(lewa);
+                player_sp->add_lewa_to_lewas_taken(lewa);
+            }
+
+            // we set that our card in this lewa was played (we already set
+            // it in TRICK, but if we reconnect to server in deal we get 
+            // new hand without set cards that we played, so even though 
+            // card might be already set we set it again)
+            player_sp->set_card_played(lewa);
+            pretty_packets::pretty_print_TAKEN(lewa, player_who_took_lewa);
+            curr_lewa_id++;
+            return SUCCESS;
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            return CONTINUE;
+        }
     }
     else if (packet_name == "WRONG")
     {
-
+        ingame_comm_wrappers::WRONG_Wrapper wrong;
+        cardCls::Lewa lewa(curr_lewa_id);
+        int ret_val = wrong.read(socket_fd, lewa, curr_lewa_id, msg_str);
+        if (ret_val != SUCCESS)
+        {
+            return ERROR;
+        }
+        pretty_packets::pretty_print_WRONG(lewa.get_lewa_id());
+        return SUCCESS;
     }
     else if (packet_name == "SCORE")
     {
+        ingame_comm_wrappers::SCORE_Wrapper score;
+        std::map<PlayerPosition, uint8_t> scores;
+        try 
+        {
+            int ret_val_score = score.read(socket_fd, scores, msg_str);
 
+            if (ret_val_score == FAILURE)
+            {
+                return CONTINUE;
+            }
+            else if (ret_val_score != SUCCESS)
+            {
+                return ERROR;
+            }
+            got_score = true;
+
+            pretty_packets::pretty_print_SCORE(scores);
+        }
+        catch (std::exception &e)
+        {
+            std::cerr << e.what() << "\n";
+            return CONTINUE;
+        }
     }
     else if (packet_name == "TOTAL")
     {
 
+        ingame_comm_wrappers::TOTAL_Wrapper total;
+        std::map<PlayerPosition, uint32_t> total_scores;
+        try
+        {
+            int ret_val_total = total.read(socket_fd, total_scores, msg_str);
+            if (ret_val_total == FAILURE)
+            {
+                return CONTINUE;
+            }
+            else if (ret_val_total != SUCCESS)
+            {
+                return ERROR;
+            }
+            player_sp->add_points_from_round_to_allpoints();
+            got_total = true;
+            pretty_packets::pretty_print_TOTAL(total_scores);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            return CONTINUE;
+        }
     }
 }
 
@@ -288,10 +377,11 @@ int klient_non_auto_func::klient_non_auto_main(AddressWrapper &server_address,
             // interface
             if (poll_descriptors[TCP_SOCKET_POLLS_ID].revents & POLLIN)
             {
-                if (handle_server_communication() != SUCCESS)
+                int ret_val = handle_server_communication(socket_fd, player_sp, semaphore_TCP, child_pipe_fd[PIPE_WRITE_DSCR]);
+
+                if (ret_val == ERROR)
                 {
-                    // inform client about the end of connection
-                    return ERROR;
+                    return FAILURE;
                 }
             }
             if (poll_descriptors[PIPE_POLLS_ID].revents & POLLIN)

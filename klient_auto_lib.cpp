@@ -321,8 +321,12 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
         {
             ingame_comm_wrappers::WRONG_Wrapper wrong;
             cardCls::Lewa lewa(curr_lewa_id);
-            wrong.read(socket_fd, lewa, curr_lewa_id, msg_str);
+            int ret_val = wrong.read(socket_fd, lewa, curr_lewa_id, msg_str);
             print_log_from_read(addreses_str, packet_name, msg_str);
+            if (ret_val != SUCCESS)
+            {
+               continue; 
+            }
         }
         else 
         {
