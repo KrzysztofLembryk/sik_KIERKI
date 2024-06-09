@@ -122,11 +122,11 @@ void CardCounter::count_cards(cardCls::Lewa &lewa)
         {
             this->nbr_of_misters_played++;
         }
-        else if (card.get_value() == K && card.get_suit() == HEARTS)
+        if (card.get_value() == K && card.get_suit() == HEARTS)
         {
             this->king_of_hearts_played = true;
         }
-        else if (card.get_suit() == HEARTS)
+        if (card.get_suit() == HEARTS)
         {
             this->nbr_of_hearts_played++;
         }
