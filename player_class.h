@@ -35,6 +35,7 @@ public:
     void set_client_fd(std::shared_ptr<ClientFdWrapper> client_fd_sp);
     void set_card_played(cardCls::CardClassWrapper &card);
     void set_game_type(GameType game_type);
+    void set_card_played(cardCls::Lewa &lewa);
 
     cardCls::DeckOfCards get_hand();
     PlayerPosition get_position();
@@ -51,6 +52,7 @@ public:
     void add_lewa_to_lewas_taken(cardCls::Lewa &lewa);
     void clear_lewas_taken();
     void zero_curr_SCORE();
+    void reset_client_fd();
 
     cardCls::CardClassWrapper play_card(Suit bottom_card_suit);
 
@@ -67,6 +69,7 @@ private:
     AddressWrapper server_address;
     AddressWrapper my_address;
     std::shared_ptr<ClientFdWrapper> client_fd_sp;
+    std::mutex mutex_player;
 };
 
 #endif // PLAYER_CLASS_H

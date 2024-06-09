@@ -144,6 +144,18 @@ void cardCls::DeckOfCards::set_card_played(const CardClassWrapper &card)
         exception_wrappers::invalid_arg_wrapper("Card not in deck");
 }
 
+void cardCls::DeckOfCards::set_card_played(Lewa &lewa)
+{
+    for (auto &card : lewa.get_cards_in_lewa())
+    {
+        if (this->was_card_played_map.find(card) != this->was_card_played_map.end())
+        {
+            this->set_card_played(card);
+            break;
+        }
+    }
+}
+
 bool cardCls::DeckOfCards::was_card_played(const CardClassWrapper &card) const
 {
     if (was_card_played_map.find(card) == was_card_played_map.end())
@@ -252,12 +264,15 @@ std::vector<cardCls::CardClassWrapper> &cardCls::Lewa::get_cards_in_lewa()
 
 uint8_t cardCls::Lewa::get_lewa_id() const
 {
+    if (lewa_id > 13 || lewa_id < 1)
+        exception_wrappers::invalid_arg_wrapper("Wanted to get lewa_id after the end of round");
     return lewa_id;
 }
 
 void cardCls::Lewa::set_lewa_id(uint8_t id)
 {
-    if (id < 1 || id > 13)
+    // when lewa is 14 it means that round will be ended
+    if (id < 1 || id > 14)
         exception_wrappers::invalid_arg_wrapper("Invalid lewa id value");
     lewa_id = id;
 }
@@ -295,9 +310,9 @@ size_t cardCls::Lewa::size() const
 
 void cardCls::Lewa::set_player_who_took_lewa(PlayerPosition player)
 {
-    if (player == NONE_POS)
+    if (player != NONE_POS && player != N && player != E && player != S && player != W)
     {
-        exception_wrappers::invalid_arg_wrapper("Player who took lewa cannot be NONE_POS");
+        exception_wrappers::invalid_arg_wrapper("Player who took lewa is not allowed value");
     }
     player_who_took_lewa = player;
 }

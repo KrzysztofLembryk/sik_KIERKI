@@ -7,6 +7,7 @@
 #include <memory>
 #include "player_class.h"
 #include "game_master.h"
+#include "err.h"
 
 void just_read_rest_of_wrong_packet(int socket_fd, size_t data_size, std::string &msg_str)
 {
@@ -18,14 +19,59 @@ void just_read_rest_of_wrong_packet(int socket_fd, size_t data_size, std::string
     delete[] buff;
 }
 
-int handle_read_packet_name(int socket_fd, std::string &packet_name, 
-struct sockaddr *server_address, struct sockaddr *client_address, 
-size_t packet_name_size, size_t data_size)
+int read_first_char_of_packet_name(int socket_fd, std::string &msg)
 {
-    std::string msg_str;
-    std::string address_str = communication_addresses_to_str(server_address, client_address, false, NOT_INVOKED_BY_SERVER);
+    char curr_char;
+    ssize_t read_length = readn(socket_fd, &curr_char, 1);
 
-    int ret_val_read_name = tcp::TCP_read_packet_name(socket_fd, packet_name_size, packet_name);
+    if (read_length < 0)
+    {
+        if (errno == EAGAIN) 
+        {
+            err_func::error("readn < 0 --> readn timeout");
+            return TIMEOUT;
+        } 
+        else 
+        {
+            // exception_wrappers::runtime_err_wrapper("readn < 0");
+            err_func::error("readn < 0");
+            return ERROR;
+        }
+    }
+    else if (read_length == 0) 
+    {
+        // exception_wrappers::runtime_err_wrapper("read_len == 0 -- no newline found in packet name or sent packet is to short or connection was closed");
+        exception_wrappers::runtime_err_wrapper(" - connection closed read_len == 0");
+    }
+    msg = std::string(&curr_char, 1);
+    return SUCCESS;
+}
+
+
+
+int handle_read_packet_name(int socket_fd, std::string &packet_name, 
+struct sockaddr *server_address, struct sockaddr *client_address)
+{
+    std::string first_letter_str;
+    std::string address_str = communication_addresses_to_str(server_address, client_address, false, NOT_INVOKED_BY_SERVER);
+    int ret_val_read_name = read_first_char_of_packet_name(socket_fd, first_letter_str);
+
+    if (ret_val_read_name != SUCCESS)
+    {
+        return ret_val_read_name;
+    }
+
+    std::string rest;
+    if (first_letter_str == "D" || first_letter_str == "B")
+    {
+        ret_val_read_name = tcp::TCP_read_packet_name(socket_fd, INIT_PACKET_NAME_SIZE - 1, rest);
+    }
+    else 
+    {
+        ret_val_read_name = tcp::TCP_read_packet_name(socket_fd, INGAME_PACKET_NAME_SIZE - 1, rest);
+    }
+
+    packet_name = first_letter_str + rest;
 
     if (ret_val_read_name == DISCONNECTED)
     {
@@ -34,14 +80,18 @@ size_t packet_name_size, size_t data_size)
     if (ret_val_read_name == FAILURE)
     {
         // Server sent wrong packet - we ignore it
-        just_read_rest_of_wrong_packet(socket_fd, data_size, msg_str);
-        print_log_from_read(address_str, packet_name, msg_str);
+        if (first_letter_str == "D" || first_letter_str == "B")
+            just_read_rest_of_wrong_packet(socket_fd, MAX_DEAL_BUFF_SIZE, rest);
+        else 
+            just_read_rest_of_wrong_packet(socket_fd, MAX_TOTAL_BUFF_SIZE, rest);
+        print_log_from_read(address_str, packet_name, rest);
         return CONTINUE;
     }
     if (ret_val_read_name != SUCCESS)
     {
         return ERROR;
     }
+
     return SUCCESS;
 }
 
@@ -61,16 +111,13 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
         int ret_val_read_name;
         try
         {
-
             if (got_score && got_total)
             {
                 ret_val_read_name = handle_read_packet_name(
                                                     socket_fd, 
                                                     packet_name, 
                                                     player_sp->get_server_address(), 
-                                                    player_sp->get_client_address(), 
-                                                    INIT_PACKET_NAME_SIZE, 
-                                                    MAX_DEAL_BUFF_SIZE);
+                                                    player_sp->get_client_address());
             }
             else 
             {
@@ -78,9 +125,7 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                                                     socket_fd, 
                                                     packet_name, 
                                                     player_sp->get_server_address(), 
-                                                    player_sp->get_client_address(), 
-                                                    INGAME_PACKET_NAME_SIZE, 
-                                                    MAX_TOTAL_BUFF_SIZE);
+                                                    player_sp->get_client_address());
 
             }
         }
@@ -96,7 +141,7 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
             std::cerr << e.what() << "\n";
             return FAILURE;
         }
-        if (ret_val_read_name == CONTINUE)
+        if (ret_val_read_name == CONTINUE || ret_val_read_name == TIMEOUT)
             continue;
         else if (ret_val_read_name != SUCCESS)
         {
@@ -128,13 +173,13 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                 {
                     return FAILURE;
                 }
-
                 curr_lewa_id = 1;
                 got_score = false;
                 got_total = false;
                 player_sp->set_game_type(game_type);
                 player_sp->set_hand(my_hand);
                 player_sp->clear_lewas_taken();
+                player_sp->zero_curr_SCORE();
             }
             catch (std::exception &e)
             {
@@ -208,6 +253,12 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                     player_sp->add_points_in_curr_round(lewa);
                     player_sp->add_lewa_to_lewas_taken(lewa);
                 }
+
+                // we set that our card in this lewa was played (we already set
+                // it in TRICK, but if we reconnect to server in deal we get 
+                // new hand without set cards that we played, so even though 
+                // card might be already set we set it again)
+                player_sp->set_card_played(lewa);
                 curr_lewa_id++;
             }
             catch(const std::exception& e)
@@ -258,13 +309,6 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                     return FAILURE;
                 }
                 player_sp->add_points_from_round_to_allpoints();
-
-                // not needed, we assume server is correct
-                // if (total_scores[player_sp->get_position()] != player_sp->get_all_points())
-                // {
-                //     throw std::runtime_error("Total points are not equal to the points from the round");
-                // }
-
                 got_total = true;
             }
             catch(const std::exception& e)
@@ -307,11 +351,9 @@ int klient_auto_func::klient_auto_main(
         int ret_val_read_name = handle_read_packet_name(socket_fd, 
                                                 packet_name, 
                                                 server_address.get_address(), 
-                                                client_address.get_address(), 
-                                                INIT_PACKET_NAME_SIZE, 
-                                                MAX_DEAL_BUFF_SIZE);
+                                                client_address.get_address());
 
-        if (ret_val_read_name == CONTINUE)
+        if (ret_val_read_name == CONTINUE || ret_val_read_name == TIMEOUT)
             continue;
         else if (ret_val_read_name != SUCCESS)
             return ret_val_read_name;

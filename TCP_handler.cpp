@@ -185,6 +185,7 @@ int tcp::TCP_read_packet_name(int socket_fd, size_t name_len, std::string &name)
         err_func::error("name_len > MAX_PACKET_NAME_SIZE");
         return ERROR;
     }
+
     char name_buff[MAX_PACKET_NAME_SIZE];
     ssize_t read_length;
 
@@ -195,6 +196,8 @@ int tcp::TCP_read_packet_name(int socket_fd, size_t name_len, std::string &name)
     {
         return ret_code;
     }
+    name = std::string(name_buff, name_len <= (size_t)read_length ? name_len : (size_t)read_length);
+
     if (ret_code == SUCCESS && (size_t)read_length != name_len)
     {
         err_func::error("read_length != name_len");

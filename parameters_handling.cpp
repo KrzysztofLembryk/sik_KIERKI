@@ -99,15 +99,11 @@ void assign_programme_parameters_client(
                                 std::vector<std::string> &ports, 
                                 std::vector<std::string> &hosts, 
                                 std::map<PlayerPosition, bool> &positions, 
-                                bool &a_option, bool &ip6_opt, bool &ip4_opt,
                                 PlayerPosition &chosen_pos)
 {
-    std::cout << "Assigning parameters\n";
-
     if (ports.size()) 
     {
         port = port_from_str_to_ul(ports[0].data());
-        std::cout << "got port: " << (unsigned)port << "\n";
     }
     else 
     {
@@ -117,34 +113,10 @@ void assign_programme_parameters_client(
     if (hosts.size()) 
     {
         host = hosts[0];
-        std::cout << "got host: " << host << "\n";
     }
     else
     {
         exception_wrappers::invalid_arg_wrapper("Host not specified");
-    }
-
-    if (ip6_opt) 
-    {
-        // Option -6 was specified
-        std::cout << "IPv6\n";
-    }
-    else if (ip4_opt) 
-    {
-        std::cout << "IPv4\n";
-        // Option -4 was specified
-    }
-    else 
-    {
-        std::cout << "Neither -6 nor -4 was specified\n";
-        // Neither -6 nor -4 was specified
-    }
-
-    // Check for options without values
-    if (a_option) 
-    {
-        std::cout << "Option -a was specified\n";
-        // Option -a was specified
     }
 
     if (positions.size() == 0)

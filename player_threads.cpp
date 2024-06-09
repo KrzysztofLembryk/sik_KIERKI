@@ -57,12 +57,26 @@ void handle_disconnection(GM_sp game_master_sp,
                             Bool_sp thread_ended_sp,
                             Bool_sp player_was_disconnected_sp,
                             Bool_sp resend_TRICK_msg,
-                            int child_pipe_fd[2])
+                            int child_pipe_fd[2],
+                            std::string &comm_msg)
 {
     while (*thread_ended_sp)
     {
+        // If thread ended it might or might not read our msg, thus to be sure 
+        // we need to discard it, by closing pipe and making new one, because 
+        // it might happen that we sent DEAL, thread didnt read it, player 
+        // reconnects we make a new thread, it sends DEAL and all TAKEN 
+        // and then it reads from pipe DEAL and sends it again and player 
+        // resets  his hand and thinks its new round
+        close(child_pipe_fd[PIPE_READ_DSCR]);
+        close(child_pipe_fd[PIPE_WRITE_DSCR]);
+        if (pipe(child_pipe_fd) == -1)
+        {
+            exception_wrappers::runtime_err_wrapper("Failed to create pipe");
+        }
         *thread_ended_sp = false;
-
+        // We close client_fd socket, and wait for new one
+        player_sp->reset_client_fd();
         game_master_sp->set_player_left(player_sp->get_position());
         game_master_sp->acquire_disconnected_sem(player_sp->get_position());
 
@@ -73,6 +87,13 @@ void handle_disconnection(GM_sp game_master_sp,
         // We wait for newly created thread to send all DEAL msgs to client
         // so we can continue
         semaphore_TCP->acquire();
+
+        if (!(*thread_ended_sp))
+        {
+            btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], comm_msg);
+
+            semaphore_TCP->acquire();
+        }
     }
 }
 
@@ -95,7 +116,8 @@ void handle_btwn_thread_comm(std::string comm_type,
                         thread_ended_sp, 
                         was_player_disconnected_sp,
                         resend_TRICK_msg,
-                        child_pipe_fd);
+                        child_pipe_fd,
+                        comm_type);
 }
 
 void player_threads::MyThread::thread_main(
@@ -154,11 +176,26 @@ void player_threads::MyThread::thread_main(
             }
 
             // We know who won lewa thus we can send TAKEN to all players
+            // When player disconnects before we send him TAKEN, and when new 
+            // player connects this current TAKEN won't be send to him by 
+            // thread in handling disconnection function, only old ones will 
+            // be sent, since we add curr lewa to lewa vector in game master 
+            // at the very end of rozdanie, so we won't duplicate sending TAKEN, we will send only one TAKEN for every played lewa,
+            // because player_thread sends msg to thread after thread handles 
+            // reconnection to send current TAKEN
             handle_btwn_thread_comm("TAKEN", game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, 
             player_was_disconnected_sp, resend_TRICK_msg);
 
+
             // We need to wait for other players so that all points for taken 
-            // lewa is added for player who took it 
+            // lewa are added for player who took it 
+            game_master_sp->wait_for_all_players();
+
+            // Everyone sent TAKEN with curr lewa to client so we can prepare 
+            // new lewa, and add old one to lewa_vec in game master, so that 
+            // if sb disconnects during SCORE or TOTAL we could send him all 
+            // played lewas
+            game_master_sp->prepare_new_lewa();
             game_master_sp->wait_for_all_players();
 
             if (game_master_sp->check_if_round_finished())
@@ -193,20 +230,13 @@ void player_threads::MyThread::thread_main(
                 }
                 else
                 {
-                    // If round finished we wait for other players, so that 
-                    // they can send lewa by TCP, if we firstly called 
-                    // prepare_new_round we could clear lewa before everyone 
-                    // would send it so we would have race conditions and hard 
-                    // to detect bug
+                    // if we called prepare_new_round without waiting for all 
+                    // threads to finish checking_if_last_round we could have 
+                    // some of them end because we increased round counter 
                     game_master_sp->wait_for_all_players();
                     game_master_sp->prepare_new_round();
                     break;
                 }
-            }
-            else
-            {
-                game_master_sp->wait_for_all_players();
-                game_master_sp->prepare_new_lewa();
             }
         }
     }

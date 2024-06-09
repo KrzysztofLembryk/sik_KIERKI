@@ -25,7 +25,6 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
 {
     std::string addreses_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), true);
     std::string packet_name;
-    int ret_code_read_name = tcp::TCP_read_packet_name(client_fd, INGAME_PACKET_NAME_SIZE, packet_name); 
 
     std::string msg_str;
     std::string final_str;
@@ -34,6 +33,8 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
 
     try 
     {
+        int ret_code_read_name = tcp::TCP_read_packet_name(client_fd, INGAME_PACKET_NAME_SIZE, packet_name); 
+
         int ret_code = client_trick.read(client_fd, lewa, curr_round, msg_str);
 
         print_log_from_read_thread_safe(addreses_str, packet_name, msg_str, game_master_sp);
@@ -55,8 +56,8 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
     catch (const std::exception &e)
     {
         // end connection
-        print_log_from_read_thread_safe(addreses_str, packet_name, msg_str, game_master_sp);
-        err_func::error("ENDING CONNECTION -- GOT EXCEPTION WHILE READING TRICK - sent trick packet was invalid - either value or suit was not allowed character");
+        std::cerr << e.what() << '\n';
+        // err_func::error("ENDING CONNECTION -- GOT EXCEPTION WHILE READING TRICK - sent trick packet was invalid - either value or suit was not allowed character");
         return ERROR;
     }
     // After we read trick packet, we can send WRONG msg
@@ -124,11 +125,18 @@ std::shared_ptr<bool> resend_TRICK_msg)
             address_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), true);
 
             int ret_code_read_name = tcp::TCP_read_packet_name(client_fd, INGAME_PACKET_NAME_SIZE, packet_name); 
+
+            if (ret_code_read_name == TIMEOUT)
+                continue;
+            if (ret_code_read_name == ERROR)
+                return ERROR;
+
             cardCls::Lewa client_ret_lewa;
             int ret_code = trick.read(client_fd, client_ret_lewa, game_master_sp->get_curr_lewa_nbr(), msg_str);
 
             print_log_from_read_thread_safe(address_str, packet_name, msg_str, game_master_sp);
-
+            if (ret_code == TIMEOUT)
+                continue;
             if(ret_code_read_name != SUCCESS || ret_code != SUCCESS)
             {
                 handle_player_disconnect(thread_ended_sp, semaphore_TCP);
@@ -139,8 +147,6 @@ std::shared_ptr<bool> resend_TRICK_msg)
                 handle_player_disconnect(thread_ended_sp, semaphore_TCP);
                 return ERROR;
             }
-            if (ret_code == TIMEOUT)
-                continue;
 
             if (client_ret_lewa.size() != 1)
             {
@@ -300,14 +306,6 @@ int handle_resending_packets_to_player(int client_fd,
         return ERROR;
     }
 
-    if (*resend_TRICK_msg)
-    {
-        if (resend_lib::resend_TRICK(client_fd, game_master_sp, player_sp, resend_TRICK_msg) != SUCCESS)
-        {
-            return ERROR;
-        }
-
-    }
     return SUCCESS;
 }
 

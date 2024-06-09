@@ -45,6 +45,10 @@ int resend_lib::resend_TAKEN(int client_fd, GM_sp game_master_sp, Player_sp play
     try
     {
         auto lewas_played = game_master_sp->get_lewas_played();
+        if (lewas_played.size() == 0)
+        {
+            return SUCCESS;
+        }
         // we dont need to pushback curr lewa to lewas_vec in game_master since
         // its done when we prepare new lewa
         for (auto lewa : lewas_played)
