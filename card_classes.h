@@ -80,6 +80,7 @@ namespace cardCls
         void add_card(const CardClassWrapper &card);
 
         void set_card_played(const CardClassWrapper &card);
+        void set_card_played(Lewa &lewa);
 
         bool was_card_played(const CardClassWrapper &card) const;
 

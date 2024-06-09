@@ -35,6 +35,7 @@ public:
     void set_client_fd(std::shared_ptr<ClientFdWrapper> client_fd_sp);
     void set_card_played(cardCls::CardClassWrapper &card);
     void set_game_type(GameType game_type);
+    void set_card_played(cardCls::Lewa &lewa);
 
     cardCls::DeckOfCards get_hand();
     PlayerPosition get_position();

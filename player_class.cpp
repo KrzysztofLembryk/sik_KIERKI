@@ -52,6 +52,11 @@ void Player::set_game_type(GameType game_type)
     this->point_counter.set_game_type(game_type);
 }
 
+void Player::set_card_played(cardCls::Lewa &lewa)
+{
+    hand.set_card_played(lewa);
+}
+
 cardCls::DeckOfCards Player::get_hand()
 {
     return hand;

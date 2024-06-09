@@ -144,6 +144,18 @@ void cardCls::DeckOfCards::set_card_played(const CardClassWrapper &card)
         exception_wrappers::invalid_arg_wrapper("Card not in deck");
 }
 
+void cardCls::DeckOfCards::set_card_played(Lewa &lewa)
+{
+    for (auto &card : lewa.get_cards_in_lewa())
+    {
+        if (this->was_card_played_map.find(card) != this->was_card_played_map.end())
+        {
+            this->set_card_played(card);
+            break;
+        }
+    }
+}
+
 bool cardCls::DeckOfCards::was_card_played(const CardClassWrapper &card) const
 {
     if (was_card_played_map.find(card) == was_card_played_map.end())

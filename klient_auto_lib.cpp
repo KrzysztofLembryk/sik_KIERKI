@@ -208,6 +208,12 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                     player_sp->add_points_in_curr_round(lewa);
                     player_sp->add_lewa_to_lewas_taken(lewa);
                 }
+
+                // we set that our card in this lewa was played (we already set
+                // it in TRICK, but if we reconnect to server in deal we get 
+                // new hand without set cards that we played, so even though 
+                // card might be already set we set it again)
+                player_sp->set_card_played(lewa);
                 curr_lewa_id++;
             }
             catch(const std::exception& e)
