@@ -143,6 +143,7 @@ int Player::check_card_correctness(cardCls::CardClassWrapper &card,
         // If it was played or if is not in deck we return error
         if (this->hand.was_card_played(card))
         {
+            std::cout << "ERROR: Card was already played\n";
             return ERROR;
         }
         
@@ -219,6 +220,7 @@ void Player::print_available_cards()
 {
     std::lock_guard<std::mutex> lock(mutex_player);
     hand.print_available_cards();
+    fflush(stdout);
 }
 
 void Player::print_taken_lewas()

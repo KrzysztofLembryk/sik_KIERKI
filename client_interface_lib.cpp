@@ -21,13 +21,13 @@ void init_polls(int parent_read_dscr, struct pollfd poll_descriptors[POLLS_NBR_O
     poll_descriptors[PIPE_POLLS_ID].events = POLLIN;
 }
 
-
-cardCls::CardClassWrapper create_card_from_input(std::string &input)
+cardCls::CardClassWrapper create_card_from_input(std::vector<char> &input)
 {
     Suit suit;
     uint8_t value;
     if (input.size() == 2)
     {
+        std::cout << "value: " << input[0] << " suit: " << input[1] << "\n";
         std::vector<char> vec{input[0]};
         value = determine_value(vec);
         suit = determine_suit(input[1]);
@@ -40,6 +40,7 @@ cardCls::CardClassWrapper create_card_from_input(std::string &input)
     }
     else
     {
+        std::cout << "input size: " << input.size() << "\n";
         exception_wrappers::runtime_err_wrapper("trimmed Input size is not correct");
     }
     cardCls::CardClassWrapper card(suit, value);
@@ -48,23 +49,25 @@ cardCls::CardClassWrapper create_card_from_input(std::string &input)
 
 int check_card_correctness(std::string &input, std::shared_ptr<Player> player_sp)
 {
-    // std::regex card_pattern("([2-9]|10|[JQKA])([HDCS])");
     if (input[0] != '!')
     {
+        std::cout << "ERROR: Card should start with '!' character.\n";
         return ERROR;
     }
     std::vector<char> vec;
-    if (input.size() > 5)
+    if (input.size() > 5 || input.size() < 3)
     {
+        std::cout << "ERROR: Card should have 3 or 4 characters.\n";
         return ERROR;
     }
-    for (size_t i = 1; i < input.size() - 1; i++)
+    for (size_t i = 1; i < input.size(); i++)
     {
         vec.push_back(input[i]);
     }
-    std::string trimmed_input(vec.begin(), vec.end());
 
-        auto card = create_card_from_input(input);
+    try 
+    {
+        auto card = create_card_from_input(vec);
         Suit bottom_card_suit = player_sp->get_curr_lewa_bottom_suit();
 
         if (player_sp->check_card_correctness(card, bottom_card_suit) != SUCCESS)
@@ -76,12 +79,19 @@ int check_card_correctness(std::string &input, std::shared_ptr<Player> player_sp
             player_sp->set_chosen_card_by_human_player(card);
             return SUCCESS;
         }
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+        return ERROR;
+    }
 }
 
 void client_interface_lib::InterfaceThread::interface_thread_main(
     std::shared_ptr<Player> player_sp,
     std::shared_ptr<std::binary_semaphore> TCP_sem,
     std::shared_ptr<std::binary_semaphore> sem_print,
+    std::shared_ptr<std::binary_semaphore> interface_sem,
     int parent_pipe_read_fd,
     int parent_pipe_write_fd)
 {
@@ -125,6 +135,7 @@ void client_interface_lib::InterfaceThread::interface_thread_main(
                             btwn_thread_comm::send_msg(parent_pipe_write_fd, "DONE");
                             card_ok_to_be_played = true;
                             TCP_sem->release();
+                            interface_sem->acquire();
                         }
                     }
                 }

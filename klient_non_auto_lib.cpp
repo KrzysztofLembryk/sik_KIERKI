@@ -167,7 +167,8 @@ int wait_on_polls_while_player_decides(int socket_fd, int child_read_fd,
 
 int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp, BinSem_sp semaphore_TCP, BinSem_sp sem_print, int child_write_fd,
                                 int child_read_fd, 
-                                std::shared_ptr<bool> decided_what_to_play)
+                                std::shared_ptr<bool> decided_what_to_play,
+                                BinSem_sp semaphore_INTERFACE)
 {
     static uint8_t curr_lewa_id = 1;
     static bool got_score = false;
@@ -293,6 +294,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
             {
                 return ERROR;
             }
+            semaphore_INTERFACE->release();
             // we need to receive TRICKS while human player decides what to play
 
 
@@ -441,17 +443,20 @@ int klient_non_auto_func::klient_non_auto_main(int socket_fd,
 
     BinSem_sp semaphore_TCP = std::make_shared<std::binary_semaphore>(0);
     BinSem_sp semaphore_PRINT = std::make_shared<std::binary_semaphore>(1);
+    BinSem_sp semaphore_INTERFACE = std::make_shared<std::binary_semaphore>(0);
+
     std::shared_ptr<bool> decided_what_to_play = std::make_shared<bool>(false);
     std::shared_ptr<Player> player_sp = std::make_shared<Player>(chosen_position);
 
     client_interface_lib::InterfaceThread interface_thread;
 
     std::thread t(
-        [player_sp, semaphore_TCP, semaphore_PRINT, child_pipe_fd, interface_thread, decided_what_to_play]() mutable
+        [player_sp, semaphore_TCP, semaphore_PRINT, child_pipe_fd, interface_thread, decided_what_to_play, semaphore_INTERFACE]() mutable
         {
             interface_thread.interface_thread_main(player_sp,
                                                    semaphore_TCP,
                                                    semaphore_PRINT,
+                                                   semaphore_INTERFACE,
                                                    child_pipe_fd[PIPE_READ_DSCR],
                                                    child_pipe_fd[PIPE_WRITE_DSCR]);
         });
@@ -472,7 +477,7 @@ int klient_non_auto_func::klient_non_auto_main(int socket_fd,
             if (poll_descriptors[TCP_SOCKET_POLLS_ID].revents & POLLIN)
             {
                 int ret_val = handle_server_communication(socket_fd, player_sp, semaphore_TCP, semaphore_PRINT, child_pipe_fd[PIPE_WRITE_DSCR],
-                child_pipe_fd[PIPE_READ_DSCR], decided_what_to_play);
+                child_pipe_fd[PIPE_READ_DSCR], decided_what_to_play, semaphore_INTERFACE);
 
                 if (ret_val == ERROR)
                 {

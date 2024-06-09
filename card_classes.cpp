@@ -197,7 +197,7 @@ void cardCls::DeckOfCards::print_available_cards()
             nbr_of_available_cards++;
         }
     }  
-
+    std::cout << "Available cards: " << nbr_of_available_cards << "\n";
     int i = 0;
 
     for (const auto &pair : was_card_played_map)
@@ -236,7 +236,7 @@ bool cardCls::DeckOfCards::check_if_suit_available(Suit suit) const
 {
     if (suit == Suit::NONE_SUIT)
     {
-        return true;
+        return false;
     }
 
     for (const auto &pair : was_card_played_map)

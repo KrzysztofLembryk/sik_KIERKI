@@ -16,6 +16,7 @@ namespace client_interface_lib
             std::shared_ptr<Player> player_sp,
             std::shared_ptr<std::binary_semaphore> TCP_sem,
             std::shared_ptr<std::binary_semaphore> sem_print,
+            std::shared_ptr<std::binary_semaphore> interface_sem,
             int parent_pipe_read_fd,
             int parent_pipe_write_fd);
     };
