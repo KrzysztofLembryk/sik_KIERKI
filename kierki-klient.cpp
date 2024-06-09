@@ -131,7 +131,9 @@ int main(int argc, char *argv[])
         true, NOT_INVOKED_BY_SERVER);
 
         iam.write(socket_fd, chosen_position, msg_str);
-        print_log_from_write(address_str, msg_str);
+
+        if (a_option)
+            print_log_from_write(address_str, msg_str);
 
         if (a_option)
         {

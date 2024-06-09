@@ -51,7 +51,7 @@ cardCls::CardClassWrapper create_card_from_input(std::string &input)
 int check_card_correctness(std::string &input, std::shared_ptr<Player> player_sp)
 {
     std::regex card_pattern("!([2-9]|10|[JQKA])([HDCS])");
-
+    std::cout << "got input: " << input << "\n";
     if (std::regex_match(input, card_pattern))
     {
         auto card = create_card_from_input(input);
@@ -104,6 +104,7 @@ void client_interface_lib::InterfaceThread::interface_thread_main(
 
                 if (parent_msg == "TRICK")
                 {
+                    std::cout << "Got trick msg \n";
                     bool card_ok_to_be_played = false;
 
                     while (!card_ok_to_be_played)
@@ -117,6 +118,7 @@ void client_interface_lib::InterfaceThread::interface_thread_main(
                         }
                         else
                         {
+                            btwn_thread_comm::send_msg(parent_pipe_write_fd, "DONE");
                             card_ok_to_be_played = true;
                             TCP_sem->release();
                         }

@@ -107,7 +107,67 @@ int read_packet_name(int socket_fd, std::string &packet_name)
     return SUCCESS;
 }
 
-int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp, BinSem_sp semaphore_TCP, BinSem_sp sem_print, int child_write_fd)
+int wait_on_polls_while_player_decides(int socket_fd, int child_read_fd,
+                                std::shared_ptr<bool> decided_what_to_play,
+                                uint8_t curr_lewa_id,
+                                std::shared_ptr<Player> player_sp,
+                                BinSem_sp sem_print,
+                                BinSem_sp semaphore_TCP)
+{
+    std::string packet_name;
+    struct pollfd poll_dscrptrs[POLLS_NBR_OF_DSCR];
+    int poll_status;
+    poll_dscrptrs[TCP_SOCKET_POLLS_ID].fd = socket_fd;
+    poll_dscrptrs[TCP_SOCKET_POLLS_ID].events = POLLIN;
+    poll_dscrptrs[PIPE_POLLS_ID].fd = child_read_fd;
+    poll_dscrptrs[PIPE_POLLS_ID].events = POLLIN;
+    ingame_comm_wrappers::TRICK_Wrapper trick;
+    cardCls::Lewa lewa;
+
+    while (!(*decided_what_to_play))
+    {
+
+        if (polls_func::handle_polls_waiting(poll_status, poll_dscrptrs) == DISCONNECTED)
+        {
+            return ERROR;
+        }
+
+        if (poll_status > 0)
+        {
+            // First we handle TCP communication, then msgs from client
+            // interface
+            if (poll_dscrptrs[TCP_SOCKET_POLLS_ID].revents & POLLIN)
+            {
+                int ret_val = read_packet_name(socket_fd, packet_name);
+
+                if (ret_val == ERROR)
+                {
+                    return FAILURE;
+                }
+                if (packet_name == "TRICK")
+                {
+                    trick.read(socket_fd, lewa, curr_lewa_id, packet_name);
+                    pretty_packets::pretty_print_TRICK(lewa, player_sp, sem_print);
+                }
+                else 
+                    return FAILURE;
+            }
+            if (poll_dscrptrs[PIPE_POLLS_ID].revents & POLLIN)
+            {
+                std::string msg;
+                btwn_thread_comm::read_msg(child_read_fd, msg);
+                semaphore_TCP->acquire();
+                *decided_what_to_play = true;
+            }
+        }
+    }
+    *decided_what_to_play = false;
+    return SUCCESS;
+}
+
+int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp, BinSem_sp semaphore_TCP, BinSem_sp sem_print, int child_write_fd,
+                                int child_read_fd, 
+                                std::shared_ptr<bool> decided_what_to_play)
 {
     static uint8_t curr_lewa_id = 1;
     static bool got_score = false;
@@ -118,7 +178,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
     {
 
         int ret_val_read_name = read_packet_name(socket_fd,
-                                                packet_name);
+                                                 packet_name);
 
         if (ret_val_read_name == CONTINUE || ret_val_read_name == TIMEOUT)
             return CONTINUE;
@@ -202,7 +262,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
     {
         ingame_comm_wrappers::TRICK_Wrapper trick;
         cardCls::Lewa lewa;
-        try 
+        try
         {
             int ret_val_trick = trick.read(socket_fd, lewa, curr_lewa_id, msg_str);
             if (ret_val_trick == FAILURE)
@@ -223,11 +283,17 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
             {
                 bottom_card_suit = Suit::NONE_SUIT;
             }
-            player_sp->set_curr_lewa_bottom_suit(bottom_card_suit); 
+            player_sp->set_curr_lewa_bottom_suit(bottom_card_suit);
 
             pretty_packets::pretty_print_TRICK(lewa, player_sp, sem_print);
             btwn_thread_comm::send_msg(child_write_fd, "TRICK");
-            semaphore_TCP->acquire();
+
+            if (wait_on_polls_while_player_decides(socket_fd, child_read_fd, decided_what_to_play, curr_lewa_id, player_sp, sem_print, semaphore_TCP) != SUCCESS)
+            {
+                return ERROR;
+            }
+            // we need to receive TRICKS while human player decides what to play
+
 
             auto chosen_card_by_human = player_sp->get_chosen_card_by_human_player();
 
@@ -238,7 +304,6 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
             ret_lewa.add_card(chosen_card_by_human);
             trick.write(socket_fd, ret_lewa, msg_str);
             return SUCCESS;
-
         }
         catch (std::exception &e)
         {
@@ -271,15 +336,15 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
             }
 
             // we set that our card in this lewa was played (we already set
-            // it in TRICK, but if we reconnect to server in deal we get 
-            // new hand without set cards that we played, so even though 
+            // it in TRICK, but if we reconnect to server in deal we get
+            // new hand without set cards that we played, so even though
             // card might be already set we set it again)
             player_sp->set_card_played(lewa);
             pretty_packets::pretty_print_TAKEN(lewa, player_who_took_lewa, sem_print);
             curr_lewa_id++;
             return SUCCESS;
         }
-        catch(const std::exception& e)
+        catch (const std::exception &e)
         {
             std::cerr << e.what() << '\n';
             return CONTINUE;
@@ -301,7 +366,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
     {
         ingame_comm_wrappers::SCORE_Wrapper score;
         std::map<PlayerPosition, uint8_t> scores;
-        try 
+        try
         {
             int ret_val_score = score.read(socket_fd, scores, msg_str);
 
@@ -343,13 +408,13 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
             got_total = true;
             pretty_packets::pretty_print_TOTAL(total_scores, sem_print);
         }
-        catch(const std::exception& e)
+        catch (const std::exception &e)
         {
             std::cerr << e.what() << '\n';
             return CONTINUE;
         }
     }
-    else 
+    else
     {
         err_func::error("Got wrong packet name from server");
         return ERROR;
@@ -375,12 +440,13 @@ int klient_non_auto_func::klient_non_auto_main(int socket_fd,
 
     BinSem_sp semaphore_TCP = std::make_shared<std::binary_semaphore>(0);
     BinSem_sp semaphore_PRINT = std::make_shared<std::binary_semaphore>(1);
+    std::shared_ptr<bool> decided_what_to_play = std::make_shared<bool>(false);
     std::shared_ptr<Player> player_sp = std::make_shared<Player>(chosen_position);
 
     client_interface_lib::InterfaceThread interface_thread;
 
     std::thread t(
-        [player_sp, semaphore_TCP, semaphore_PRINT, child_pipe_fd, interface_thread]() mutable
+        [player_sp, semaphore_TCP, semaphore_PRINT, child_pipe_fd, interface_thread, decided_what_to_play]() mutable
         {
             interface_thread.interface_thread_main(player_sp,
                                                    semaphore_TCP,
@@ -404,7 +470,8 @@ int klient_non_auto_func::klient_non_auto_main(int socket_fd,
             // interface
             if (poll_descriptors[TCP_SOCKET_POLLS_ID].revents & POLLIN)
             {
-                int ret_val = handle_server_communication(socket_fd, player_sp, semaphore_TCP, semaphore_PRINT, child_pipe_fd[PIPE_WRITE_DSCR]);
+                int ret_val = handle_server_communication(socket_fd, player_sp, semaphore_TCP, semaphore_PRINT, child_pipe_fd[PIPE_WRITE_DSCR],
+                child_pipe_fd[PIPE_READ_DSCR], decided_what_to_play);
 
                 if (ret_val == ERROR)
                 {

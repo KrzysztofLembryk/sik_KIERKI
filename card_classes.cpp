@@ -189,7 +189,7 @@ void cardCls::DeckOfCards::print_deck() const
 
 void cardCls::DeckOfCards::print_available_cards()
 {
-    size_t nbr_of_available_cards = 0;
+    int nbr_of_available_cards = 0;
     for (const auto &pair : was_card_played_map)
     {
         if (!pair.second)
@@ -198,7 +198,7 @@ void cardCls::DeckOfCards::print_available_cards()
         }
     }  
 
-    size_t i = 0;
+    int i = 0;
 
     for (const auto &pair : was_card_played_map)
     {
