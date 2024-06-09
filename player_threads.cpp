@@ -126,6 +126,7 @@ void player_threads::MyThread::thread_main(
         game_master_sp->wait_for_game_start();
 
         // Here we send DEAL to All players
+        sleep(5);
         handle_btwn_thread_comm("DEAL", game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, player_was_disconnected_sp, resend_TRICK_msg);
 
         game_master_sp->wait_for_all_players();

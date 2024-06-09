@@ -49,58 +49,6 @@ namespace cardCls
     };
 
     /**
-     * @brief DeckOfCards class stores Cards objects in a map. It has methods to
-     * add card to cardCls, set card as played and check if card was played.
-     */
-    class DeckOfCards
-    {
-    public:
-        DeckOfCards() = default;
-        // {
-        //     if (init)
-        //     {
-        //         for (uint8_t i = 2; i <= 10; i++)
-        //         {
-        //             was_card_played_map[{HEARTS, i}] = false;
-        //             was_card_played_map[{DIAMONDS, i}] = false;
-        //             was_card_played_map[{CLUBS, i}] = false;
-        //             was_card_played_map[{SPADES, i}] = false;
-        //         }
-        //         for (uint8_t i = J; i <= A; i++)
-        //         {
-        //             was_card_played_map[{HEARTS, i}] = false;
-        //             was_card_played_map[{DIAMONDS, i}] = false;
-        //             was_card_played_map[{CLUBS, i}] = false;
-        //             was_card_played_map[{SPADES, i}] = false;
-        //         }
-        //     }
-        // }
-        ~DeckOfCards() = default;
-
-        void add_card(const CardClassWrapper &card);
-
-        void set_card_played(const CardClassWrapper &card);
-        void set_card_played(Lewa &lewa);
-
-        bool was_card_played(const CardClassWrapper &card) const;
-
-        void reset();
-
-        void print_deck() const;
-
-        size_t size() const;
-
-        std::vector<char> to_char_vector() const;
-
-        bool check_if_suit_available(Suit suit) const;
-
-        cardCls::CardClassWrapper play_card(Suit bottom_card_suit);
-
-    private:
-        std::map<CardClassWrapper, bool> was_card_played_map;
-    };
-
-    /**
      * @brief Trik == Lewa in polish, I prefer to use polish name for it.
      * Lewa class stores maximally 4 cards, which are played in one round.
      * It has methods to add card to lewa and get vector of cards in lewa.
@@ -151,6 +99,41 @@ namespace cardCls
         std::vector<CardClassWrapper> lewa;
         PlayerPosition player_who_took_lewa;
     };
+
+
+    /**
+     * @brief DeckOfCards class stores Cards objects in a map. It has methods to
+     * add card to cardCls, set card as played and check if card was played.
+     */
+    class DeckOfCards
+    {
+    public:
+        DeckOfCards() = default;
+        ~DeckOfCards() = default;
+
+        void add_card(const CardClassWrapper &card);
+
+        void set_card_played(const CardClassWrapper &card);
+        void set_card_played(Lewa &lewa);
+
+        bool was_card_played(const CardClassWrapper &card) const;
+
+        void reset();
+
+        void print_deck() const;
+
+        size_t size() const;
+
+        std::vector<char> to_char_vector() const;
+
+        bool check_if_suit_available(Suit suit) const;
+
+        cardCls::CardClassWrapper play_card(Suit bottom_card_suit);
+
+    private:
+        std::map<CardClassWrapper, bool> was_card_played_map;
+    };
+
 
 } // namespace cardCls
 
