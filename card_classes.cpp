@@ -307,9 +307,9 @@ size_t cardCls::Lewa::size() const
 
 void cardCls::Lewa::set_player_who_took_lewa(PlayerPosition player)
 {
-    if (player == NONE_POS)
+    if (player != NONE_POS && player != N && player != E && player != S && player != W)
     {
-        exception_wrappers::invalid_arg_wrapper("Player who took lewa cannot be NONE_POS");
+        exception_wrappers::invalid_arg_wrapper("Player who took lewa is not allowed value");
     }
     player_who_took_lewa = player;
 }

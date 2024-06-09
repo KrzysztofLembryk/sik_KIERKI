@@ -300,6 +300,7 @@ void gm::GameMaster::prepare_new_lewa()
         lewas_played.push_back(*curr_lewa);
         curr_lewa->clear_lewa();
         curr_lewa->set_lewa_id(curr_lewa->get_lewa_id() + 1);
+        curr_lewa->set_player_who_took_lewa(NONE_POS);
         curr_lewa_nbr++;
     }
 }

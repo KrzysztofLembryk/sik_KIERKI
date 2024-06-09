@@ -68,6 +68,7 @@ private:
     AddressWrapper server_address;
     AddressWrapper my_address;
     std::shared_ptr<ClientFdWrapper> client_fd_sp;
+    std::mutex mutex_player;
 };
 
 #endif // PLAYER_CLASS_H

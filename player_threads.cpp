@@ -57,7 +57,8 @@ void handle_disconnection(GM_sp game_master_sp,
                             Bool_sp thread_ended_sp,
                             Bool_sp player_was_disconnected_sp,
                             Bool_sp resend_TRICK_msg,
-                            int child_pipe_fd[2])
+                            int child_pipe_fd[2],
+                            std::string &comm_msg)
 {
     while (*thread_ended_sp)
     {
@@ -85,6 +86,13 @@ void handle_disconnection(GM_sp game_master_sp,
         // We wait for newly created thread to send all DEAL msgs to client
         // so we can continue
         semaphore_TCP->acquire();
+
+        if (!(*thread_ended_sp))
+        {
+            btwn_thread_comm::send_msg(child_pipe_fd[PIPE_WRITE_DSCR], comm_msg);
+
+            semaphore_TCP->acquire();
+        }
     }
 }
 
@@ -107,7 +115,8 @@ void handle_btwn_thread_comm(std::string comm_type,
                         thread_ended_sp, 
                         was_player_disconnected_sp,
                         resend_TRICK_msg,
-                        child_pipe_fd);
+                        child_pipe_fd,
+                        comm_type);
 }
 
 void player_threads::MyThread::thread_main(
@@ -138,9 +147,9 @@ void player_threads::MyThread::thread_main(
         game_master_sp->wait_for_game_start();
 
         // Here we send DEAL to All players
-        sleep(5);
         handle_btwn_thread_comm("DEAL", game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, player_was_disconnected_sp, resend_TRICK_msg);
 
+        sleep(5);
         game_master_sp->wait_for_all_players();
 
         while (true)
