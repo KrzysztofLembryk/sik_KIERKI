@@ -6,6 +6,7 @@
 #include <mutex>
 #include <semaphore>
 #include <barrier>
+#include "socket_fd_handler.h"
 
 namespace gm
 {
@@ -22,9 +23,12 @@ namespace gm
 
         bool check_if_position_taken(PlayerPosition pos);
         std::vector<PlayerPosition> get_taken_positions();
+        void set_player_left(PlayerPosition pos);
 
-        void add_new_player(PlayerPosition pos, 
-                            struct sockaddr_in6 &my_address);
+        int add_new_player(PlayerPosition pos, 
+                            struct sockaddr_in6 &my_address,
+                            std::shared_ptr<ClientFdWrapper> client_fd_sp);
+
         void add_card_to_lewa(cardCls::CardClassWrapper &card);
         
         void wait_for_turn(PlayerPosition pos);
@@ -32,15 +36,17 @@ namespace gm
         void wait_for_all_players();
 
         PlayerPosition get_whose_turn();
+        PlayerPosition get_first_player();
         GameType get_game_type();
         std::shared_ptr<cardCls::Lewa> get_curr_lewa();
-        uint8_t get_curr_round_nbr();
+        size_t get_curr_round_nbr();
         uint8_t get_curr_lewa_nbr();
-        uint8_t get_nbr_of_rounds();
+        size_t get_nbr_of_rounds();
         cardCls::DeckOfCards get_player_deck(PlayerPosition pos);
         PlayerPosition get_who_won_lewa();
         std::map<PlayerPosition, uint8_t> get_player_scores();
         std::map<PlayerPosition, uint32_t> get_player_all_points();
+        std::vector<cardCls::Lewa> get_lewas_played();
 
         bool check_if_game_started();
         bool check_if_curr_lewa_full();
@@ -61,6 +67,8 @@ namespace gm
         void acquire_print_msg_sem();
         void release_print_msg_sem();
 
+        void acquire_disconnected_sem(PlayerPosition pos);
+
     private:
         std::map<PlayerPosition, std::shared_ptr<std::binary_semaphore>> semaphore_map;
         std::map<PlayerPosition, std::shared_ptr<Player>> players;
@@ -70,7 +78,7 @@ namespace gm
         PlayerPosition first_player;
         PlayerPosition whose_turn;
         PlayerPosition who_won_lewa;
-        uint8_t round_number;
+        size_t round_number;
         uint8_t curr_lewa_nbr;
         gameCls::CardCounter card_counter;
         std::map<PlayerPosition, bool> pos_taken_map;
@@ -79,6 +87,7 @@ namespace gm
         std::mutex mutex_gm;
         std::barrier<void(*)()> sync_barrier;
         std::shared_ptr<std::binary_semaphore> sem_print_msg;
+        std::map<PlayerPosition, std::shared_ptr<std::binary_semaphore>> disconnected_sem_map;
     };
 }
 

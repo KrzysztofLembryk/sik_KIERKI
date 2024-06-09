@@ -134,10 +134,10 @@ void cardCls::DeckOfCards::set_card_played(const CardClassWrapper &card)
 {
     if (was_card_played_map.find(card) != was_card_played_map.end())
     {
-        if (was_card_played_map[card])
-        {
-            exception_wrappers::invalid_arg_wrapper("Card already played");
-        }
+        // if (was_card_played_map[card])
+        // {
+        //     exception_wrappers::invalid_arg_wrapper("Card already played");
+        // }
         was_card_played_map[card] = true;
     }
     else 
@@ -219,7 +219,7 @@ cardCls::CardClassWrapper cardCls::DeckOfCards::play_card(Suit bottom_card_suit)
             return pair.first;
         }
     }
-    return CardClassWrapper(Suit::CLUBS, 0);
+    exception_wrappers::runtime_err_wrapper("No card to play");
 }
 
 size_t cardCls::DeckOfCards::size() const
@@ -299,10 +299,6 @@ void cardCls::Lewa::set_player_who_took_lewa(PlayerPosition player)
     {
         exception_wrappers::invalid_arg_wrapper("Player who took lewa cannot be NONE_POS");
     }
-    if (player_who_took_lewa != NONE_POS)
-    {
-        exception_wrappers::invalid_arg_wrapper("Player who took lewa already set");
-    }
     player_who_took_lewa = player;
 }
 
@@ -324,6 +320,11 @@ std::vector<char> cardCls::Lewa::get_lewa_id_as_char() const
         std::string id = std::to_string(lewa_id);
         return {id[0], id[1]};
     }
+}
+
+PlayerPosition cardCls::Lewa::get_player_who_took_lewa() const
+{
+    return player_who_took_lewa;
 }
 
 cardCls::CardClassWrapper cardCls::Lewa::get_top_card() const

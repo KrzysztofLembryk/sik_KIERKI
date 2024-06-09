@@ -65,13 +65,15 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
 
     client_fd_sp->set_timeout_for_socket(timeout);
 
-    print_client_address(client_address);
-
     init_comm_wrappers::IAM_Wrapper iam_wrapper;
     PlayerPosition new_p_position;
 
-    std::string address_str = communication_addresses_to_str((struct sockaddr *)&server_address, (struct sockaddr *)&client_address, true);
+    std::string address_str = communication_addresses_to_str(
+                                            (struct sockaddr *)&server_address, 
+                                            (struct sockaddr *)&client_address, 
+                                            true);
     std::string msg_str;
+
     if (iam_wrapper.read(client_fd_sp->to_int(), new_p_position, msg_str) != SUCCESS)
     {
         // We print log from write even though we did reading, since at the 
@@ -100,16 +102,22 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
     }
     else
     {
-        game_master_sp->add_new_player(new_p_position, client_address);
+        if (game_master_sp->add_new_player(new_p_position, client_address, client_fd_sp) != SUCCESS)
+        {
+            // add_new_player is not success only when we add new player after 
+            // other player left if so we already have thread for this player
+            // thus we dont want to create a new one
+            return CONTINUE;
+        }
+
     }
 
     player_threads::MyThread my_thread;
     std::thread t(
-        [client_fd_sp, game_master_sp, new_p_position, pipe_write_fd, my_thread]() mutable {
-            my_thread.thread_main(client_fd_sp,
-                                    game_master_sp,
-                                    game_master_sp->get_player(new_p_position),
-                                    pipe_write_fd); 
+        [game_master_sp, new_p_position, pipe_write_fd, my_thread]() mutable {
+            my_thread.thread_main(game_master_sp,
+                                game_master_sp->get_player(new_p_position),
+                                pipe_write_fd); 
         }
     );
 
@@ -144,7 +152,6 @@ int main(int ac, char *av[])
     }
 
     int pipe_fd[2];
-    char pipe_buff[PIPE_BUFF_SIZE];
     if (pipe(pipe_fd) == -1)
     {
         err_func::syserr("Failed to create pipe");

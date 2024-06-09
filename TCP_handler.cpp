@@ -48,9 +48,9 @@ int tcp::TCP_read_packet(int socket_fd, char *buff, size_t data_size,
     }
     else if (read_length == 0) 
     {
-        // exception_wrappers::runtime_err_wrapper(" - connection closed read_len == 0");
-        err_func::error(" - connection closed read_len == 0");
-        return DISCONNECTED;
+        exception_wrappers::runtime_err_wrapper(" - connection closed read_len == 0");
+        // err_func::error(" - connection closed read_len == 0");
+        // return DISCONNECTED;
     }
     return SUCCESS;
 }

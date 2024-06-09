@@ -36,6 +36,12 @@ void Player::set_server_address(AddressWrapper &addr)
     server_address = addr;
 }
 
+void Player::set_client_fd(std::shared_ptr<ClientFdWrapper> client_fd_sp)
+{
+    this->client_fd_sp.reset();
+    this->client_fd_sp = client_fd_sp;
+}
+
 void Player::set_card_played(cardCls::CardClassWrapper &card)
 {
     hand.set_card_played(card);
@@ -74,6 +80,11 @@ struct sockaddr* Player::get_server_address()
 struct sockaddr* Player::get_client_address()
 {
     return my_address.get_address();
+}
+
+int Player::get_client_fd()
+{
+    return client_fd_sp->to_int();
 }
 
 int Player::check_card_correctness(cardCls::CardClassWrapper &card, 
@@ -122,7 +133,6 @@ void Player::add_points_in_curr_round(cardCls::Lewa &lewa)
 void Player::add_points_from_round_to_allpoints()
 {
     this->all_points += (uint32_t)(this->curr_game_points);
-    this->curr_game_points = 0;
 }
 
 void Player::add_lewa_to_lewas_taken(cardCls::Lewa &lewa)
@@ -130,9 +140,14 @@ void Player::add_lewa_to_lewas_taken(cardCls::Lewa &lewa)
     lewas_taken.push_back(lewa);
 }
 
-void Player::clea_lewas_taken()
+void Player::clear_lewas_taken()
 {
     lewas_taken.clear();
+}
+
+void Player::zero_curr_SCORE()
+{
+    curr_game_points = 0;
 }
 
 cardCls::CardClassWrapper Player::play_card(Suit bottom_card_suit)

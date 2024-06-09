@@ -11,6 +11,11 @@ sync_barrier(MAX_PLAYERS, [](){})
     this->semaphore_map[E] = std::make_shared<std::binary_semaphore>(0);
     this->semaphore_map[S] = std::make_shared<std::binary_semaphore>(0);
     this->semaphore_map[W] = std::make_shared<std::binary_semaphore>(0);
+    this->disconnected_sem_map[N] = std::make_shared<std::binary_semaphore>(0);
+    this->disconnected_sem_map[E] = std::make_shared<std::binary_semaphore>(0);
+    this->disconnected_sem_map[S] = std::make_shared<std::binary_semaphore>(0);
+    this->disconnected_sem_map[W] = std::make_shared<std::binary_semaphore>(0);
+
     this->curr_lewa = std::make_shared<cardCls::Lewa>(1);
     this->rounds = rounds;
     this->round_number = 1;
@@ -31,7 +36,7 @@ sync_barrier(MAX_PLAYERS, [](){})
                             rounds[0].get_player_cards(pos), 
                             pos, 
                             rounds[0].get_game_type());
-                            this->players[pos]->set_server_address(server_addr);
+        this->players[pos]->set_server_address(server_addr);
     }
 }
 
@@ -39,6 +44,12 @@ bool gm::GameMaster::check_if_position_taken(PlayerPosition pos)
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
     return pos_taken_map[pos];
+}
+
+void gm::GameMaster::set_player_left(PlayerPosition pos)
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    pos_taken_map[pos] = false;
 }
 
 std::vector<PlayerPosition> gm::GameMaster::get_taken_positions()
@@ -62,21 +73,31 @@ std::vector<PlayerPosition> gm::GameMaster::get_taken_positions()
  * increments number_of_players_present and if its equal to 4 it releases 4 
  * permits on barrier_first, meaning game can start.
 */
-void gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &p_address)
+int gm::GameMaster::add_new_player(PlayerPosition pos, struct sockaddr_in6 &p_address, std::shared_ptr<ClientFdWrapper> client_fd_sp)
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
-    pos_taken_map[pos] = true;
     players[pos]->set_player_address(p_address);
-
+    players[pos]->set_client_fd(client_fd_sp);
+    pos_taken_map[pos] = true;
     // Only at the beginning when we add new players we count them and set 
     // is_game_started to true, after that when player leaves we dont change 
     // nbr_of_players_present since game is already started
     if (number_of_players_present < MAX_PLAYERS)
-        number_of_players_present++;
-
-    if (number_of_players_present == MAX_PLAYERS)
     {
-        is_game_started = true;
+        number_of_players_present++;
+        if (number_of_players_present == MAX_PLAYERS)
+            is_game_started = true;
+        
+        return SUCCESS;
+    }
+    else 
+    {
+        // if we got here it means that player was disconnected and new player
+        // wants to connect to our game, thus we need to set a flag so that 
+        // tcp thread knows what to send him
+        disconnected_sem_map[pos]->release();
+
+        return CONTINUE;
     }
 }
 
@@ -111,6 +132,12 @@ PlayerPosition gm::GameMaster::get_whose_turn()
     return whose_turn;
 }
 
+PlayerPosition gm::GameMaster::get_first_player()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return first_player;
+}
+
 GameType gm::GameMaster::get_game_type()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
@@ -123,7 +150,7 @@ std::shared_ptr<cardCls::Lewa> gm::GameMaster::get_curr_lewa()
     return curr_lewa;
 }
 
-uint8_t gm::GameMaster::get_curr_round_nbr()
+size_t gm::GameMaster::get_curr_round_nbr()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
     return round_number;
@@ -135,10 +162,10 @@ uint8_t gm::GameMaster::get_curr_lewa_nbr()
     return curr_lewa_nbr;
 }
 
-uint8_t gm::GameMaster::get_nbr_of_rounds()
+size_t gm::GameMaster::get_nbr_of_rounds()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
-    return (uint8_t)rounds.size();
+    return rounds.size();
 }
 
 cardCls::DeckOfCards gm::GameMaster::get_player_deck(PlayerPosition pos)
@@ -173,6 +200,12 @@ std::map<PlayerPosition, uint32_t> gm::GameMaster::get_player_all_points()
         all_points[player.first] = player.second->get_all_points();
     }
     return all_points;
+}
+
+std::vector<cardCls::Lewa> gm::GameMaster::get_lewas_played()
+{
+    std::lock_guard<std::mutex> lock(mutex_gm);
+    return lewas_played;
 }
 
 bool gm::GameMaster::check_if_game_started()
@@ -296,11 +329,6 @@ void gm::GameMaster::prepare_new_round()
         card_counter.new_game(rounds[round_number - 1].get_game_type());
     }
 }
-// cardCls::DeckOfCards gm::GameMaster::get_player_cards(PlayerPosition pos)
-// {
-//     std::lock_guard<std::mutex> lock(mutex_gm);
-//     return players[pos]->get_hand();
-// }
 
 std::shared_ptr<Player> gm::GameMaster::get_player(PlayerPosition pos)
 {
@@ -316,4 +344,9 @@ void gm::GameMaster::acquire_print_msg_sem()
 void gm::GameMaster::release_print_msg_sem()
 {
     sem_print_msg->release();
+}
+
+void gm::GameMaster::acquire_disconnected_sem(PlayerPosition pos)
+{
+    disconnected_sem_map[pos]->acquire();
 }

@@ -6,13 +6,14 @@
 class ClientFdWrapper
 {
 public:
-    ClientFdWrapper() = delete;
+    ClientFdWrapper() : client_fd(-1), should_be_closed(false) {};
     ClientFdWrapper(int client_fd);
     ClientFdWrapper(const ClientFdWrapper& other) = default;
     ClientFdWrapper& operator=(const ClientFdWrapper& other) = default;
     ~ClientFdWrapper();
 
     void set_timeout_for_socket(unsigned max_wait);
+    void set_new_client_fd(int new_fd);
     int to_int() const;
 
 private:

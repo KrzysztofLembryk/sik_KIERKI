@@ -129,6 +129,8 @@ namespace cardCls
 
         std::vector<char> get_lewa_id_as_char() const;
 
+        PlayerPosition get_player_who_took_lewa() const;
+
         void set_lewa_id(uint8_t id);
 
         void set_lewa_id(const std::vector<char> &id);

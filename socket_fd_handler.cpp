@@ -26,11 +26,27 @@ ClientFdWrapper::~ClientFdWrapper()
 
 void ClientFdWrapper::set_timeout_for_socket(unsigned max_wait)
 {
+    if (client_fd < 0 )
+        exception_wrappers::runtime_err_wrapper("client_socket_fd < 0 cannot set timeout for socket");
+
     struct timeval time_o = {.tv_sec = max_wait, .tv_usec = 0};
     if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &time_o, sizeof(time_o)) < 0)
     {
         exception_wrappers::runtime_err_wrapper("setsockopt() failed");
     }
+}
+
+void ClientFdWrapper::set_new_client_fd(int new_fd)
+{
+    if (client_fd > 0)
+    {
+        close(client_fd);
+    }
+    if (new_fd < 0 )
+        exception_wrappers::runtime_err_wrapper("new_fd < 0 cannot set new client fd");
+
+    should_be_closed = true;
+    client_fd = new_fd;
 }
 
 int ClientFdWrapper::to_int() const

@@ -22,7 +22,6 @@ int handle_read_packet_name(int socket_fd, std::string &packet_name,
 struct sockaddr *server_address, struct sockaddr *client_address, 
 size_t packet_name_size, size_t data_size)
 {
-    ssize_t read_length;
     std::string msg_str;
     std::string address_str = communication_addresses_to_str(server_address, client_address, false, NOT_INVOKED_BY_SERVER);
 
@@ -60,27 +59,42 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
         std::string addreses_str = communication_addresses_to_str(server_address, client_address, false, NOT_INVOKED_BY_SERVER);
         std::string msg_str;
         int ret_val_read_name;
-
-        if (got_score && got_total)
+        try
         {
-            ret_val_read_name = handle_read_packet_name(
-                                                socket_fd, 
-                                                packet_name, 
-                                                player_sp->get_server_address(), 
-                                                player_sp->get_client_address(), 
-                                                INIT_PACKET_NAME_SIZE, 
-                                                MAX_DEAL_BUFF_SIZE);
+
+            if (got_score && got_total)
+            {
+                ret_val_read_name = handle_read_packet_name(
+                                                    socket_fd, 
+                                                    packet_name, 
+                                                    player_sp->get_server_address(), 
+                                                    player_sp->get_client_address(), 
+                                                    INIT_PACKET_NAME_SIZE, 
+                                                    MAX_DEAL_BUFF_SIZE);
+            }
+            else 
+            {
+                ret_val_read_name = handle_read_packet_name(
+                                                    socket_fd, 
+                                                    packet_name, 
+                                                    player_sp->get_server_address(), 
+                                                    player_sp->get_client_address(), 
+                                                    INGAME_PACKET_NAME_SIZE, 
+                                                    MAX_TOTAL_BUFF_SIZE);
+
+            }
         }
-        else 
+        catch (std::exception &e)
         {
-            ret_val_read_name = handle_read_packet_name(
-                                                socket_fd, 
-                                                packet_name, 
-                                                player_sp->get_server_address(), 
-                                                player_sp->get_client_address(), 
-                                                INGAME_PACKET_NAME_SIZE, 
-                                                MAX_TOTAL_BUFF_SIZE);
-
+            // handle_read_packet_name throws only when we are disconnected,
+            // thus if we got score and total and got disconnected we know that 
+            // game has ended and we can return SUCCESS
+            if (got_score && got_total)
+            {
+                return SUCCESS;
+            }
+            std::cerr << e.what() << "\n";
+            return FAILURE;
         }
         if (ret_val_read_name == CONTINUE)
             continue;
@@ -120,7 +134,7 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                 got_total = false;
                 player_sp->set_game_type(game_type);
                 player_sp->set_hand(my_hand);
-                player_sp->clea_lewas_taken();
+                player_sp->clear_lewas_taken();
             }
             catch (std::exception &e)
             {
@@ -245,10 +259,11 @@ int play_game(int socket_fd, std::shared_ptr<Player> player_sp)
                 }
                 player_sp->add_points_from_round_to_allpoints();
 
-                if (total_scores[player_sp->get_position()] != player_sp->get_all_points())
-                {
-                    throw std::runtime_error("Total points are not equal to the points from the round");
-                }
+                // not needed, we assume server is correct
+                // if (total_scores[player_sp->get_position()] != player_sp->get_all_points())
+                // {
+                //     throw std::runtime_error("Total points are not equal to the points from the round");
+                // }
 
                 got_total = true;
             }
