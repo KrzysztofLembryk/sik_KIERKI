@@ -19,8 +19,7 @@ namespace TCP_threads
             std::shared_ptr<std::binary_semaphore> TCP_sem,
             int parent_pipe_read_fd,
             std::shared_ptr<bool> thread_ended_sp,
-            std::shared_ptr<bool> player_was_disconnected_sp,
-            std::shared_ptr<bool> resend_TRICK_msg);
+            std::shared_ptr<bool> player_was_disconnected_sp);
     };
 } // namespace TCP_threads
 

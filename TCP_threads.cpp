@@ -101,8 +101,7 @@ int handle_DEAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::s
     return SUCCESS;
 }
 
-int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP, 
-std::shared_ptr<bool> resend_TRICK_msg)
+int handle_TRICK(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::shared_ptr<bool> thread_ended_sp, BinSem_sp semaphore_TCP)
 {
     ingame_comm_wrappers::TRICK_Wrapper trick;
     cardCls::Lewa lewa_with_good_id(game_master_sp->get_curr_lewa_nbr());
@@ -115,7 +114,6 @@ std::shared_ptr<bool> resend_TRICK_msg)
     {
         try 
         {
-            *resend_TRICK_msg = true;
             address_str = communication_addresses_to_str(player_sp->get_server_address(), player_sp->get_client_address(), false);
 
             trick.write(client_fd, *(game_master_sp->get_curr_lewa()), msg_str);
@@ -173,7 +171,6 @@ std::shared_ptr<bool> resend_TRICK_msg)
                 continue;
             }
 
-            *resend_TRICK_msg = false;
             // If card is correct we add it to lewa and set that this card is 
             // played in player hand
             game_master_sp->add_card_to_lewa(client_card);
@@ -293,8 +290,7 @@ int handle_TOTAL(int client_fd, GM_sp game_master_sp, Player_sp player_sp, std::
 
 int handle_resending_packets_to_player(int client_fd, 
                                         GM_sp game_master_sp, 
-                                        Player_sp player_sp,
-                                        Bool_sp resend_TRICK_msg)
+                                        Player_sp player_sp)
 {
     if (resend_lib::resend_DEAL(client_fd, game_master_sp, player_sp) != SUCCESS)
     {
@@ -314,8 +310,7 @@ void TCP_threads::TCPThread::TCP_thread_main(GM_sp game_master_sp,
                                             BinSem_sp semaphore_TCP,
                                             int parent_pipe_read_fd,
                                             Bool_sp thread_ended_sp,
-                                            Bool_sp player_was_disconnected_sp,
-                                            Bool_sp resend_TRICK_msg)
+                                            Bool_sp player_was_disconnected_sp)
 {
 
     struct pollfd poll_descriptors[POLLS_NBR_OF_DSCR];
@@ -332,7 +327,7 @@ void TCP_threads::TCPThread::TCP_thread_main(GM_sp game_master_sp,
         *player_was_disconnected_sp = false;
 
         if (handle_resending_packets_to_player(player_sp->get_client_fd(), 
-        game_master_sp, player_sp, resend_TRICK_msg) != SUCCESS)
+        game_master_sp, player_sp) != SUCCESS)
         {
             *thread_ended_sp = true;
             semaphore_TCP->release();
@@ -368,8 +363,7 @@ void TCP_threads::TCPThread::TCP_thread_main(GM_sp game_master_sp,
                 }
                 else if (msg == "TRICK")
                 {
-                    if (handle_TRICK(player_sp->get_client_fd(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP,
-                    resend_TRICK_msg) != SUCCESS)
+                    if (handle_TRICK(player_sp->get_client_fd(), game_master_sp, player_sp, thread_ended_sp, semaphore_TCP) != SUCCESS)
                     {
                         return;
                     }

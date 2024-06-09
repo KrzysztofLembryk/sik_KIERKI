@@ -8,8 +8,7 @@
 namespace klient_non_auto_func 
 {
     
-    int klient_non_auto_main(AddressWrapper &server_address, 
-    AddressWrapper &client_address, int socket_fd, 
+    int klient_non_auto_main(int socket_fd, 
     PlayerPosition chosen_position);
 }
 

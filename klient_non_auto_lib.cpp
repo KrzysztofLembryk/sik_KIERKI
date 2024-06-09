@@ -26,7 +26,7 @@ void init_polls(int socket_fd, int child_pipe_fd[2], struct pollfd poll_descript
     poll_descriptors[PIPE_POLLS_ID].events = POLLIN;
 }
 
-void just_read_rest_of_wrong_packet(int socket_fd, size_t data_size, std::string &msg_str)
+void read_rest_of_wrong_packet(int socket_fd, size_t data_size, std::string &msg_str)
 {
     char *buff = new char[data_size];
     ssize_t total_bytes_read = 0;
@@ -36,7 +36,7 @@ void just_read_rest_of_wrong_packet(int socket_fd, size_t data_size, std::string
     delete[] buff;
 }
 
-int read_first_char_of_packet_name(int socket_fd, std::string &msg)
+int read_first_char_of_msg(int socket_fd, std::string &msg)
 {
     char curr_char;
     ssize_t read_length = readn(socket_fd, &curr_char, 1);
@@ -67,7 +67,7 @@ int read_first_char_of_packet_name(int socket_fd, std::string &msg)
 int read_packet_name(int socket_fd, std::string &packet_name)
 {
     std::string first_letter_str;
-    int ret_val_read_name = read_first_char_of_packet_name(socket_fd, first_letter_str);
+    int ret_val_read_name = read_first_char_of_msg(socket_fd, first_letter_str);
 
     if (ret_val_read_name != SUCCESS)
     {
@@ -94,9 +94,9 @@ int read_packet_name(int socket_fd, std::string &packet_name)
     {
         // Server sent wrong packet - we ignore it
         if (first_letter_str == "D" || first_letter_str == "B")
-            just_read_rest_of_wrong_packet(socket_fd, MAX_DEAL_BUFF_SIZE, rest);
+            read_rest_of_wrong_packet(socket_fd, MAX_DEAL_BUFF_SIZE, rest);
         else
-            just_read_rest_of_wrong_packet(socket_fd, MAX_TOTAL_BUFF_SIZE, rest);
+            read_rest_of_wrong_packet(socket_fd, MAX_TOTAL_BUFF_SIZE, rest);
         return CONTINUE;
     }
     if (ret_val_read_name != SUCCESS)
@@ -114,13 +114,33 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
     static bool got_total = false;
     std::string packet_name;
     std::string msg_str;
-    int ret_val_read_name = read_packet_name(socket_fd,
-                                             packet_name);
+    try
+    {
 
-    if (ret_val_read_name == CONTINUE || ret_val_read_name == TIMEOUT)
-        return CONTINUE;
-    else if (ret_val_read_name != SUCCESS)
+        int ret_val_read_name = read_packet_name(socket_fd,
+                                                packet_name);
+
+        if (ret_val_read_name == CONTINUE || ret_val_read_name == TIMEOUT)
+            return CONTINUE;
+        else if (ret_val_read_name != SUCCESS)
+        {
+            if (got_score && got_total)
+            {
+                return SUCCESS;
+            }
+            return ERROR;
+        }
+    }
+    catch (std::exception &e)
+    {
+        if (got_score && got_total)
+        {
+            return SUCCESS;
+        }
+
+        std::cerr << e.what() << "\n";
         return ERROR;
+    }
 
     if (packet_name == "BUSY")
     {
@@ -205,7 +225,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
             }
             player_sp->set_curr_lewa_bottom_suit(bottom_card_suit); 
 
-            pretty_packets::pretty_print_TRICK(lewa, sem_print);
+            pretty_packets::pretty_print_TRICK(lewa, player_sp, sem_print);
             btwn_thread_comm::send_msg(child_write_fd, "TRICK");
             semaphore_TCP->acquire();
 
@@ -329,13 +349,18 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
             return CONTINUE;
         }
     }
+    else 
+    {
+        err_func::error("Got wrong packet name from server");
+        return ERROR;
+    }
+
+    return SUCCESS;
 }
 
 // This function will handle TCP connection with server and also getting msg
 // from thread that takes care of client interface
-int klient_non_auto_func::klient_non_auto_main(AddressWrapper &server_address,
-                                               AddressWrapper &client_address,
-                                               int socket_fd,
+int klient_non_auto_func::klient_non_auto_main(int socket_fd,
                                                PlayerPosition chosen_position)
 {
     int child_pipe_fd[2];

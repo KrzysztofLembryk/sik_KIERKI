@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
         }
         else 
         {
-            if(klient_non_auto_func::klient_non_auto_main(server_address, client_address, socket_fd, chosen_position) != SUCCESS)
+            if(klient_non_auto_func::klient_non_auto_main(socket_fd, chosen_position) != SUCCESS)
             {
                 close(socket_fd);
                 return FAILURE;

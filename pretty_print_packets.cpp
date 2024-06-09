@@ -1,11 +1,11 @@
-#include "pretty_print_packets.h"
-
 #include <iostream>
 #include "common.h"
 #include <vector>
+#include "pretty_print_packets.h"
 
 using std::cout;
 using BinSem_sp = std::shared_ptr<std::binary_semaphore>;
+
 
 void pretty_packets::pretty_print_DEAL(GameType game_type, PlayerPosition first_player_position, cardCls::DeckOfCards &deck_of_cards, BinSem_sp sem_print)
 {
@@ -18,7 +18,9 @@ void pretty_packets::pretty_print_DEAL(GameType game_type, PlayerPosition first_
    sem_print->release();
 }
 
-void pretty_packets::pretty_print_BUSY(std::vector<PlayerPosition> &taken_positions, BinSem_sp sem_print)
+void pretty_packets::pretty_print_BUSY(
+   std::vector<PlayerPosition> &taken_positions, 
+   BinSem_sp sem_print)
 {
    sem_print->acquire();
    cout << "Place busy, list of busy places received: ";
