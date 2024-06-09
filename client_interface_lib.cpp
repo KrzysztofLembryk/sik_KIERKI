@@ -21,19 +21,6 @@ void init_polls(int parent_read_dscr, struct pollfd poll_descriptors[POLLS_NBR_O
     poll_descriptors[PIPE_POLLS_ID].events = POLLIN;
 }
 
-// void read_msg_from_parent(int parent_pipe_read_fd, std::string &parent_msg)
-// {
-//     char buff[INGAME_PACKET_NAME_SIZE];
-//     std::memset(buff, 0, INGAME_PACKET_NAME_SIZE);
-
-//     ssize_t read_len = read(parent_pipe_read_fd, buff, INGAME_PACKET_NAME_SIZE);
-//     if (read_len < 0)
-//     {
-//         exception_wrappers::runtime_err_wrapper("read < 0 when reading msg from parent thread");
-//     }
-
-//     parent_msg = std::string(buff, read_len);
-// }
 
 cardCls::CardClassWrapper create_card_from_input(std::string &input)
 {
@@ -90,6 +77,7 @@ int check_card_correctness(std::string &input, std::shared_ptr<Player> player_sp
 void client_interface_lib::InterfaceThread::interface_thread_main(
     std::shared_ptr<Player> player_sp,
     std::shared_ptr<std::binary_semaphore> TCP_sem,
+    std::shared_ptr<std::binary_semaphore> sem_print,
     int parent_pipe_read_fd,
     int parent_pipe_write_fd)
 {
@@ -123,7 +111,9 @@ void client_interface_lib::InterfaceThread::interface_thread_main(
                         std::getline(std::cin, input);
                         if (check_card_correctness(input, player_sp) != SUCCESS)
                         {
+                            sem_print->acquire();
                             std::cerr << "ERROR: Chosen card is not correct. Try again.\n";
+                            sem_print->release();
                         }
                         else
                         {
@@ -143,11 +133,15 @@ void client_interface_lib::InterfaceThread::interface_thread_main(
                 std::getline(std::cin, input);
                 if (input == "cards")
                 {
+                    sem_print->acquire();
                     player_sp->print_available_cards();
+                    sem_print->release();
                 }
                 else if (input == "tricks")
                 {
+                    sem_print->acquire();
                     player_sp->print_taken_lewas();
+                    sem_print->release();
                 }
                 else if (input == "exit")
                 {
@@ -156,14 +150,19 @@ void client_interface_lib::InterfaceThread::interface_thread_main(
                 }
                 else if (input == "help")
                 {
+                    sem_print->acquire();
                     std::cout << "Available commands:\n"
                                  "cards - show available cards on your hand\n"
                                  "tricks - show taken lewas\n"
                                  "exit - exit the game\n";
+                    fflush(stdout);
+                    sem_print->release();
                 }
                 else
                 {
+                    sem_print->acquire();
                     std::cerr << "Unknown command. Type 'help' for available commands.\n";
+                    sem_print->release();
                 }
             }
         }

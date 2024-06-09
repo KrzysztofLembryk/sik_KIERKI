@@ -107,7 +107,7 @@ int read_packet_name(int socket_fd, std::string &packet_name)
     return SUCCESS;
 }
 
-int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp, BinSem_sp semaphore_TCP, int child_write_fd)
+int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp, BinSem_sp semaphore_TCP, BinSem_sp sem_print, int child_write_fd)
 {
     static uint8_t curr_lewa_id = 1;
     static bool got_score = false;
@@ -129,7 +129,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
         try
         {
             int ret_busy_val = busy.read(socket_fd, busy_positions, msg_str);
-            pretty_packets::pretty_print_BUSY(busy_positions);
+            pretty_packets::pretty_print_BUSY(busy_positions, sem_print);
 
             ret_busy_val = ERROR;
             return ret_busy_val;
@@ -160,7 +160,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
                 return ERROR;
             }
 
-            pretty_packets::pretty_print_DEAL(game_type, first_player_pos, my_hand);
+            pretty_packets::pretty_print_DEAL(game_type, first_player_pos, my_hand, sem_print);
         }
         catch (std::exception &e)
         {
@@ -205,7 +205,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
             }
             player_sp->set_curr_lewa_bottom_suit(bottom_card_suit); 
 
-            pretty_packets::pretty_print_TRICK(lewa);
+            pretty_packets::pretty_print_TRICK(lewa, sem_print);
             btwn_thread_comm::send_msg(child_write_fd, "TRICK");
             semaphore_TCP->acquire();
 
@@ -255,7 +255,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
             // new hand without set cards that we played, so even though 
             // card might be already set we set it again)
             player_sp->set_card_played(lewa);
-            pretty_packets::pretty_print_TAKEN(lewa, player_who_took_lewa);
+            pretty_packets::pretty_print_TAKEN(lewa, player_who_took_lewa, sem_print);
             curr_lewa_id++;
             return SUCCESS;
         }
@@ -274,7 +274,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
         {
             return ERROR;
         }
-        pretty_packets::pretty_print_WRONG(lewa.get_lewa_id());
+        pretty_packets::pretty_print_WRONG(lewa.get_lewa_id(), sem_print);
         return SUCCESS;
     }
     else if (packet_name == "SCORE")
@@ -295,7 +295,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
             }
             got_score = true;
 
-            pretty_packets::pretty_print_SCORE(scores);
+            pretty_packets::pretty_print_SCORE(scores, sem_print);
         }
         catch (std::exception &e)
         {
@@ -321,7 +321,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
             }
             player_sp->add_points_from_round_to_allpoints();
             got_total = true;
-            pretty_packets::pretty_print_TOTAL(total_scores);
+            pretty_packets::pretty_print_TOTAL(total_scores, sem_print);
         }
         catch(const std::exception& e)
         {
@@ -349,15 +349,17 @@ int klient_non_auto_func::klient_non_auto_main(AddressWrapper &server_address,
     init_polls(socket_fd, child_pipe_fd, poll_descriptors);
 
     BinSem_sp semaphore_TCP = std::make_shared<std::binary_semaphore>(0);
+    BinSem_sp semaphore_PRINT = std::make_shared<std::binary_semaphore>(1);
     std::shared_ptr<Player> player_sp = std::make_shared<Player>(chosen_position);
 
     client_interface_lib::InterfaceThread interface_thread;
 
     std::thread t(
-        [player_sp, semaphore_TCP, child_pipe_fd, interface_thread]() mutable
+        [player_sp, semaphore_TCP, semaphore_PRINT, child_pipe_fd, interface_thread]() mutable
         {
             interface_thread.interface_thread_main(player_sp,
                                                    semaphore_TCP,
+                                                   semaphore_PRINT,
                                                    child_pipe_fd[PIPE_READ_DSCR],
                                                    child_pipe_fd[PIPE_WRITE_DSCR]);
         });
@@ -377,7 +379,7 @@ int klient_non_auto_func::klient_non_auto_main(AddressWrapper &server_address,
             // interface
             if (poll_descriptors[TCP_SOCKET_POLLS_ID].revents & POLLIN)
             {
-                int ret_val = handle_server_communication(socket_fd, player_sp, semaphore_TCP, child_pipe_fd[PIPE_WRITE_DSCR]);
+                int ret_val = handle_server_communication(socket_fd, player_sp, semaphore_TCP, semaphore_PRINT, child_pipe_fd[PIPE_WRITE_DSCR]);
 
                 if (ret_val == ERROR)
                 {
