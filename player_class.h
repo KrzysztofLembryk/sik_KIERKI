@@ -52,6 +52,7 @@ public:
     void add_lewa_to_lewas_taken(cardCls::Lewa &lewa);
     void clear_lewas_taken();
     void zero_curr_SCORE();
+    void reset_client_fd();
 
     cardCls::CardClassWrapper play_card(Suit bottom_card_suit);
 

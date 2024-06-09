@@ -75,7 +75,8 @@ void handle_disconnection(GM_sp game_master_sp,
             exception_wrappers::runtime_err_wrapper("Failed to create pipe");
         }
         *thread_ended_sp = false;
-
+        // We close client_fd socket, and wait for new one
+        player_sp->reset_client_fd();
         game_master_sp->set_player_left(player_sp->get_position());
         game_master_sp->acquire_disconnected_sem(player_sp->get_position());
 

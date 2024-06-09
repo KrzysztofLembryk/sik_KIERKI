@@ -46,7 +46,6 @@ void Player::set_server_address(AddressWrapper &addr)
 void Player::set_client_fd(std::shared_ptr<ClientFdWrapper> client_fd_sp)
 {
     std::lock_guard<std::mutex> lock(mutex_player);
-    this->client_fd_sp.reset();
     this->client_fd_sp = client_fd_sp;
 }
 
@@ -177,6 +176,13 @@ void Player::zero_curr_SCORE()
 {
     std::lock_guard<std::mutex> lock(mutex_player);
     curr_game_points = 0;
+}
+
+void Player::reset_client_fd()
+{
+    std::lock_guard<std::mutex> lock(mutex_player);
+    // we end connection with client
+    client_fd_sp.reset();
 }
 
 cardCls::CardClassWrapper Player::play_card(Suit bottom_card_suit)
