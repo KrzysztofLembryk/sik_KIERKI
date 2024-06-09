@@ -186,7 +186,7 @@ void player_threads::MyThread::thread_main(
             handle_btwn_thread_comm("TAKEN", game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, 
             player_was_disconnected_sp, resend_TRICK_msg);
 
-            // sleep(2);
+            sleep(2);
 
             // We need to wait for other players so that all points for taken 
             // lewa are added for player who took it 

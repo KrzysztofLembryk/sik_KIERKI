@@ -56,7 +56,6 @@ int handle_player_msg_at_wrong_time(int client_fd, uint8_t curr_round,
     catch (const std::exception &e)
     {
         // end connection
-        print_log_from_read_thread_safe(addreses_str, packet_name, msg_str, game_master_sp);
         std::cerr << e.what() << '\n';
         // err_func::error("ENDING CONNECTION -- GOT EXCEPTION WHILE READING TRICK - sent trick packet was invalid - either value or suit was not allowed character");
         return ERROR;
@@ -302,16 +301,6 @@ int handle_resending_packets_to_player(int client_fd,
         return ERROR;
     }
 
-    // if (*resend_TRICK_msg)
-    // {
-    //     std::cout << "resending TRICK msg\n";
-    //     fflush(stdout);
-    //     if (resend_lib::resend_TRICK(client_fd, game_master_sp, player_sp, resend_TRICK_msg) != SUCCESS)
-    //     {
-    //         return ERROR;
-    //     }
-
-    // }
     return SUCCESS;
 }
 
