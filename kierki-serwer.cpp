@@ -128,6 +128,10 @@ int handle_game_joining_request(int socket_fd, unsigned timeout, std::shared_ptr
 
 int main(int ac, char *av[])
 {
+    // We need to ignore SIGPIPE since writing to closed pipe otherwise would 
+    // cause our server to crash
+    signal(SIGPIPE, SIG_IGN);
+
     po::variables_map vm;
     uint16_t port = 0;
     unsigned timeout;

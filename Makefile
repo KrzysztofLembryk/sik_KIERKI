@@ -90,7 +90,6 @@ resend_lib.o: resend_lib.cpp resend_lib.h game_master.h player_class.h \
  ingame_comm_wrappers.h init_comm_wrappers.h common.h TCP_handler.h
 socket_fd_handler.o: socket_fd_handler.cpp socket_fd_handler.h \
  exception_wrappers.h err.h constants.h
-tests.o: tests.cpp card_classes.h enum_types.h exception_wrappers.h
 
 clean:
 	rm -f $(TARGETS) *.o

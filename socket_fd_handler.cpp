@@ -84,7 +84,6 @@ void socket_func::handle_server_socket_init(uint16_t &port,
                         int &socket_fd,
                         struct sockaddr_in6 &server_address)
 {
-    // std::signal(SIGPIPE, SIG_IGN);
     init_socket_fd(socket_fd);
 
     server_address.sin6_family = AF_INET6;
