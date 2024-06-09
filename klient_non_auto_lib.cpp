@@ -287,6 +287,7 @@ int handle_server_communication(int socket_fd, std::shared_ptr<Player> player_sp
 
             pretty_packets::pretty_print_TRICK(lewa, player_sp, sem_print);
             btwn_thread_comm::send_msg(child_write_fd, "TRICK");
+            semaphore_TCP->acquire();
 
             if (wait_on_polls_while_player_decides(socket_fd, child_read_fd, decided_what_to_play, curr_lewa_id, player_sp, sem_print, semaphore_TCP) != SUCCESS)
             {

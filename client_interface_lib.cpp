@@ -24,36 +24,46 @@ void init_polls(int parent_read_dscr, struct pollfd poll_descriptors[POLLS_NBR_O
 
 cardCls::CardClassWrapper create_card_from_input(std::string &input)
 {
-    std::string trimmed_input = input.substr(1);
     Suit suit;
     uint8_t value;
-
-    if (trimmed_input.size() == 2)
+    if (input.size() == 2)
     {
-        std::vector<char> vec{trimmed_input[0]};
+        std::vector<char> vec{input[0]};
         value = determine_value(vec);
-        suit = determine_suit(trimmed_input[1]);
+        suit = determine_suit(input[1]);
     }
-    else if (trimmed_input.size() == 3)
+    else if (input.size() == 3)
     {
-        std::vector<char> vec{trimmed_input[0], trimmed_input[1]};
+        std::vector<char> vec{input[0], input[1]};
         value = determine_value(vec);
-        suit = determine_suit(trimmed_input[2]);
+        suit = determine_suit(input[2]);
     }
     else
     {
         exception_wrappers::runtime_err_wrapper("trimmed Input size is not correct");
     }
-
-    return cardCls::CardClassWrapper(suit, value);
+    cardCls::CardClassWrapper card(suit, value);
+    return card;
 }
 
 int check_card_correctness(std::string &input, std::shared_ptr<Player> player_sp)
 {
-    std::regex card_pattern("!([2-9]|10|[JQKA])([HDCS])");
-    std::cout << "got input: " << input << "\n";
-    if (std::regex_match(input, card_pattern))
+    // std::regex card_pattern("([2-9]|10|[JQKA])([HDCS])");
+    if (input[0] != '!')
     {
+        return ERROR;
+    }
+    std::vector<char> vec;
+    if (input.size() > 5)
+    {
+        return ERROR;
+    }
+    for (size_t i = 1; i < input.size() - 1; i++)
+    {
+        vec.push_back(input[i]);
+    }
+    std::string trimmed_input(vec.begin(), vec.end());
+
         auto card = create_card_from_input(input);
         Suit bottom_card_suit = player_sp->get_curr_lewa_bottom_suit();
 
@@ -66,12 +76,6 @@ int check_card_correctness(std::string &input, std::shared_ptr<Player> player_sp
             player_sp->set_chosen_card_by_human_player(card);
             return SUCCESS;
         }
-    }
-    else
-    {
-        // The input does not match the pattern
-        return ERROR;
-    }
 }
 
 void client_interface_lib::InterfaceThread::interface_thread_main(
@@ -104,7 +108,7 @@ void client_interface_lib::InterfaceThread::interface_thread_main(
 
                 if (parent_msg == "TRICK")
                 {
-                    std::cout << "Got trick msg \n";
+                    TCP_sem->release();
                     bool card_ok_to_be_played = false;
 
                     while (!card_ok_to_be_played)
