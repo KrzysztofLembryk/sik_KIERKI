@@ -90,6 +90,8 @@ void init_client_address(int socket_fd, AddressWrapper &client_address, int fina
 
 int main(int argc, char *argv[])
 {
+    int socket_fd;
+
     try
     {
         uint16_t port;
@@ -99,7 +101,6 @@ int main(int argc, char *argv[])
         bool ip4_opt = false;
         PlayerPosition chosen_position;
         AddressWrapper server_address;
-        int socket_fd;
         int final_type_of_ip;
 
         // Access the options
@@ -119,6 +120,7 @@ int main(int argc, char *argv[])
                     server_address.get_address_len()) < 0)
         {
             err_func::error("Cannot connect to the server");
+            close(socket_fd);
             return FAILURE;
         }
 
@@ -133,10 +135,12 @@ int main(int argc, char *argv[])
         if (a_option)
         {
             klient_auto_func::klient_auto_main(server_address, client_address, socket_fd, chosen_position);
+            close(socket_fd);
         }
         else 
         {
             klient_auto_func::klient_auto_main(server_address, client_address, socket_fd, chosen_position);
+            close(socket_fd);
         }
     }
     catch (std::exception &e)
