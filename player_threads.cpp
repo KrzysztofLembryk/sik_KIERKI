@@ -209,7 +209,6 @@ void player_threads::MyThread::thread_main(
                 // with updated scores
                 game_master_sp->wait_for_all_players();
 
-                sleep(2);
                 handle_btwn_thread_comm("TOTAL", game_master_sp, player_sp, semaphore_TCP, child_pipe_fd, thread_ended_sp, player_was_disconnected_sp, resend_TRICK_msg);
 
                 // IDK if we should wait for all players here, I think safer 
