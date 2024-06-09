@@ -196,3 +196,14 @@ void Player::print_available_cards()
     std::lock_guard<std::mutex> lock(mutex_player);
     hand.print_available_cards();
 }
+
+void Player::print_taken_lewas()
+{
+    std::lock_guard<std::mutex> lock(mutex_player);
+    for (auto &lewa : lewas_taken)
+    {
+        lewa.print();
+        std::cout << '\n';
+    }
+    fflush(stdout);
+}

@@ -175,19 +175,42 @@ void cardCls::DeckOfCards::reset()
 
 void cardCls::DeckOfCards::print_deck() const
 {
+    size_t i = 0;
     for (const auto &pair : was_card_played_map)
     {
         pair.first.print();
+        if (i < was_card_played_map.size() - 1)
+        {
+            std::cout << ", ";
+        }
+        i++;
     }
 }
 
 void cardCls::DeckOfCards::print_available_cards()
 {
+    size_t nbr_of_available_cards = 0;
+    for (const auto &pair : was_card_played_map)
+    {
+        if (!pair.second)
+        {
+            nbr_of_available_cards++;
+        }
+    }  
+
+    size_t i = 0;
+
     for (const auto &pair : was_card_played_map)
     {
         if (!pair.second)
         {
             pair.first.print();
+
+            if (i < nbr_of_available_cards - 1)
+            {
+                std::cout << ", ";
+            }
+            i++;
         }
     }
 
@@ -364,9 +387,15 @@ cardCls::CardClassWrapper cardCls::Lewa::get_top_card() const
 
 void cardCls::Lewa::print()
 {
+    size_t i = 0;
     for (const auto &card : lewa)
     {
         card.print();
+        if (i < lewa.size() - 1)
+        {
+            std::cout << ", ";
+        }
+        i++;
     }
 }
 

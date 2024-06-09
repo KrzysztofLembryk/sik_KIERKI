@@ -18,9 +18,13 @@ void pretty_packets::pretty_print_DEAL(GameType game_type, PlayerPosition first_
 void pretty_packets::pretty_print_BUSY(std::vector<PlayerPosition> &taken_positions)
 {
    cout << "Place busy, list of busy places received: ";
+   size_t i = 0;
    for (auto &pos : taken_positions)
    {
       cout << playerPos_to_char(pos);
+      if (i < taken_positions.size() - 1)
+         cout << ", ";
+      i++;
    }
    cout << ".\n";
    fflush(stdout);

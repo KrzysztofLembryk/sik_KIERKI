@@ -56,6 +56,7 @@ public:
 
     cardCls::CardClassWrapper play_card(Suit bottom_card_suit);
     void print_available_cards();
+    void print_taken_lewas();
 
 private:
     cardCls::DeckOfCards hand;
