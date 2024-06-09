@@ -294,6 +294,7 @@ void cardCls::Lewa::set_lewa_id(const std::vector<char> &id)
 
     if (lewa_id < 1 || lewa_id > 13)
     {
+        std::cout << "set_lewa_id(char vec): read lewa id: " << (unsigned)lewa_id << "\n";
         exception_wrappers::invalid_arg_wrapper("Invalid lewa id value");
     }
 }
