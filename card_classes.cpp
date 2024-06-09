@@ -234,6 +234,11 @@ std::vector<char> cardCls::DeckOfCards::to_char_vector() const
 */
 bool cardCls::DeckOfCards::check_if_suit_available(Suit suit) const
 {
+    if (suit == Suit::NONE_SUIT)
+    {
+        return true;
+    }
+
     for (const auto &pair : was_card_played_map)
     {
         if (pair.first.get_suit() == suit && !pair.second)

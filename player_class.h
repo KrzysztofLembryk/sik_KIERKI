@@ -10,7 +10,16 @@
 class Player
 {
 public:
+
     Player() = delete;
+    Player(PlayerPosition pos) : position(pos),
+                                all_points(0),
+                                curr_game_points(0),
+                                curr_lewa_bottom_suit(Suit::NONE_SUIT)
+    {
+        client_fd_sp = std::make_shared<ClientFdWrapper>();
+    }
+
     Player(cardCls::DeckOfCards &hand,
            PlayerPosition position,
            GameType game_type) : hand(hand),

@@ -10,6 +10,7 @@
 #include <algorithm>
 #include "common.h"
 #include <vector>
+#include "btwn_thread_comm.h"
 
 void init_polls(int parent_read_dscr, struct pollfd poll_descriptors[POLLS_NBR_OF_DSCR])
 {
@@ -20,19 +21,19 @@ void init_polls(int parent_read_dscr, struct pollfd poll_descriptors[POLLS_NBR_O
     poll_descriptors[PIPE_POLLS_ID].events = POLLIN;
 }
 
-void read_msg_from_parent(int parent_pipe_read_fd, std::string &parent_msg)
-{
-    char buff[INGAME_PACKET_NAME_SIZE];
-    std::memset(buff, 0, INGAME_PACKET_NAME_SIZE);
+// void read_msg_from_parent(int parent_pipe_read_fd, std::string &parent_msg)
+// {
+//     char buff[INGAME_PACKET_NAME_SIZE];
+//     std::memset(buff, 0, INGAME_PACKET_NAME_SIZE);
 
-    ssize_t read_len = read(parent_pipe_read_fd, buff, INGAME_PACKET_NAME_SIZE);
-    if (read_len < 0)
-    {
-        exception_wrappers::runtime_err_wrapper("read < 0 when reading msg from parent thread");
-    }
+//     ssize_t read_len = read(parent_pipe_read_fd, buff, INGAME_PACKET_NAME_SIZE);
+//     if (read_len < 0)
+//     {
+//         exception_wrappers::runtime_err_wrapper("read < 0 when reading msg from parent thread");
+//     }
 
-    parent_msg = std::string(buff, read_len);
-}
+//     parent_msg = std::string(buff, read_len);
+// }
 
 cardCls::CardClassWrapper create_card_from_input(std::string &input)
 {
@@ -90,8 +91,7 @@ void client_interface_lib::InterfaceThread::interface_thread_main(
     std::shared_ptr<Player> player_sp,
     std::shared_ptr<std::binary_semaphore> TCP_sem,
     int parent_pipe_read_fd,
-    int parent_pipe_write_fd,
-    std::shared_ptr<bool> thread_ended_sp)
+    int parent_pipe_write_fd)
 {
     std::string input;
 
@@ -112,7 +112,7 @@ void client_interface_lib::InterfaceThread::interface_thread_main(
             if (poll_descriptors[PIPE_POLLS_ID].revents & POLLIN)
             {
                 std::string parent_msg;
-                read_msg_from_parent(parent_pipe_read_fd, parent_msg);
+                btwn_thread_comm::read_msg(parent_pipe_read_fd, parent_msg);
 
                 if (parent_msg == "TRICK")
                 {
@@ -151,8 +151,7 @@ void client_interface_lib::InterfaceThread::interface_thread_main(
                 }
                 else if (input == "exit")
                 {
-                    char buff[] = "EXIT";
-                    ssize_t write_len = write(parent_pipe_write_fd, buff, 4);
+                    btwn_thread_comm::send_msg(parent_pipe_write_fd, "EXIT");
                     return;
                 }
                 else if (input == "help")
