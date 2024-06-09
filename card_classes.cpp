@@ -264,12 +264,15 @@ std::vector<cardCls::CardClassWrapper> &cardCls::Lewa::get_cards_in_lewa()
 
 uint8_t cardCls::Lewa::get_lewa_id() const
 {
+    if (lewa_id > 13 || lewa_id < 1)
+        exception_wrappers::invalid_arg_wrapper("Wanted to get lewa_id after the end of round");
     return lewa_id;
 }
 
 void cardCls::Lewa::set_lewa_id(uint8_t id)
 {
-    if (id < 1 || id > 13)
+    // when lewa is 14 it means that round will be ended
+    if (id < 1 || id > 14)
         exception_wrappers::invalid_arg_wrapper("Invalid lewa id value");
     lewa_id = id;
 }

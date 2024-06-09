@@ -312,7 +312,7 @@ void gm::GameMaster::prepare_new_lewa()
 void gm::GameMaster::prepare_new_round()
 {
     std::lock_guard<std::mutex> lock(mutex_gm);
-    if (curr_lewa->lewa_full())
+    if (curr_lewa->get_lewa_id() > 1)
     {
         curr_lewa->clear_lewa();
         curr_lewa->set_lewa_id(1);
