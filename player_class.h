@@ -17,7 +17,8 @@ public:
                                  position(position),
                                  all_points(0),
                                  curr_game_points(0),
-                                 point_counter(game_type) 
+                                 point_counter(game_type),
+                                 curr_lewa_bottom_suit(Suit::NONE_SUIT)
     {
         client_fd_sp = std::make_shared<ClientFdWrapper>();
     }
@@ -36,6 +37,8 @@ public:
     void set_card_played(cardCls::CardClassWrapper &card);
     void set_game_type(GameType game_type);
     void set_card_played(cardCls::Lewa &lewa);
+    void set_curr_lewa_bottom_suit(Suit bottom_suit);
+    void set_chosen_card_by_human_player(cardCls::CardClassWrapper &card);
 
     cardCls::DeckOfCards get_hand();
     PlayerPosition get_position();
@@ -44,6 +47,8 @@ public:
     struct sockaddr *get_server_address();
     struct sockaddr *get_client_address();
     int get_client_fd();
+    Suit get_curr_lewa_bottom_suit();
+    cardCls::CardClassWrapper get_chosen_card_by_human_player();
 
     int check_card_correctness(cardCls::CardClassWrapper &card,
                                Suit bottom_card_suit);
@@ -65,6 +70,8 @@ private:
     uint8_t curr_game_points;
     gameCls::PointCounter point_counter;
     std::vector<cardCls::Lewa> lewas_taken;
+    Suit curr_lewa_bottom_suit;
+    cardCls::CardClassWrapper chosen_card_by_human_player;
     // we dont need to allocate memory for server address since it lives in main
     // thread and main thread ends after all threads end, thus it is safe to
     // use it

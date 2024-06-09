@@ -55,6 +55,18 @@ void Player::set_card_played(cardCls::CardClassWrapper &card)
     hand.set_card_played(card);
 }
 
+void Player::set_curr_lewa_bottom_suit(Suit bottom_suit)
+{
+    std::lock_guard<std::mutex> lock(mutex_player);
+    curr_lewa_bottom_suit = bottom_suit;
+}
+
+void Player::set_chosen_card_by_human_player(cardCls::CardClassWrapper &card)
+{
+    std::lock_guard<std::mutex> lock(mutex_player);
+    chosen_card_by_human_player = card;
+}
+
 void Player::set_game_type(GameType game_type)
 {
     std::lock_guard<std::mutex> lock(mutex_player);
@@ -107,6 +119,18 @@ int Player::get_client_fd()
 {
     std::lock_guard<std::mutex> lock(mutex_player);
     return client_fd_sp->to_int();
+}
+
+Suit Player::get_curr_lewa_bottom_suit()
+{
+    std::lock_guard<std::mutex> lock(mutex_player);
+    return curr_lewa_bottom_suit;
+}
+
+cardCls::CardClassWrapper Player::get_chosen_card_by_human_player()
+{
+    std::lock_guard<std::mutex> lock(mutex_player);
+    return chosen_card_by_human_player;
 }
 
 int Player::check_card_correctness(cardCls::CardClassWrapper &card, 

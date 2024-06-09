@@ -20,6 +20,7 @@ constexpr int PIPE_WRITE_DSCR = 1;
 constexpr int PIPE_BUFF_SIZE = 3;
 constexpr int POLLS_NBR_OF_DSCR = 2;
 constexpr int TCP_SOCKET_POLLS_ID = 0;
+constexpr int STDIN_POLLS_ID = 0;
 constexpr int PIPE_POLLS_ID = 1;
 
 // CLIENT CONSTANTS

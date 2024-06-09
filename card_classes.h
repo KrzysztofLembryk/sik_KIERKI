@@ -25,7 +25,7 @@ namespace cardCls
     {
     public:
         // Constructors
-        CardClassWrapper() = delete;
+        CardClassWrapper() : card({Suit::NONE_SUIT, 0}) {};
         CardClassWrapper(Suit suit, uint8_t value);
         CardClassWrapper(Card card) : card(card) {}
 
