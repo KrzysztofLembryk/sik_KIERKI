@@ -31,7 +31,7 @@ int init_client(int argc,
         std::map<PlayerPosition, bool> positions;
         parse_programme_parameters_client(argc, argv, ports, hosts, positions, a_opt, ip6_opt, ip4_opt);
 
-        assign_programme_parameters_client(port, host, ports, hosts, positions, a_opt, ip6_opt, ip4_opt, chosen_position);
+        assign_programme_parameters_client(port, host, ports, hosts, positions, chosen_position);
 
         if (ip6_opt)
         {
